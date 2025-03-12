@@ -23,7 +23,7 @@ DROP TABLE IF EXISTS `building`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `building` (
-  `bid` int(11) NOT NULL,
+  `bid` int(11) NOT NULL AUTO_INCREMENT,
   `bname` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`bid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -46,7 +46,7 @@ DROP TABLE IF EXISTS `college`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `college` (
-  `cid` int(11) NOT NULL,
+  `cid` int(11) NOT NULL AUTO_INCREMENT,
   `cname` varchar(20) DEFAULT NULL,
   `cbuilding` int(11) NOT NULL,
   PRIMARY KEY (`cid`),
@@ -74,6 +74,9 @@ DROP TABLE IF EXISTS `course`;
 CREATE TABLE `course` (
   `coid` int(11) NOT NULL,
   `coname` varchar(20) DEFAULT NULL,
+  `cohour` int(11) NOT NULL,
+  `cotype` enum('publicBase','majorBase','majorCore','majorElective','publicElective') NOT NULL DEFAULT 'publicElective',
+  `covolume` int(11) NOT NULL DEFAULT '30',
   PRIMARY KEY (`coid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -86,6 +89,52 @@ LOCK TABLES `course` WRITE;
 /*!40000 ALTER TABLE `course` DISABLE KEYS */;
 /*!40000 ALTER TABLE `course` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER before_course_insert
+BEFORE INSERT ON course
+FOR EACH ROW
+BEGIN
+    IF NEW.cohour <= 0 OR NEW.covolume <= 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Learn hours must better than 0';
+    END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER before_course_update
+BEFORE UPDATE ON course
+FOR EACH ROW
+BEGIN
+    IF NEW.cohour <= 0 OR NEW.covolume <= 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Learn hours must better than 0';
+    END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `department`
@@ -95,7 +144,7 @@ DROP TABLE IF EXISTS `department`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `department` (
-  `did` int(11) NOT NULL,
+  `did` int(11) NOT NULL AUTO_INCREMENT,
   `dcollege` int(11) NOT NULL,
   `dname` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`did`),
@@ -121,11 +170,12 @@ DROP TABLE IF EXISTS `distance`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `distance` (
-  `diid` int(11) DEFAULT NULL,
+  `diid` int(11) NOT NULL AUTO_INCREMENT,
   `dibuilding1` int(11) NOT NULL,
   `dibuilding2` int(11) NOT NULL,
   `didistance` int(11) NOT NULL,
-  KEY `dibuilding1` (`dibuilding1`),
+  PRIMARY KEY (`diid`),
+  UNIQUE KEY `dibuilding1` (`dibuilding1`,`dibuilding2`),
   KEY `dibuilding2` (`dibuilding2`),
   CONSTRAINT `distance_ibfk_1` FOREIGN KEY (`dibuilding1`) REFERENCES `building` (`bid`),
   CONSTRAINT `distance_ibfk_2` FOREIGN KEY (`dibuilding2`) REFERENCES `building` (`bid`)
@@ -195,10 +245,11 @@ DROP TABLE IF EXISTS `room`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `room` (
-  `rid` int(11) NOT NULL,
+  `rid` int(11) NOT NULL AUTO_INCREMENT,
   `rname` varchar(20) DEFAULT NULL,
   `rbuilding` int(11) NOT NULL,
   `rtype` enum('common','multimedia','sport','special') NOT NULL,
+  `rvolume` int(11) NOT NULL DEFAULT '50',
   PRIMARY KEY (`rid`),
   KEY `rbuilding` (`rbuilding`),
   CONSTRAINT `room_ibfk_1` FOREIGN KEY (`rbuilding`) REFERENCES `building` (`bid`)
@@ -213,6 +264,52 @@ LOCK TABLES `room` WRITE;
 /*!40000 ALTER TABLE `room` DISABLE KEYS */;
 /*!40000 ALTER TABLE `room` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER before_room_insert
+BEFORE INSERT ON room
+FOR EACH ROW
+BEGIN
+    IF NEW.rvolume <= 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Room volume must better than 0';
+    END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER before_room_update
+BEFORE UPDATE ON room
+FOR EACH ROW
+BEGIN
+    IF NEW.rvolume <= 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Room volume must better than 0';
+    END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `schedule`
@@ -222,14 +319,16 @@ DROP TABLE IF EXISTS `schedule`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `schedule` (
+  `scid` int(11) NOT NULL AUTO_INCREMENT,
   `sctask` int(11) NOT NULL,
   `scroom` int(11) NOT NULL,
   `tabegin_week` int(11) NOT NULL,
   `taend_week` int(11) NOT NULL,
   `tabegin_time` time NOT NULL,
   `taend_time` time NOT NULL,
+  PRIMARY KEY (`scid`),
+  UNIQUE KEY `scroom` (`scroom`,`tabegin_week`,`taend_week`,`tabegin_time`,`taend_time`),
   KEY `sctask` (`sctask`),
-  KEY `scroom` (`scroom`),
   CONSTRAINT `schedule_ibfk_1` FOREIGN KEY (`sctask`) REFERENCES `task` (`taid`),
   CONSTRAINT `schedule_ibfk_2` FOREIGN KEY (`scroom`) REFERENCES `room` (`rid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -256,6 +355,24 @@ DELIMITER ;;
 BEFORE INSERT ON schedule
 FOR EACH ROW
 BEGIN
+    -- 检查时间冲突
+    IF EXISTS (
+        SELECT 1
+        FROM schedule
+        WHERE scroom = NEW.scroom
+          AND tabegin_week = NEW.tabegin_week
+          AND taend_week = NEW.taend_week
+          AND (
+              (NEW.tabegin_time BETWEEN tabegin_time AND taend_time)
+              OR (NEW.taend_time BETWEEN tabegin_time AND taend_time)
+              OR (tabegin_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
+              OR (taend_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
+          )
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Time conflict: Another course is already scheduled in this room during the specified time';
+    END IF;
+
     IF NEW.taend_week <= NEW.tabegin_week THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'End week must better than start week';
@@ -265,6 +382,7 @@ BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'End time must better than start time';
     END IF;
+
 END */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -284,6 +402,25 @@ DELIMITER ;;
 BEFORE UPDATE ON schedule
 FOR EACH ROW
 BEGIN
+    -- 检查时间冲突
+    IF EXISTS (
+        SELECT 1
+        FROM schedule
+        WHERE scroom = NEW.scroom
+          AND tabegin_week = NEW.tabegin_week
+          AND taend_week = NEW.taend_week
+          AND scid != NEW.scid -- 排除自身
+          AND (
+              (NEW.tabegin_time BETWEEN tabegin_time AND taend_time)
+              OR (NEW.taend_time BETWEEN tabegin_time AND taend_time)
+              OR (tabegin_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
+              OR (taend_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
+          )
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Time conflict: Another course is already scheduled in this room during the specified time';
+    END IF;
+
     IF NEW.taend_week <= NEW.tabegin_week THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'End week must better than start week';
@@ -293,6 +430,7 @@ BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'End time must better than start time';
     END IF;
+
 END */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -385,4 +523,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-03-10 19:29:42
+-- Dump completed on 2025-03-12 23:00:19
