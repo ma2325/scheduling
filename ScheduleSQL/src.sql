@@ -2,7 +2,7 @@ CREATE DATABASE schedule;
 
 USE schedule;
 
---楼号表
+-- 楼号表
 CREATE TABLE building(
     bid INTEGER AUTO_INCREMENT PRIMARY KEY,
     bname VARCHAR(20)
@@ -79,7 +79,7 @@ CREATE TABLE course(
     coname VARCHAR(20),
     cohour INTEGER NOT NULL,
     cotype ENUM('publicBase','majorBase','majorCore','majorElective','publicElective') NOT NULL DEFAULT 'publicElective',
-    covolume INTEGER NOT NULL DEFAULT 30,
+    covolume INTEGER NOT NULL DEFAULT 30
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 DELIMITER $$
