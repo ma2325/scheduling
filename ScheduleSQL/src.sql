@@ -14,7 +14,7 @@ CREATE TABLE room(
     rname VARCHAR(20),
     rbuilding INTEGER NOT NULL,
     rtype ENUM('common','multimedia','sport','special') NOT NULL,
-    rvolume INTEGER NOT NULL DEFAULT 50 COMMENT ,
+    rvolume INTEGER NOT NULL DEFAULT 50,
     FOREIGN KEY (rbuilding) REFERENCES building(bid)
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
@@ -117,7 +117,7 @@ CREATE TABLE distance(
     diid INTEGER AUTO_INCREMENT PRIMARY KEY,
     dibuilding1 INTEGER NOT NULL,
     dibuilding2 INTEGER NOT NULL,
-    didistance INTEGER CHECK (didistance > 0) NOT NULL,
+    didistance INTEGER NOT NULL CHECK (didistance > 0),
     FOREIGN KEY (dibuilding1) REFERENCES building(bid),
     FOREIGN KEY (dibuilding2) REFERENCES building(bid),
     UNIQUE (dibuilding1, dibuilding2)
