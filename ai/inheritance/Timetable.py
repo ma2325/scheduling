@@ -1,11 +1,19 @@
 #遗传算法
 import random
-import Class
+import sql.models
 # 模拟数据
 teachers = ["T1", "T2", "T3"]
 courses_names = ["C1", "C2", "C3", "C4"]
 rooms = ["R1", "R2", "R3"]
 time_slots = ["Mon-8AM", "Mon-10AM", "Tue-8AM", "Tue-10AM"]
+
+class Course:
+    def __init__(self, name, teacher, time,classroom):
+        self.name = name
+        self.teacher = teacher
+        self.time = time
+        self.classroom = classroom
+
 
 # 生成初始种群
 def generate_initial_population(size=10):
@@ -13,7 +21,7 @@ def generate_initial_population(size=10):
     for _ in range(size):
         schedule = []
         for course_name in courses_names:
-            course = Class.Course(
+            course = Course(
                 name=course_name,
                 teacher=random.choice(teachers),
                 time=random.choice(time_slots),
@@ -67,5 +75,4 @@ def genetic_algorithm(generations=100, population_size=10):
 
 # 运行遗传算法
 best_schedule = genetic_algorithm()
-for course in best_schedule:
-    course.show_info()
+
