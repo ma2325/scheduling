@@ -153,12 +153,14 @@ CREATE TABLE schedule(
     scid INTEGER AUTO_INCREMENT PRIMARY KEY,
     sctask INTEGER NOT NULL,
     scroom INTEGER NOT NULL,
-    FOREIGN KEY (sctask) REFERENCES task(taid),
-    FOREIGN KEY (scroom) REFERENCES room(rid),
     tabegin_week INTEGER NOT NULL,
     taend_week INTEGER NOT NULL,
     tabegin_time TIME NOT NULL,
     taend_time TIME NOT NULL,
+    tateacher INTEGER NOT NULL,
+    FOREIGN KEY (sctask) REFERENCES task(taid),
+    FOREIGN KEY (scroom) REFERENCES room(rid),
+    FOREIGN KEY (tateacher) REFERENCES teacher(tid),
     UNIQUE (scroom, tabegin_week, taend_week, tabegin_time, taend_time)
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
