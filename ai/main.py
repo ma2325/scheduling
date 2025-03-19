@@ -1,5 +1,6 @@
 import sql.connect
 import sql.models
+import inheritance.Timetable
 
 #连接数据库
 conn=sql.connect.connect()
@@ -62,7 +63,12 @@ if __name__ == "__main__":
             print(f"ID:{teacher.tid}")
         print("teachers OK\n")
     finally:
+        #关闭
         cursor.close()
         print("exit to mysql")
         conn.close()
-    #关闭
+
+    print("OK")
+    shedule= inheritance.Timetable.result(courses, rooms, teachers)
+    for eachclass in shedule:
+        print(eachclass)
