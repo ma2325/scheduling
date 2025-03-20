@@ -3,7 +3,7 @@
 
 ## :file_folder: 文件说明
 - schedule.sql为MySQL根据数据库结构自动导出的文件
-- src.sql为输入的源代码
+- data为数据源xls格式和xlsx格式
 
 ---
 ##  :tent: 导出方式
