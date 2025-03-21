@@ -1,6 +1,5 @@
 import sql.connect
 import sql.models
-import inheritance.Timetable
 
 #连接数据库
 conn=sql.connect.connect()
@@ -45,40 +44,20 @@ def load_teacher():
     return teachers
 
 
-if __name__ == "__main__":
-    try:
-        courses=load_course()
-        print("courses:")
-        '''
-        for course in courses:
-            print(f"ID: {course.coid}, Type: {course.cotype2}")
-        '''
-        print("courses OK\n")
 
-        rooms=load_room()
-        print("rooms: ")
-        '''
-        for room in rooms:
-            print(f"ID: {room.rid}, Volume:{room.rvolume}, Type: {room.rtype}")
-        '''
-        print("rooms OK\n")
+try:
+    courses=load_course()
+    print("courses OK\n")
 
-        teachers=load_teacher()
-        '''
-        print("teachers: ")
-        for teacher in teachers:
-            print(f"ID:{teacher.tcode}")
-        '''
-        print("teachers OK\n")
-    finally:
-        #关闭
-        cursor.close()
-        print("exit to mysql")
-        conn.close()
+    rooms=load_room()
+    print("rooms OK\n")
+
+    teachers=load_teacher()
+    print("teachers OK\n")
+finally:
+    #关闭
+    cursor.close()
+    print("exit to mysql")
+    conn.close()
 
     print("OK")
-    '''
-    shedule= inheritance.Timetable.result(courses, rooms, teachers)
-    for eachclass in shedule:
-        print(eachclass)
-    '''

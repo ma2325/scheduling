@@ -1,147 +1,86 @@
 import random
-import math
+from typing import List
+from main import courses,rooms,teachers
 
-# 蚁群优化参数
-PHEROMONE_DECAY = 0.1  # 信息素挥发系数
-PHEROMONE_BOOST = 5.0  # 适应度对信息素的影响因子
-ALPHA = 1.0  # 信息素影响力
-BETA = 2.0   # 启发式信息影响力
-EVAPORATION_RATE = 0.2  # 信息素衰减率
-
-# 初始化信息素矩阵（教师、教室、时间段）
-pheromones = {}
-
-def initialize_pheromones(courses, rooms, teachers):
-    """ 初始化信息素值 """
-    global pheromones
-    pheromones = {}
-    for course in courses:
-        for room in rooms:
-            for teacher in teachers:
-                for time_slot in range(21):  # 假设 0-20 共 21 个时间段
-                    pheromones[(course.coid, room.rid, teacher.tid, time_slot)] = 1.0
-
-def initialize_population(courses, rooms, teachers, population_size=100):
-    """ 初始化种群，基于信息素选择教室和时间 """
+def initialize_population(size: int) -> List[List[tuple]]:
+    """生成初始种群，每个个体是一个排课方案"""
     population = []
-    for _ in range(population_size):
-        schedule = []
+    for _ in range(size):
+        individual = []
         for course in courses:
-            possible_rooms = [room.rid for room in rooms if room.rvolume >= course.covolume]
-            possible_teachers = [teacher.tid for teacher in teachers]
-
-            if not possible_rooms or not possible_teachers:
-                continue
-
-            # 计算蚁群优化选择概率
-            choices = []
-            for room in possible_rooms:
-                for teacher in possible_teachers:
-                    for time_slot in range(21):
-                        pheromone = pheromones.get((course.coid, room, teacher, time_slot), 1.0)
-                        heuristic = 1.0 / (1 + random.random())  # 启发式信息
-                        probability = (pheromone ** ALPHA) * (heuristic ** BETA)
-                        choices.append((probability, room, teacher, time_slot))
-
-            choices.sort(reverse=True, key=lambda x: x[0])
-            _, best_room, best_teacher, best_time = choices[0]  # 选择最高概率方案
-
-            schedule.append({
-                "course_id": course.coid,
-                "room_id": best_room,
-                "teacher_id": best_teacher,
-                "time_slot": best_time
-            })
-        population.append(schedule)
+            teacher = random.choice(teachers)  # 随机选择教师
+            room = random.choice(rooms)  # 随机选择教室
+            time_slot = random.randint(1, 40)  # 40个时间段（5天×8节课）
+            individual.append((course.coid, teacher.tcode, room.rid, time_slot))
+        population.append(individual)
+    print("初始生成种群成功")
     return population
 
-def fitness(schedule):
-    """ 计算适应度，考虑时间冲突、教师时间偏好等 """
+def fitness(individual: List[tuple]) -> int:
+    """适应度函数，计算排课方案的合理性"""
     score = 0
-    time_teacher_conflicts = set()
-    time_room_conflicts = set()
+    teacher_schedule = {}
+    room_schedule = {}
+    teacher_rooms = {}
 
-    for entry in schedule:
-        key_teacher = (entry['teacher_id'], entry['time_slot'])
-        key_room = (entry['room_id'], entry['time_slot'])
-
-        if key_teacher in time_teacher_conflicts:
-            score -= 5  # 教师时间冲突
+    for course_id, teacher_id, room_id, time_slot in individual:
+        # 硬约束：教师时间冲突
+        if (teacher_id, time_slot) in teacher_schedule:
+            score -= 100  # 严重冲突
         else:
-            time_teacher_conflicts.add(key_teacher)
+            teacher_schedule[(teacher_id, time_slot)] = course_id
 
-        if key_room in time_room_conflicts:
-            score -= 5  # 教室时间冲突
+        # 硬约束：教室不能同时安排两门课
+        if (room_id, time_slot) in room_schedule:
+            score -= 50
         else:
-            time_room_conflicts.add(key_room)
+            room_schedule[(room_id, time_slot)] = course_id
 
-        # 额外约束优化
-        if entry["time_slot"] in [0, 20]:  # 避免极端早晚时间
-            score -= 2
-        if entry["time_slot"] in [10, 11]:  # 午休时间
-            score -= 3
+    # 软约束：教师授课地点尽量不超过2个教学楼
+
+    for teacher_id,assigned_rooms in teacher_rooms.items():
+        if len(assigned_rooms) > 2:
+            score -= 10 * (len(assigned_rooms) - 2)
+
+    print(score)
 
     return score
 
-def update_pheromones(population):
-    """ 信息素更新 """
-    global pheromones
-    # 挥发所有信息素
-    for key in pheromones.keys():
-        pheromones[key] *= (1 - PHEROMONE_DECAY)
+def selection(population: List[List[tuple]]) -> List[List[tuple]]:
+    """选择适应度最高的个体"""
+    sorted_population = sorted(population, key=fitness, reverse=True)
+    return sorted_population[:len(population) // 2]  # 选择前50%作为父代
 
-    # 强化优良个体的信息素
-    for schedule in population[:10]:  # 仅强化前 10 个解
-        score = fitness(schedule)
-        for entry in schedule:
-            key = (entry['course_id'], entry['room_id'], entry['teacher_id'], entry['time_slot'])
-            pheromones[key] += PHEROMONE_BOOST * max(0, score)
+def crossover(parent1: List[tuple], parent2: List[tuple]) -> List[tuple]:
+    """交叉操作，交换部分课程安排"""
+    split = len(parent1) // 2
+    child = parent1[:split] + parent2[split:]
+    return child
 
-def select(population):
-    """ 选择最优个体 """
-    population.sort(key=lambda x: fitness(x), reverse=True)
-    return population[: len(population) // 2]
-
-def crossover(parent1, parent2):
-    """ 交叉操作 """
-    if not parent1 or not parent2:
-        return parent1 or parent2
-    point = random.randint(0, min(len(parent1), len(parent2)) - 1)
-    return parent1[:point] + parent2[point:]
-
-def mutate(schedule, mutation_rate=0.1):
-    """ 变异操作，提高冲突排课的变异率 """
-    for entry in schedule:
+def mutate(individual: List[tuple], mutation_rate: float = 0.1):
+    """变异操作，随机调整部分课程安排"""
+    for i in range(len(individual)):
         if random.random() < mutation_rate:
-            old_time = entry['time_slot']
-            entry['time_slot'] = random.randint(0, 20)
-            if fitness(schedule) < 0:  # 如果变异后适应度变差，回滚
-                entry['time_slot'] = old_time
-    return schedule
+            course_id, teacher_id, room_id, time_slot = individual[i]
+            individual[i] = (course_id, random.choice(teachers).tcode, random.choice(rooms).rid, random.randint(1, 40))
+    return individual
 
-def genetic_algorithm(courses, rooms, teachers, generations=100):
-    """ 遗传算法 + 蚁群优化 """
-    initialize_pheromones(courses, rooms, teachers)
-    population = initialize_population(courses, rooms, teachers)
-
-    if not population or not population[0]:
-        raise ValueError("无法生成有效初始种群，请检查教室容量是否满足课程需求")
-
-    for _ in range(generations):
-        selected = select(population)
-        new_population = []
-
-        while len(new_population) < len(population):
-            p1, p2 = random.sample(selected, 2) if len(selected) >= 2 else (selected[0], selected[0])
+def genetic_algorithm(courses, rooms, teachers, iterations: int, population_size: int):
+    """主流程：运行GA进行排课"""
+    population = initialize_population(population_size)
+    for _ in range(iterations):
+        population = selection(population)
+        next_gen = []
+        while len(next_gen) < population_size:
+            p1, p2 = random.sample(population, 2)
             child = crossover(p1, p2)
             child = mutate(child)
-            new_population.append(child)
+            next_gen.append(child)
+        population = next_gen
 
-        population = new_population
-        update_pheromones(population)  # 更新信息素
+    best_schedule = max(population, key=fitness)
+    return best_schedule  # 返回最优解
 
-    best_schedule = max(population, key=lambda x: fitness(x))
-    return best_schedule
-
-def result(courses, rooms, teachers):
-    return genetic_algorithm(courses, rooms, teachers)
+# 运行遗传算法
+timetable = genetic_algorithm(courses, rooms, teachers, iterations=100, population_size=50)
+print("最佳排课方案：", timetable)
