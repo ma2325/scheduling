@@ -19,6 +19,7 @@ app.use(express.json());
 
 app.use("/admin",require("./router/AdminRouter"))
 app.use("/dashboard",require("./router/DashboardRouter"))
+app.use("/statistics",require("./router/StatisticsRouter"))
 
 app.get("/",(req,res)=>{
     res.send("hello world");
