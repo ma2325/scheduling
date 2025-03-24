@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const crypto = require('crypto');
 const { db } = require("../db/DbUtils");
 
 router.get("/",async(req,res)=>{
@@ -17,3 +16,5 @@ router.get("/",async(req,res)=>{
         });
     }
 });
+
+module.exports = router;
