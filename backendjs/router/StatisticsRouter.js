@@ -56,32 +56,6 @@ router.get("/", async (req, res) => {
             }));
         }
 
-        console.log("right2");
-        //获取教师授课次数
-        const { success: teacherSuccess, data: teacherRows } = await getCountData(
-            "SELECT tname FROM teacher",
-            []
-        );
-        let teaching_count = [];
-
-        if (teacherSuccess) {
-            const teacherNames = teacherRows.map((t) => t.tname);
-
-            const teacherCounts = await Promise.all(
-                teacherNames.map((t) =>
-                    getCountData(
-                        "SELECT COUNT(*) AS cnt FROM schedule WHERE scbegin_week <= ? AND scend_week >=? AND scteacher = ?",
-                        [week, week, t]
-                    )
-                )
-            );
-
-            teaching_count = teacherNames.map((teacher, i) => ({
-                teacher,
-                teaching_count: teacherCounts[i].success ? teacherCounts[i].data[0].cnt : 0,
-            }));
-        }
-
         console.log("right3");
         //获取任务类型次数
         const { success: typeSuccess, data: typeRows } = await getCountData(
@@ -111,7 +85,7 @@ router.get("/", async (req, res) => {
         //统一返回数据
         res.send({
             code: 200,
-            data: [room_occupancy_rate, teaching_count, type_count],
+            data: [room_occupancy_rate, type_count],
         });
     } catch (err) {
         res.send({
