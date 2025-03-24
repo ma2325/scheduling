@@ -18,6 +18,7 @@ app.use(function(req,res,next){
 app.use(express.json());
 
 app.use("/admin",require("./router/AdminRouter"))
+app.use("/dashboard",require("./router/DashboardRouter"))
 
 app.get("/",(req,res)=>{
     res.send("hello world");
