@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "crypto": "^1.0.1",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.2",
+    "mysql2": "^3.14.0",
+    "uuid": "^11.1.0"
+  }
+}

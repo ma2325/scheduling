@@ -5,9 +5,9 @@ spring:
     name: backend
 
   datasource:
-    url: jdbc:mysql://localhost:3306/schedule?characterEncoding=utf8&useSSL=false
+    url: jdbc:mysql://localhost:3306/schedule?characterEncoding=utf8
     username: root
-    password: 20050830lrz
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
 mybatis-plus:
   configuration:
