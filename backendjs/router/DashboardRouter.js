@@ -9,10 +9,10 @@ router.get("/",async(req,res)=>{
         const coursesResult = await db.async.all(`
             SELECT
                 s.scid,
-                s.sctask as name,
+                c.coname as name,
                 s.sccampus as campus,
                 s.scbuilding as building,
-                s.scteacher as teacher,
+                t.tname as teacher,
                 s.scroom as classroom,
                 s.scday_of_week as day_of_week,
                 s.scbegin_time as startTime,
@@ -21,6 +21,10 @@ router.get("/",async(req,res)=>{
                 s.scend_week as endWeek
             FROM
                 schedule s
+            LEFT JOIN
+                course c ON s.sctask = c.coid
+            LEFT JOIN
+                teacher t ON s.scteacher = t.tcode
             ORDER BY
                 s.scid
         `)
@@ -96,5 +100,7 @@ router.get("/",async(req,res)=>{
         })
     }
 });
+
+
 
 module.exports = router;

@@ -69,3 +69,56 @@ axios.defaults.baseURL = "http://localhost:8080";
     "msg":"注册失败"
 }
 ```
+(3)dashboard
+/**
+ * Request
+ */
+export interface Request {
+    code: number;
+    data: Datum[];
+    [property: string]: any;
+}
+
+export interface Datum {
+    /**
+     * 楼名
+     */
+    building: string;
+    /**
+     * 校区名
+     */
+    campus: string;
+    /**
+     * 教室名
+     */
+    classroom: string;
+    /**
+     * 结束时间
+     */
+    endTime: string;
+    /**
+     * 课程结果唯一标明
+     */
+    id: number;
+    /**
+     * 课程名
+     */
+    name: string;
+    /**
+     * 开始时间
+     */
+    startTime: string;
+    /**
+     * 教师名
+     */
+    teacher: string;
+    /**
+     * 周几上课
+     */
+    weekday: number;
+    /**
+     * 上课周
+     */
+    weeks: number[];
+    [property: string]: any;
+}
