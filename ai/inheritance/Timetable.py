@@ -9,6 +9,9 @@ import deepseek
 from collections import defaultdict
 import time
 
+"""
+时间相关
+"""
 '''三维时间模型'''
 WEEKS_IN_SEMESTER = 20  # 总教学周数
 DAYS_PER_WEEK = 5       # 每周上课天数 (周一至周五)
@@ -29,7 +32,6 @@ def generate_course_slots(course):
     all_slots = []
 
     for start_week, end_week, lessons_per_week in course.time_slots:
-        # 生成每周的候选时间
         weekly_slots = [
             TimeSlot(week, day, slot)
             for week in range(start_week, end_week + 1)
@@ -37,64 +39,23 @@ def generate_course_slots(course):
             for slot in range(1, SLOTS_PER_DAY + 1)
         ]
 
-        # 随机选择每周需要的节数
+        if not weekly_slots:
+            print(f"🚨 课程 {course.cid} 生成的时间点为空！要求: {course.time_slots}")
+
         random.shuffle(weekly_slots)
         selected = weekly_slots[:lessons_per_week]
         all_slots.extend(selected)
 
     return all_slots
 
-'''初始种群，贪心'''
-def initialize_population(size: int) -> List[List[tuple]]:
-    population = []
-    sorted_courses = sorted(
-        courses,
-        key=lambda x: -x.popularity if x.popularity is not None else 0
-    )
-    for _ in range(size):
-        individual = []
-        used_slots = {"teachers": set(), "rooms": set()}
-        for course in sorted_courses:
-            valid_slots = generate_course_slots(course)
-            for ts in valid_slots:  # 直接使用TimeSlot对象
-                teacher_key = (course.teacherid, ts.week, ts.day, ts.slot)
-                if course.fixedroom:
-                    room = next((r for r in rooms if r.rname == course.fixedroom), None)
-                else:
-                    room = next((r for r in rooms if r.rcapacity >= course.popularity and r.rtype==course.fixedroomtype), None)
-                if room:
-                    room_key = (room.rid, ts.week, ts.day, ts.slot)
-                    if teacher_key not in used_slots["teachers"] and room_key not in used_slots["rooms"]:
-                        individual.append((course.cid, room.rid, course.teacherid, ts.week, ts.day, ts.slot))
-                        used_slots["teachers"].add(teacher_key)
-                        used_slots["rooms"].add(room_key)
-                        break
-        population.append(individual)
-    for course in sorted_courses:
-        valid_slots = generate_course_slots(course)
-    assigned = False  # 标记是否成功安排
-
-    for ts in valid_slots:
-        teacher_key = (course.teacherid, ts.week, ts.day, ts.slot)
-        if course.fixedroom:
-            room = next((r for r in rooms if r.rname == course.fixedroom), None)
-        else:
-            room = next((r for r in rooms if r.rcapacity >= course.popularity and r.rtype == course.fixedroomtype), None)
-
-        if room:
-            room_key = (room.rid, ts.week, ts.day, ts.slot)
-            if teacher_key not in used_slots["teachers"] and room_key not in used_slots["rooms"]:
-                individual.append((course.cid, room.rid, course.teacherid, ts.week, ts.day, ts.slot))
-                used_slots["teachers"].add(teacher_key)
-                used_slots["rooms"].add(room_key)
-                assigned = True
-                break  # 成功安排后跳出循环
-
-    if not assigned:
-        print(f"⚠️ 课程 {course.cid} (教师 {course.teacherid}) 无法安排！")
-
-    return population
-
+"""
+检测
+"""
+'''统计未被安排的课'''
+def count_unscheduled_courses(timetable):
+    scheduled_courses = {entry[0] for entry in timetable}
+    unscheduled_courses = [c.cid for c in courses if c.cid not in scheduled_courses]
+    return len(unscheduled_courses), unscheduled_courses
 '''冲突检查'''
 def check_conflict_3d(individual: list, index: int, courses: list, rooms: list) -> bool:
     target = individual[index]
@@ -128,6 +89,52 @@ def check_conflict_3d(individual: list, index: int, courses: list, rooms: list) 
     )
 
     return teacher_conflict or room_conflict or room_type_mismatch
+
+"""
+遗传算法
+"""
+'''初始种群，贪心'''
+def initialize_population(size: int) -> List[List[tuple]]:
+    population = []
+    sorted_courses = sorted(
+        courses,
+        key=lambda x: -x.popularity if x.popularity is not None else 0
+    )
+
+    for _ in range(size):
+        individual = []
+        used_slots = {"teachers": defaultdict(list), "rooms": set()}
+
+        for course in sorted_courses:
+            valid_slots = generate_course_slots(course)
+            assigned = False  # 标记是否成功安排
+
+            for ts in valid_slots:
+                teacher_key = (course.teacherid, ts.week, ts.day, ts.slot)
+
+                # **解决教室不可用问题：尝试多个教室**
+                possible_rooms = [r for r in rooms if r.rtype == course.fixedroomtype]
+                possible_rooms.sort(key=lambda r: abs(r.rcapacity - course.popularity))  # 选择最合适的教室
+
+                for room in possible_rooms:
+                    room_key = (room.rid, ts.week, ts.day, ts.slot)
+
+                    # **解决教师冲突问题：尝试多个时间点**
+                    if teacher_key not in used_slots["teachers"] and room_key not in used_slots["rooms"]:
+                        individual.append((course.cid, room.rid, course.teacherid, ts.week, ts.day, ts.slot))
+                        used_slots["teachers"][teacher_key].append(course.cid)
+                        used_slots["rooms"].add(room_key)
+                        assigned = True
+                        break  # 成功安排，跳出教室循环
+
+                if assigned:
+                    break  # 成功安排，跳出时间点循环
+
+            if not assigned:
+                print(f"⚠️ 课程 {course.cid} (教师 {course.teacherid}) 仍然无法安排！可能是教师冲突或教室不足。")
+
+        population.append(individual)
+    return population
 
 '''适应度函数'''
 def fitness(individual):
@@ -174,7 +181,7 @@ def crossover(parent1: List[tuple], parent2: List[tuple]) -> List[tuple]:
     min_length = min(len(parent1), len(parent2))
     parent1, parent2 = parent1[:min_length], parent2[:min_length]
 
-    print(f"📏 parent1 长度: {len(parent1)}, parent2 长度: {len(parent2)}")
+   # print(f"📏 parent1 长度: {len(parent1)}, parent2 长度: {len(parent2)}")
 
     # 创建课程ID到教师ID的映射字典
     course_teacher_map = {c.cid: c.teacherid for c in courses}
@@ -231,14 +238,11 @@ def mutate(individual):
             mutated[i] = (cid, room.rid, teacher_id, new_slot.week, new_slot.day, new_slot.slot)
 
     return mutated
-'''遗传主算法'''
-'''遗传主算法 - 添加可视化版本'''
+
+'''遗传主算法 '''
 def genetic_algorithm(iterations=100, population_size=50):
     print("🔄 开始初始化种群...")
     start_time = time.time()
-    for course in courses:
-        print(f"课程 {course.cid} -> 教师 {course.teacherid}")
-
     population = initialize_population(population_size)
     init_time = time.time() - start_time
     print(f"✅ 种群初始化完成，耗时 {init_time:.2f} 秒")
@@ -248,8 +252,6 @@ def genetic_algorithm(iterations=100, population_size=50):
     for gen in range(iterations):
         iter_start = time.time()
         print(f"\n=== 第 {gen+1}/{iterations} 代 ===")
-
-        # 评估种群
         population.sort(key=fitness, reverse=True)
         current_best = fitness(population[0])
         best_fitness_history.append(current_best)
@@ -261,18 +263,20 @@ def genetic_algorithm(iterations=100, population_size=50):
             if check_conflict_3d(population[0], i, courses, rooms)
         )
         print(f"⚠️ 当前最佳个体冲突数: {conflict_count}")
+        best_individual = population[0]
+        unscheduled_count, unscheduled_courses = count_unscheduled_courses(best_individual)
+        print(f"🚨 未被安排课程数: {unscheduled_count}, 课程ID: {unscheduled_courses}")
 
-        # 创建新一代
-        new_population = [population[0]]  # 精英保留
-
+        new_population = [best_individual]
         while len(new_population) < population_size:
             # 显示进度
             if len(new_population) % 10 == 0:
                 print(f"🧬 正在生成后代... {len(new_population)}/{population_size}", end="\r")
-
             p1, p2 = random.sample(population[:10], 2)
             child = crossover(p1, p2)
-            new_population.append(mutate(child))
+            mutated_child = mutate(child)
+
+            new_population.append(mutated_child)
 
         population = new_population
         iter_time = time.time() - iter_start
@@ -287,8 +291,12 @@ def genetic_algorithm(iterations=100, population_size=50):
     print(f"\n🎉 遗传算法完成！总耗时: {total_time:.2f} 秒")
     print(f"📈 适应度变化: {best_fitness_history}")
 
+
     return max(population, key=fitness)
 
+"""
+打印结果
+"""
 def print_schedule(timetable):
     print("\n📅 最终排课方案：")
     scheduled_courses = set()
