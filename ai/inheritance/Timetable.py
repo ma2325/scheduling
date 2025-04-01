@@ -58,7 +58,7 @@ def initialize_population(size: int) -> List[List[tuple]]:
             valid_slots = generate_course_slots(course)
             for ts in valid_slots:  # 直接使用TimeSlot对象
                 teacher_key = (course.teacherid, ts.week, ts.day, ts.slot)
-                room = next((r for r in rooms if r.rcapacity >= course.popularity), None)
+                room = next((r for r in rooms if r.rcapacity >= course.popularity ), None)
                 if room:
                     room_key = (room.rid, ts.week, ts.day, ts.slot)
                     if teacher_key not in used_slots["teachers"] and room_key not in used_slots["rooms"]:
@@ -135,9 +135,30 @@ def selection(population: List[List[tuple]]) -> List[List[tuple]]:
 
 '''基因重组'''
 def crossover(parent1: List[tuple], parent2: List[tuple]) -> List[tuple]:
-    """交叉操作，交换部分课程安排"""
+    min_length = min(len(parent1), len(parent2))
+    parent1, parent2 = parent1[:min_length], parent2[:min_length]
+
+    print(f"📏 parent1 长度: {len(parent1)}, parent2 长度: {len(parent2)}")
+
+    # 创建课程ID到教师ID的映射字典
+    course_teacher_map = {c.cid: c.teacherid for c in courses}
+
     split = len(parent1) // 2
-    child = parent1[:split] + parent2[split:]
+    child = []
+
+    for i in range(len(parent1)):
+        if i < split:
+            cid, rid, _, week, day, slot = parent1[i]  # 忽略原teacher_id
+        else:
+            cid, rid, _, week, day, slot = parent2[i]  # 忽略原teacher_id
+
+        # 直接从映射字典获取正确的教师ID
+        teacher_id = course_teacher_map.get(cid)
+        if teacher_id is None:
+            continue  # 或者处理找不到课程的情况
+
+        child.append((cid, rid, teacher_id, week, day, slot))
+
     return child
 
 '''基因变异'''
@@ -146,15 +167,21 @@ def mutate(individual):
     mutated = individual.copy()
     total = len(mutated)
 
+    # 创建课程ID到教师ID的映射字典
+    course_teacher_map = {c.cid: c.teacherid for c in courses}
+
     for i in range(total):
-        # 显示进度
         if i % 5 == 0 or i == total-1:
             print(f"🔄 变异进度: {i+1}/{total}", end="\r")
 
         if check_conflict_3d(mutated, i, courses, rooms):
-            cid, _, teacher_id, _, _, _ = mutated[i]
+            cid, _, _, _, _, _ = mutated[i]  # 忽略原teacher_id
 
-            # 找到对应的课程对象
+            # 获取正确的教师ID
+            teacher_id = course_teacher_map.get(cid)
+            if teacher_id is None:
+                continue
+
             course = next((c for c in courses if c.cid == cid), None)
             if not course:
                 continue
@@ -170,6 +197,9 @@ def mutate(individual):
 def genetic_algorithm(iterations=100, population_size=50):
     print("🔄 开始初始化种群...")
     start_time = time.time()
+    for course in courses:
+        print(f"课程 {course.cid} -> 教师 {course.teacherid}")
+
     population = initialize_population(population_size)
     init_time = time.time() - start_time
     print(f"✅ 种群初始化完成，耗时 {init_time:.2f} 秒")

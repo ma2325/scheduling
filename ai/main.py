@@ -60,6 +60,10 @@ def load_myclass():
 
 try:
     courses=load_course()
+    for course in courses:
+        if course.teacherid is None:
+            print(f"⚠️ 课程 {course.cid} ")
+
     print("courses OK\n")
 
     rooms=load_room()
