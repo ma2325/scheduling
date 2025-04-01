@@ -58,7 +58,10 @@ def initialize_population(size: int) -> List[List[tuple]]:
             valid_slots = generate_course_slots(course)
             for ts in valid_slots:  # 直接使用TimeSlot对象
                 teacher_key = (course.teacherid, ts.week, ts.day, ts.slot)
-                room = next((r for r in rooms if r.rcapacity >= course.popularity ), None)
+                if course.fixedroom:
+                    room = next((r for r in rooms if r.rname == course.fixedroom), None)
+                else:
+                    room = next((r for r in rooms if r.rcapacity >= course.popularity and r.rtype==course.fixedroomtype), None)
                 if room:
                     room_key = (room.rid, ts.week, ts.day, ts.slot)
                     if teacher_key not in used_slots["teachers"] and room_key not in used_slots["rooms"]:
@@ -67,12 +70,44 @@ def initialize_population(size: int) -> List[List[tuple]]:
                         used_slots["rooms"].add(room_key)
                         break
         population.append(individual)
+    for course in sorted_courses:
+        valid_slots = generate_course_slots(course)
+    assigned = False  # 标记是否成功安排
+
+    for ts in valid_slots:
+        teacher_key = (course.teacherid, ts.week, ts.day, ts.slot)
+        if course.fixedroom:
+            room = next((r for r in rooms if r.rname == course.fixedroom), None)
+        else:
+            room = next((r for r in rooms if r.rcapacity >= course.popularity and r.rtype == course.fixedroomtype), None)
+
+        if room:
+            room_key = (room.rid, ts.week, ts.day, ts.slot)
+            if teacher_key not in used_slots["teachers"] and room_key not in used_slots["rooms"]:
+                individual.append((course.cid, room.rid, course.teacherid, ts.week, ts.day, ts.slot))
+                used_slots["teachers"].add(teacher_key)
+                used_slots["rooms"].add(room_key)
+                assigned = True
+                break  # 成功安排后跳出循环
+
+    if not assigned:
+        print(f"⚠️ 课程 {course.cid} (教师 {course.teacherid}) 无法安排！")
+
     return population
 
 '''冲突检查'''
 def check_conflict_3d(individual: list, index: int, courses: list, rooms: list) -> bool:
     target = individual[index]
     cid, rid, teacherid, week, day, slot = target
+
+    # 获取当前课程信息
+    course = next((c for c in courses if c.cid == cid), None)
+    room = next((r for r in rooms if r.rid == rid), None)
+
+    # 检查教室类型是否匹配
+    room_type_mismatch = room and course and room.rtype != course.fixedroomtype
+    #检查固定教室
+    fixed_room_mismatch = course and course.fixedroom and rid != course.fixedroom
 
     # 检查教师冲突
     teacher_conflict = any(
@@ -92,7 +127,8 @@ def check_conflict_3d(individual: list, index: int, courses: list, rooms: list) 
         for item in individual[:index] + individual[index+1:]
     )
 
-    return teacher_conflict or room_conflict
+    return teacher_conflict or room_conflict or room_type_mismatch
+
 '''适应度函数'''
 def fitness(individual):
     score = 0
@@ -163,21 +199,15 @@ def crossover(parent1: List[tuple], parent2: List[tuple]) -> List[tuple]:
 
 '''基因变异'''
 def mutate(individual):
-    print("🧬 开始变异操作...")
     mutated = individual.copy()
     total = len(mutated)
 
-    # 创建课程ID到教师ID的映射字典
     course_teacher_map = {c.cid: c.teacherid for c in courses}
 
     for i in range(total):
-        if i % 5 == 0 or i == total-1:
-            print(f"🔄 变异进度: {i+1}/{total}", end="\r")
-
         if check_conflict_3d(mutated, i, courses, rooms):
-            cid, _, _, _, _, _ = mutated[i]  # 忽略原teacher_id
+            cid, _, _, _, _, _ = mutated[i]
 
-            # 获取正确的教师ID
             teacher_id = course_teacher_map.get(cid)
             if teacher_id is None:
                 continue
@@ -186,11 +216,20 @@ def mutate(individual):
             if not course:
                 continue
 
-            room = random.choice(rooms)
+            # 若课程有固定教室，直接使用固定教室
+            if course.fixedroom:
+                room = next((r for r in rooms if r.rname == course.fixedroom), None)
+            else:
+                # 选择符合类型的教室
+                valid_rooms = [r for r in rooms if r.rtype == course.fixedroomtype]
+                room = random.choice(valid_rooms) if valid_rooms else None
+
+            if not room:
+                continue
+
             new_slot = random.choice(generate_course_slots(course))
             mutated[i] = (cid, room.rid, teacher_id, new_slot.week, new_slot.day, new_slot.slot)
 
-    print("\n✅ 变异完成！")
     return mutated
 '''遗传主算法'''
 '''遗传主算法 - 添加可视化版本'''
@@ -252,6 +291,8 @@ def genetic_algorithm(iterations=100, population_size=50):
 
 def print_schedule(timetable):
     print("\n📅 最终排课方案：")
+    scheduled_courses = set()
+
     for i, (cid, rid, teacher, week, day, slot) in enumerate(timetable, 1):
         day_map = {1: "周一", 2: "周二", 3: "周三", 4: "周四", 5: "周五"}
         print(
@@ -260,6 +301,14 @@ def print_schedule(timetable):
             f"教师 {teacher} | "
             f"时间：第{week}周 {day_map[day]} 第{slot}节"
         )
+        scheduled_courses.add(cid)
+
+    # 输出未被安排的课程
+    unscheduled_courses = [c for c in courses if c.cid not in scheduled_courses]
+    if unscheduled_courses:
+        print("\n🚨 以下课程未被成功安排：")
+        for c in unscheduled_courses:
+            print(f"❌ 课程 {c.cid} (教师 {c.teacherid})")
 
 # 在main中调用
 '''main'''

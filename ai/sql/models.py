@@ -2,8 +2,9 @@ import json
 #教室
 '''教室编号，类型，容纳人数，校区，教学楼'''
 class Room:
-    def __init__(self,rid,rtype,rcapacity,rcampus,rbuilding):
+    def __init__(self,rid,rname,rtype,rcapacity,rcampus,rbuilding):
         self.rid = rid
+        self.rname = rname
         self.rtype = rtype
         self.rcapacity = rcapacity
         self.rcampus = rcampus
