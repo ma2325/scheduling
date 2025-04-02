@@ -304,15 +304,16 @@ DROP TABLE IF EXISTS `schedule`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `schedule` (
   `scid` int(11) NOT NULL DEFAULT '0',
-  `sctask` varchar(50) NOT NULL DEFAULT '',
+  `sctask` varchar(50) NOT NULL,
   `sccampus` varchar(50) NOT NULL DEFAULT '',
   `scbuilding` varchar(50) NOT NULL DEFAULT '',
   `scroom` varchar(50) NOT NULL DEFAULT '',
   `scbegin_week` int(11) NOT NULL,
   `scend_week` int(11) NOT NULL,
+  `scday_of_week` tinyint(1) NOT NULL,
   `scbegin_time` time NOT NULL,
   `scend_time` time NOT NULL,
-  `scteacher` int(11) NOT NULL,
+  `scteacher` varchar(50) NOT NULL,
   `scpopularity` int(11) NOT NULL,
   PRIMARY KEY (`scid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -324,6 +325,8 @@ CREATE TABLE `schedule` (
 
 LOCK TABLES `schedule` WRITE;
 /*!40000 ALTER TABLE `schedule` DISABLE KEYS */;
+INSERT INTO schedule.schedule (scid, sctask, sccampus, scbuilding, scroom, scbegin_week, scend_week, scday_of_week, scbegin_time, scend_time, scteacher, scpopularity) VALUES (101, '000000B0A012024202511010', '主校区', '第一教学楼', 'A201', 1, 16, 1, '08:00:00', '09:40:00', '304', 85);
+INSERT INTO schedule.schedule (scid, sctask, sccampus, scbuilding, scroom, scbegin_week, scend_week, scday_of_week, scbegin_time, scend_time, scteacher, scpopularity) VALUES (102, '000000B0A012024202511006', '主校区', '第二教学楼', 'B305', 1, 8, 2, '14:00:00', '15:40:00', '305', 78);
 /*!40000 ALTER TABLE `schedule` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;

@@ -70,7 +70,7 @@ axios.defaults.baseURL = "http://localhost:8080";
 }
 ```
 (3)/dashboard
-1）/weekview
+1）/weekView
 输入：
 1.学生：
 user
@@ -150,3 +150,32 @@ export interface Datum {
     weeks: number[];
     [property: string]: any;
 }
+
+2）/termView
+输入：
+1.学生：
+user
+string 
+示例值:
+24教学7班
+
+userType
+string 
+示例值:
+student
+
+2.教师：
+export interface Request {
+    /**
+     * 教师编号
+     */
+    user?: string;示例值:304
+    /**
+     * 用户类型
+     */
+    userType?: string;示例值:teacher
+}
+
+
+返回：
+同/weekView
