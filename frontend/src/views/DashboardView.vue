@@ -43,7 +43,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import WeekView from '@/components/schedule/WeekView.vue';
 import MonthView from '@/components/schedule/MonthView.vue';
@@ -60,18 +61,30 @@ const viewOptions = [
 
 
 const currentView = ref('week');
-const currentWeek = ref(1);
-const currentMonth = ref(3); // 3月
-const currentSemester = ref('2023-2024-2');
+const currentWeek = ref(2);
+const currentMonth = ref(4); // 3月
+const currentSemester = ref('2024-2025-1');
 
-// 模拟课程数据
-const courses = ref([
-  { id: 1, name: '高等数学', teacher: '张教授', classroom: '教学楼A-101', weekday: 1, startTime: '08:00', endTime: '09:40', weeks: [1, 2, 3, 4, 5, 6, 7, 8] },
-  { id: 2, name: '大学物理', teacher: '李教授', classroom: '教学楼B-202', weekday: 2, startTime: '10:00', endTime: '11:40', weeks: [1, 2, 3, 4, 5, 6, 7, 8] },
-  { id: 3, name: '程序设计', teacher: '王教授', classroom: '实验楼C-303', weekday: 3, startTime: '14:00', endTime: '15:40', weeks: [1, 2, 3, 4, 5, 6, 7, 8] },
-  { id: 4, name: '数据结构', teacher: '刘教授', classroom: '教学楼A-201', weekday: 4, startTime: '16:00', endTime: '17:40', weeks: [1, 2, 3, 4, 5, 6, 7, 8] },
-  { id: 5, name: '英语', teacher: '陈教授', classroom: '外语楼D-101', weekday: 5, startTime: '08:00', endTime: '09:40', weeks: [1, 2, 3, 4, 5, 6, 7, 8] },
-]);
+// 课程数据
+const courses = ref([]);
+
+// **请求 API 获取课程数据**
+const fetchCourses = async () => {
+  try {
+    const response = await axios.get('/dashboard'); // 发送请求
+    if (response.data.code === 200) {
+      courses.value = response.data.data; // API 返回的课程数据
+    } else {
+      console.error('获取课程数据失败:', response.data.msg);
+    }
+  } catch (error) {
+    console.error('API 请求错误:', error);
+  }
+};
+
+// 组件挂载时获取数据
+onMounted(fetchCourses);
+
 
 // 根据当前视图过滤课程
 const filteredCourses = computed(() => {
@@ -116,7 +129,7 @@ const nextPeriod = () => {
     currentMonth.value++;
   } else if (currentView.value === 'semester') {
     // 切换下一学期，这里简化处理
-    currentSemester.value = '2024-2025-1';
+    currentSemester.value = '2024-2025-2';
   }
 };
 </script>
