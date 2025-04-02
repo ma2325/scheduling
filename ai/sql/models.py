@@ -2,8 +2,9 @@ import json
 #教室
 '''教室编号，类型，容纳人数，校区，教学楼'''
 class Room:
-    def __init__(self,rid,rtype,rcapacity,rcampus,rbuilding):
+    def __init__(self,rid,rname,rtype,rcapacity,rcampus,rbuilding):
         self.rid = rid
+        self.rname = rname
         self.rtype = rtype
         self.rcapacity = rcapacity
         self.rcampus = rcampus
@@ -26,11 +27,32 @@ class Course:
         self.fixedbuilding = fixedbuilding
         self.capmpus = capmpus
 
+        self.time_slots=Course.parse_task(task) if task else[];
+        #是否合班？
         if self.formclass is None:
             self.combine = True
         else:
             if "，" in self.formclass or "," in self.formclass:
                 self.combine = True
+
+    #字段拆分
+    def parse_task(task: str):
+        """解析 task 字符串，支持多个时间范围，如 '1-4:2,9-12:2' -> [(1,4,2), (9,12,2)]"""
+        if not isinstance(task, str):
+            raise ValueError(f"⚠️ task 不是字符串: {task}")
+
+        time_slots = []
+        parts = task.split(",")  # 按逗号拆分多个时间段
+
+        for part in parts:
+            try:
+                week_range, lessons_per_week = part.split(":")
+                start_week, end_week = map(int, week_range.split("-"))
+                time_slots.append((start_week, end_week, int(lessons_per_week)))
+            except Exception as e:
+                raise ValueError(f"⚠️ 解析 task 失败: {task}, 出错部分: {part}, 错误: {e}")
+
+        return time_slots  # 返回多个时间段
 
         #行政班
 '''班名，固定教室'''

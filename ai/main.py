@@ -31,12 +31,13 @@ def load_course():
 #载入教室
 '''教室编号，类型，容纳人数，校区，教学楼'''
 def load_room():
-    cursor.execute("SELECT rid,rtype,rcapacity,rcampus,rbuilding FROM room")
+    cursor.execute("SELECT rid,rtype,rname,rcapacity,rcampus,rbuilding FROM room")
     rooms=[]
     for row in cursor.fetchall():
         room=sql.models.Room(
             rid=row['rid'],
             rtype=row['rtype'],
+            rname=row['rname'],
             rcapacity=row['rcapacity'],
             rcampus=row['rcampus'],
             rbuilding=row['rbuilding']
@@ -60,6 +61,10 @@ def load_myclass():
 
 try:
     courses=load_course()
+    for course in courses:
+        if course.teacherid is None:
+            print(f"⚠️ 课程 {course.cid} ")
+
     print("courses OK\n")
 
     rooms=load_room()
