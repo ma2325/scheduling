@@ -63,7 +63,7 @@ try:
     courses=load_course()
     for course in courses:
         if course.teacherid is None:
-            print(f"⚠️ 课程 {course.cid} ")
+            print(f"⚠️ 课程 {course.cid} ，未安排老师")
 
     print("courses OK\n")
 
