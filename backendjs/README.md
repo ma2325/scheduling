@@ -69,16 +69,44 @@ axios.defaults.baseURL = "http://localhost:8080";
     "msg":"注册失败"
 }
 ```
-(3)dashboard
-/**
- * Request
- */
+(3)/dashboard
+1）/weekView
+输入：
+1.学生：
+user
+string 
+示例值:
+24教学7班
+
+userType
+string 
+示例值:
+student
+
+week
+string 
+示例值:
+1
+
+2.教师：
 export interface Request {
-    code: number;
-    data: Datum[];
-    [property: string]: any;
+    /**
+     * 教师编号
+     */
+    user?: string;示例值:304
+    /**
+     * 用户类型
+     */
+    userType?: string;示例值:teacher
+    /**
+     * 查看周
+     */
+    week?: string;
+    [property: string]: any;示例值:1
 }
 
+
+返回：
 export interface Datum {
     /**
      * 楼名
@@ -97,7 +125,7 @@ export interface Datum {
      */
     endTime: string;
     /**
-     * 课程结果唯一标明
+     * 排课记录唯一标识
      */
     id: number;
     /**
@@ -109,16 +137,45 @@ export interface Datum {
      */
     startTime: string;
     /**
-     * 教师名
+     * 结束时间
      */
     teacher: string;
     /**
-     * 周几上课
+     * 上课星期几
      */
     weekday: number;
     /**
-     * 上课周
+     * 上课周集合
      */
     weeks: number[];
     [property: string]: any;
 }
+
+2）/termView
+输入：
+1.学生：
+user
+string 
+示例值:
+24教学7班
+
+userType
+string 
+示例值:
+student
+
+2.教师：
+export interface Request {
+    /**
+     * 教师编号
+     */
+    user?: string;示例值:304
+    /**
+     * 用户类型
+     */
+    userType?: string;示例值:teacher
+}
+
+
+返回：
+同/weekView
