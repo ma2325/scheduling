@@ -53,6 +53,7 @@
 <script setup>
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
+import { login, signup} from '@/api/auth';
 
 const router = useRouter();
 const isLogin = ref(true);
@@ -78,13 +79,28 @@ const handleSubmit = async () => {
       return;
     }
     
-    // 这里应该调用实际的登录/注册API
-    // const response = await api.auth.login(form) 或 register(form)
-    
-    // 模拟成功登录
-    console.log('提交表单:', form);
-    localStorage.setItem('user', JSON.stringify({ username: form.username }));
-    router.push('/dashboard');
+    // console.log("提交表单", form);
+    // localStorage.setItem('user', JSON.stringify({ account: form.account }));
+    // router.push('/dashboard'); // 跳转到课表页面
+
+
+    let response;
+    if (isLogin.value) {
+      // 调用后端的登录 API
+      response = await login(form.username, form.password);
+    } else {
+      // 调用后端的注册 API
+      response = await signup(form.username, form.password);
+    }
+
+    // 判断请求是否成功
+    if (response.data.code === 200) {
+      alert(isLogin.value ? '登录成功' : '注册成功');
+      localStorage.setItem('user', JSON.stringify({ username: form.username }));
+      router.push('/dashboard'); // 跳转到课表页面
+    } else {
+      alert(response.data.msg || '操作失败');
+    }
   } catch (error) {
     console.error('登录/注册失败:', error);
     alert('登录/注册失败，请重试');
