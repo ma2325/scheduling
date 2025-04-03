@@ -73,6 +73,102 @@ try:
     myclasses=load_myclass()
     print("myclasses OK\n")
 
+    # 测试数据
+    courses = [
+        sql.models.Course(
+            cid=1,
+            formclass="A班",
+            popularity=30,
+            teacherid=1,
+            task="1-8:2,10-15:2",
+            continuous=1,
+            fixedroomtype="普通教室",
+            fixesroom=None,
+            fixedtime=None,
+            fixedbuilding=None,
+            capmpus="东校区",
+            combine=False
+        ),
+        sql.models.Course(
+            cid=2,
+            formclass="B班",
+            popularity=25,
+            teacherid=2,
+            task="2-4:2",
+            continuous=2,
+            fixedroomtype="多媒体教室",
+            fixesroom=None,
+            fixedtime=None,
+            fixedbuilding=None,
+            capmpus="西校区",
+            combine=False
+        ),
+        sql.models.Course(
+            cid=3,
+            formclass="C班",
+            popularity=40,
+            teacherid=1,
+            task="6-10:3",
+            continuous=1,
+            fixedroomtype="普通教室",
+            fixesroom=None,
+            fixedtime=None,
+            fixedbuilding=None,
+            capmpus="东校区",
+            combine=False
+        ),
+        sql.models.Course(
+            cid=4,
+            formclass="D班",
+            popularity=20,
+            teacherid=3,
+            task="3-4:4",
+            continuous=4,
+            fixedroomtype="实验室",
+            fixesroom=None,
+            fixedtime=None,
+            fixedbuilding=None,
+            capmpus="西校区",
+            combine=False
+        ),
+    ]
+
+    rooms = [
+        sql.models.Room(
+            rid=101,
+            rname="101教室",
+            rtype="普通教室",
+            rcapacity=50,
+            rcampus="东校区",
+            rbuilding="教学楼A"
+        ),
+        sql.models.Room(
+            rid=102,
+            rname="102教室",
+            rtype="多媒体教室",
+            rcapacity=30,
+            rcampus="西校区",
+            rbuilding="教学楼B"
+        ),
+        sql.models.Room(
+            rid=103,
+            rname="103实验室",
+            rtype="实验室",
+            rcapacity=20,
+            rcampus="西校区",
+            rbuilding="实验楼A"
+        ),
+        sql.models.Room(
+            rid=104,
+            rname="104教室",
+            rtype="普通教室",
+            rcapacity=40,
+            rcampus="东校区",
+            rbuilding="教学楼B"
+        ),
+    ]
+
+
 
 finally:
     #关闭

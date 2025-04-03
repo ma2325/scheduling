@@ -27,7 +27,9 @@ class Course:
         self.fixedbuilding = fixedbuilding
         self.capmpus = capmpus
 
-        self.time_slots=Course.parse_task(task) if task else[];
+        self.time_slots=Course.parse_task(task) if task else[]
+        for ts in self.time_slots:
+            print(f"  ▸ 时间段 {ts[0]}-{ts[1]}周，每周 {ts[2]} 节课")
         #是否合班？
         if self.formclass is None:
             self.combine = True
