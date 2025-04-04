@@ -8,12 +8,15 @@ import json
 import deepseek
 from collections import defaultdict
 import time
+#连排开始规则
+CONTINUOUS_SLOT_RULES = {
+    2: [1, 3, 5, 7],  # 两节连排允许的开始节次
+    4: [1, 3, 5],     # 四节连排允许的开始节次
+    # 可以继续添加其他连排类型的规则
+}
 
-
-#这里有希望对
-#两点前睡觉！
-
-#this
+#这里完全对啦！
+#总课程应该为66944
 '''三维时间模型'''
 WEEKS_IN_SEMESTER = 20  # 总教学周数
 DAYS_PER_WEEK = 5       # 每周上课天数 (周一至周五)
@@ -32,33 +35,32 @@ class TimeSlot:
 '''根据课程的time_slots生成所有有效时间点'''
 def generate_course_slots(course):
     all_slots = []
-    print(f"\n📝 开始生成课程 {course.cid} 的时间槽（总时间段数：{len(course.time_slots)}）")
     for start_week, end_week, lessons_per_week in course.time_slots:
         continuous = getattr(course, 'continuous', 1)
-        groups_needed_per_week = lessons_per_week // continuous  # 计算每周需要的组数
+        groups_needed_per_week = lessons_per_week // continuous
 
         for week in range(start_week, end_week + 1):
-            weekly_slots = []
-            for day in range(1, DAYS_PER_WEEK + 1):
-                # 连排课程逻辑
+            # 随机打乱周几的顺序，避免总是从周一开始
+            days = list(range(1, DAYS_PER_WEEK + 1))
+            random.shuffle(days)
+
+            for day in days:
                 if continuous > 1:
-                    possible_starts = [s for s in range(1, SLOTS_PER_DAY + 1)
-                                       if s + continuous - 1 <= SLOTS_PER_DAY]
-                    for start in possible_starts:
-                        slot_group = [
-                            TimeSlot(week, day, start + i)
-                            for i in range(continuous)
-                        ]
-                        weekly_slots.append(slot_group)
+                    allowed_starts = CONTINUOUS_SLOT_RULES.get(continuous, [])
+                    for start in allowed_starts:
+                        if start + continuous - 1 <= SLOTS_PER_DAY:
+                            group = [TimeSlot(week, day, start + i) for i in range(continuous)]
+                            all_slots.append(group)
                 else:
-                    # 非连排课程逻辑
-                    weekly_slots.extend([[TimeSlot(week, day, s)] for s in range(1, SLOTS_PER_DAY+1)])
+                    # 对于非连排课程，更均匀地分布在不同的天
+                    slots = list(range(1, SLOTS_PER_DAY + 1))
+                    random.shuffle(slots)
+                    for slot in slots[:groups_needed_per_week]:
+                        all_slots.append([TimeSlot(week, day, slot)])
 
-            # 确保生成的组数不超过需求
-            random.shuffle(weekly_slots)
-            selected_groups = weekly_slots[:groups_needed_per_week]
-            all_slots.extend(selected_groups)
-
+                # 如果已经找到足够的组，就停止
+                if len(all_slots) >= groups_needed_per_week * (end_week - start_week + 1):
+                    break
     return all_slots
 
 '''统计未被安排的课'''
@@ -72,65 +74,97 @@ def count_unscheduled_courses(timetable):
 def initialize_population(size: int, courses, rooms):
     population = []
 
+    # 课程排序逻辑（保留原有）
     sorted_courses = sorted(
         courses,
-        key=lambda x: -x.popularity if x.popularity is not None else 0 + random.uniform(-5, 5)
+        key=lambda x: (
+            -x.popularity if x.popularity is not None else 0,
+            x.fixedroom is not None,
+            random.random()
+        )
     )
 
     for _ in range(size):
         individual = []
-        used_slots = {"teachers": defaultdict(list), "rooms": set()}
+        used_slots = {
+            "teachers": set(),  # 直接使用set()而不是defaultdict
+            "rooms": set()      # 直接使用set()而不是defaultdict
+        }
 
         for course in sorted_courses:
-            # 获取课程的所有时间槽组（按周分组）
+            # 生成所有可能的时间槽组（按周分组）
             all_slot_groups = generate_course_slots(course)
+            continuous = getattr(course, 'continuous', 1)
 
-            # 按周分组时间槽
-            weekly_slots = defaultdict(list)
-            for slot_group in all_slot_groups:
-                week = slot_group[0].week
-                weekly_slots[week].append(slot_group)
+            # 按周和天两级分组
+            weekly_slots = defaultdict(lambda: defaultdict(list))
+            for group in all_slot_groups:
+                week = group[0].week
+                day = group[0].day
+                weekly_slots[week][day].append(group)
 
-            # 计算每周需要的课程组数（考虑连排）
-            lessons_per_week = course.time_slots[0][2]  # 每周需要的课程数
-            continuous = getattr(course, 'continuous', 1)  # 连排节数，默认为1
-            groups_needed_per_week = lessons_per_week // continuous  # 每周需要的时间槽组数
+            # 处理每个时间段
+            for time_slot in course.time_slots:
+                start_week, end_week, lessons_per_week = time_slot
+                groups_needed_per_week = lessons_per_week // continuous
 
-            # 确保每周分配足够的课程组
-            for week in range(course.time_slots[0][0], course.time_slots[0][1] + 1):
-                available_groups = weekly_slots.get(week, [])
-                random.shuffle(available_groups)
+                for week in range(start_week, end_week + 1):
+                    assigned_groups = 0
 
-                # 分配该周需要的时间槽组
-                assigned_groups = 0
-                for slot_group in available_groups:
-                    if assigned_groups >= groups_needed_per_week:
-                        break
-
-                    teacher_available = all(
-                        (course.teacherid, ts.week, ts.day, ts.slot) not in used_slots["teachers"]
-                        for ts in slot_group
-                    )
-
+                    # 优先尝试固定教室
                     possible_rooms = [r for r in rooms if r.rtype == course.fixedroomtype]
-                    possible_rooms.sort(key=lambda r: abs(r.rcapacity - course.popularity))
+                    if course.fixedroom:
+                        fixed_room = next((r for r in rooms if r.rname == course.fixedroom), None)
+                        if fixed_room:
+                            possible_rooms.insert(0, fixed_room)
 
-                    for room in possible_rooms:
-                        room_available = all(
-                            (room.rid, ts.week, ts.day, ts.slot) not in used_slots["rooms"]
-                            for ts in slot_group
-                        )
-
-                        if teacher_available and room_available:
-                            for ts in slot_group:
-                                individual.append((course.cid, room.rid, course.teacherid, ts.week, ts.day, ts.slot))
-                                used_slots["teachers"][(course.teacherid, ts.week, ts.day, ts.slot)] = course.cid
-                                used_slots["rooms"].add((room.rid, ts.week, ts.day, ts.slot))
-                            assigned_groups += 1
+                    # 按天遍历，优先同一天分配多组
+                    for day in range(1, DAYS_PER_WEEK + 1):
+                        if assigned_groups >= groups_needed_per_week:
                             break
 
-                if assigned_groups < groups_needed_per_week:
-                    print(f"⚠️ 课程 {course.cid} 在第 {week} 周安排不完全！需要 {groups_needed_per_week} 组，但只安排了 {assigned_groups} 组。")
+                        # 获取该天所有可用时间组
+                        day_groups = weekly_slots[week].get(day, [])
+                        random.shuffle(day_groups)
+
+                        for group in day_groups:
+                            if assigned_groups >= groups_needed_per_week:
+                                break
+
+                            # 检查整组是否可用
+                            group_available = True
+                            room_selected = None
+
+                            for room in possible_rooms:
+                                room_ok = True
+                                for ts in group:
+                                    teacher_key = (course.teacherid, ts.week, ts.day, ts.slot)
+                                    room_key = (room.rid, ts.week, ts.day, ts.slot)
+                                    if (teacher_key in used_slots["teachers"] or
+                                            room_key in used_slots["rooms"]):
+                                        room_ok = False
+                                        break
+
+                                if room_ok:
+                                    room_selected = room
+                                    break
+
+                            if room_selected:
+                                # 分配整组
+                                for ts in group:
+                                    entry = (
+                                        course.cid,
+                                        room_selected.rid,
+                                        course.teacherid,
+                                        ts.week, ts.day, ts.slot
+                                    )
+                                    individual.append(entry)
+                                    used_slots["teachers"].add((course.teacherid, ts.week, ts.day, ts.slot))
+                                    used_slots["rooms"].add((room_selected.rid, ts.week, ts.day, ts.slot))
+                                assigned_groups += 1
+
+                    if assigned_groups < groups_needed_per_week:
+                        print(f"⚠️ 课程 {course.cid} 第{week}周需要 {groups_needed_per_week} 组，只安排了 {assigned_groups} 组")
 
         population.append(individual)
 
@@ -141,6 +175,7 @@ def initialize_population(size: int, courses, rooms):
 def check_conflict_3d(individual: list, index: int, courses: list, rooms: list) -> bool:
     if index >= len(individual) or individual[index] is None:
         return True  # 视为冲突，需重新安排
+
     target = individual[index]
     cid, rid, teacherid, week, day, slot = target
 
@@ -149,50 +184,63 @@ def check_conflict_3d(individual: list, index: int, courses: list, rooms: list) 
     if not course:
         return True
 
-    # 检查是否是连排课程的一部分
+    # ==================== 连排课程检查 ====================
     is_continuous = hasattr(course, 'continuous') and course.continuous > 1
-    continuous_slots = []
 
     if is_continuous:
-        # 找出同一课程的所有连排安排
-        course_entries = [e for e in individual if e[0] == cid and e[3] == week and e[4] == day]
-        # 按节次排序
+        # 1. 找出同一课程同周同天的所有安排
+        course_entries = [e for e in individual if e[0] == cid
+                          and e[3] == week and e[4] == day]
+
+        # 2. 必须满足连排节数要求
+        if len(course_entries) != course.continuous:
+            return True
+
+        # 3. 检查节次连续性
         course_entries.sort(key=lambda x: x[5])
-        # 检查是否形成连续的节次块
         for i in range(len(course_entries) - 1):
             if course_entries[i+1][5] != course_entries[i][5] + 1:
                 return True
-        # 检查是否从正确的节次开始
+
+        # 4. 检查开始节次是否符合规则
         start_slot = course_entries[0][5]
-        if course.continuous == 2 and start_slot not in [1, 3, 5, 7]:
-            return True
-        if course.continuous == 4 and start_slot not in [1, 3, 5]:
+        allowed_starts = CONTINUOUS_SLOT_RULES.get(course.continuous, [])
+        if allowed_starts and start_slot not in allowed_starts:
             return True
 
-    # 检查教室类型是否匹配
+        # 5. 检查整组教室是否一致
+        if len(set(e[1] for e in course_entries)) > 1:
+            return True
+
+    # ==================== 原有冲突检查 ====================
+    # 教室类型检查
     room = next((r for r in rooms if r.rid == rid), None)
     room_type_mismatch = room and room.rtype != course.fixedroomtype
-    fixed_room_mismatch = course.fixedroom and rid != course.fixedroom
 
-    # 检查教师冲突
+    # 固定教室检查（基于rname）
+    fixed_room_mismatch = False
+    if course.fixedroom:
+        room = next((r for r in rooms if r.rid == rid), None)
+        if not room or room.rname != course.fixedroom:
+            fixed_room_mismatch = True
+
+    # 教师时间冲突检查
     teacher_conflict = any(
-        item[2] == teacherid and
-        item[3] == week and
-        item[4] == day and
-        item[5] == slot
+        item[2] == teacherid and item[3] == week
+        and item[4] == day and item[5] == slot
         for item in individual[:index] + individual[index+1:]
     )
 
-    # 检查教室冲突
+    # 教室时间冲突检查
     room_conflict = any(
-        item[1] == rid and
-        item[3] == week and
-        item[4] == day and
-        item[5] == slot
+        item[1] == rid and item[3] == week
+        and item[4] == day and item[5] == slot
         for item in individual[:index] + individual[index+1:]
     )
 
-    return teacher_conflict or room_conflict or room_type_mismatch or fixed_room_mismatch
+    # 综合所有冲突条件
+    return (teacher_conflict or room_conflict
+            or room_type_mismatch or fixed_room_mismatch)
 '''适应度函数'''
 '''改进后的适应度函数（增加时间分布奖励）'''
 def fitness(individual):
@@ -293,76 +341,93 @@ def crossover(parent1, parent2):
 '''基因变异'''
 def mutate(individual):
     mutated = individual.copy()
-    total = len(mutated)
-
     course_teacher_map = {c.cid: c.teacherid for c in courses}
     course_dict = {c.cid: c for c in courses}
+    room_dict = {r.rid: r for r in rooms}  # 新增：教室字典加速查询
 
-    # 按课程分组处理，特别是连排课程
+    # 按课程分组处理
     course_groups = defaultdict(list)
     for i, entry in enumerate(mutated):
-        course_groups[entry[0]].append((i, entry))
+        if entry:  # 跳过已标记为None的条目
+            course_groups[entry[0]].append((i, entry))
 
     for cid, entries in course_groups.items():
         course = course_dict.get(cid)
-        if not course:
+        if not course or random.random() > 0.5:  # 50%概率不变异
             continue
 
+        continuous = getattr(course, 'continuous', 1)
 
-        # 检查是否需要变异（随机决定）
-        if random.random() > 0.5:  # 50%的概率保持不变
-            continue
-
-        # 处理连排课程
-        if hasattr(course, 'continuous') and course.continuous > 1:
-            # 获取该课程的所有安排
-            entries.sort(key=lambda x: (x[1][3], x[1][4], x[1][5]))  # 按周、天、节次排序
-
-            # 尝试生成新的时间组
-            new_slot_groups = generate_course_slots(course)
-            if not new_slot_groups:
-                continue
-
-            new_slot_group = random.choice(new_slot_groups)
-            room = next((r for r in rooms if r.rid == entries[0][1][1]), None)
-            if not room:
-                continue
-
-            # 删除原有安排
+        # ===== 连排课程处理 =====
+        if continuous > 1:
+            # 1. 删除原有所有连排课程段
             for i, _ in entries:
                 mutated[i] = None
 
-            # 添加新安排
+            # 2. 生成新的有效连排组（确保连续且符合节次规则）
+            valid_groups = [
+                group for group in generate_course_slots(course)
+                if len(group) == continuous   # 确保完整连排
+                   and all(ts.day == group[0].day for ts in group)
+            ]
+
+            if not valid_groups:
+                continue
+
+            new_group = random.choice(valid_groups)
+
+            # 3. 教室选择（优先固定教室）
+            if course.fixedroom:
+                room = next((r for r in rooms if r.rname == course.fixedroom), None)
+            else:
+                # 尝试保持原教室（从第一个有效条目获取）
+                original_room_id = next((e[1][1] for e in entries if e[1]), None)
+                room = room_dict.get(original_room_id) if original_room_id else None
+
+            if not room:  # 备用选择：同类型教室
+                room = next((r for r in rooms if r.rtype == course.fixedroomtype), None)
+                if not room:
+                    continue
+
+            # 4. 插入新安排（整组插入）
             new_entries = []
-            for ts in new_slot_group:
+            for ts in new_group:
                 new_entry = (cid, room.rid, course.teacherid, ts.week, ts.day, ts.slot)
                 new_entries.append(new_entry)
 
-            # 找到空位插入
+            # 5. 找到连续空位插入（保持原始顺序）
             empty_indices = [i for i, x in enumerate(mutated) if x is None]
             for i, entry in zip(empty_indices[:len(new_entries)], new_entries):
                 mutated[i] = entry
+
+        # ===== 非连排课程处理 =====
         else:
-            # 非连排课程的变异逻辑保持不变
             for i, entry in entries:
                 if check_conflict_3d(mutated, i, courses, rooms):
-                    teacher_id = course_teacher_map.get(cid)
-                    if not teacher_id:
-                        continue
-
+                    # 保持原有教室或选择新教室
                     if course.fixedroom:
                         room = next((r for r in rooms if r.rname == course.fixedroom), None)
                     else:
-                        valid_rooms = [r for r in rooms if r.rtype == course.fixedroomtype]
-                        room = random.choice(valid_rooms) if valid_rooms else None
+                        room = room_dict.get(entry[1]) or \
+                               next((r for r in rooms if r.rtype == course.fixedroomtype), None)
 
                     if not room:
                         continue
 
-                    new_slot = random.choice(generate_course_slots(course)[0])  # 取第一个时间组
-                    mutated[i] = (cid, room.rid, teacher_id, new_slot.week, new_slot.day, new_slot.slot)
+                    # 生成新时间（确保不与其他安排冲突）
+                    for _ in range(3):  # 最多尝试3次
+                        new_slot = random.choice(generate_course_slots(course)[0])
+                        new_entry = (cid, room.rid, course.teacherid,
+                                     new_slot.week, new_slot.day, new_slot.slot)
 
-    # 移除None值
+                        # 临时替换检查冲突
+                        original = mutated[i]
+                        mutated[i] = new_entry
+                        if not check_conflict_3d(mutated, i, courses, rooms):
+                            break
+                        mutated[i] = original
+
+    # 移除None值并保持原始课程顺序
     mutated = [x for x in mutated if x is not None]
     return mutated
 '''遗传主算法'''
