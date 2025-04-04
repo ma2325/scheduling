@@ -97,7 +97,7 @@ try:
             task="2-4:2",
             continuous=2,
             fixedroomtype="多媒体教室",
-            fixedroom="101教室",
+            fixedroom="102教室",
             fixedtime=None,
             fixedbuilding=None,
             capmpus="西校区",
