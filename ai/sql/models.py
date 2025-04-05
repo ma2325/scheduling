@@ -14,10 +14,12 @@ class Room:
 #课程
 '''课程号，教学班名，课程人数，老师（工号表示），时间，周节次，连排节次，指定教室类型，指定教室，指定时间，指定教学楼,开课校区,是否为合班，'''
 class Course:
-    def __init__(self, cid,formclass,popularity,teacherid,task,continuous,fixedroomtype,fixedroom,fixedtime,fixedbuilding,capmpus,combine=False):
+    def __init__(self, cid,formclass,popularity,total_hours,teacherid,task,continuous,fixedroomtype,fixedroom,fixedtime,fixedbuilding,capmpus,combine=False):
+        self.uid = f"{cid}-{teacherid}-{task}-{fixedroom}"
         self.cid = cid
         self.formclass = formclass
         self.popularity = popularity
+        self.total_hours = total_hours
         self.teacherid = teacherid
         self.task = task
         self.continuous = continuous
@@ -28,8 +30,6 @@ class Course:
         self.capmpus = capmpus
 
         self.time_slots=Course.parse_task(task) if task else[]
-        for ts in self.time_slots:
-            print(f"  ▸ 时间段 {ts[0]}-{ts[1]}周，每周 {ts[2]} 节课")
         #是否合班？
         if self.formclass is None:
             self.combine = True
@@ -53,6 +53,7 @@ class Course:
                 time_slots.append((start_week, end_week, int(lessons_per_week)))
             except Exception as e:
                 raise ValueError(f"⚠️ 解析 task 失败: {task}, 出错部分: {part}, 错误: {e}")
+
 
         return time_slots  # 返回多个时间段
 
