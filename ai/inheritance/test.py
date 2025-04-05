@@ -1,5 +1,6 @@
 from typing import List
 from collections import defaultdict
+#可删
 
 def validate_schedule(schedule: List[tuple], courses: List[dict]) -> List[str]:
     """

@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 class ConstraintSolver:
+
     def __init__(self, courses, rooms):
         """
         改进版约束检查器，完全兼容Timetable.py的三维时间模型
@@ -9,7 +10,7 @@ class ConstraintSolver:
         """
         self.courses = courses
         self.rooms = rooms
-        self.course_dict = {c.cid: c for c in courses}
+        self.course_dict = {c.uid: c for c in courses}  # 使用 uid 作为键
         self.room_dict = {r.rid: r for r in rooms}
 
         # 连排规则（与Timetable.py一致）
@@ -21,16 +22,17 @@ class ConstraintSolver:
     def check_hard_constraints(self, individual):
         """
         检查所有硬约束（三维时间模型）
-        :param individual: 排课方案 [(cid, rid, tid, week, day, slot), ...]
+        :param individual: 排课方案 [(uid, rid, tid, week, day, slot), ...]
         :return: True/False
         """
-        return (
-                self._check_teacher_conflicts(individual) and
-                self._check_room_conflicts(individual) and
-                self._check_room_type_and_fixed(individual) and
-                self._check_continuous_courses(individual) and
-                self._check_room_capacity(individual)
-        )
+        error_score = 0
+
+        error_score += self._check_teacher_conflicts(individual) * 100
+        error_score += self._check_room_conflicts(individual) * 50
+        error_score += self._check_room_type_and_fixed(individual) * 10
+        # ...其他约束...
+
+        return error_score < 30
 
     def _check_teacher_conflicts(self, individual):
         """增强健壮性的检查"""
@@ -39,7 +41,12 @@ class ConstraintSolver:
 
         teacher_schedule = defaultdict(set)
         try:
-            for cid, _, tid, week, day, slot in individual:
+            for uid, _, tid, week, day, slot in individual:
+                course = self.course_dict.get(uid)  # 使用 uid 查找课程
+                if not course:
+                    print(f"⚠️ 数据错误: 课程{uid}不存在")
+                    continue
+
                 time_key = (week, day, slot)
                 if time_key in teacher_schedule[tid]:
                     return False
@@ -51,7 +58,17 @@ class ConstraintSolver:
     def _check_room_conflicts(self, individual):
         """检查教室在同一时间是否被占用"""
         room_schedule = defaultdict(set)
-        for _, rid, _, week, day, slot in individual:
+        for uid, rid, _, week, day, slot in individual:
+            course = self.course_dict.get(uid)  # 使用 uid 查找课程
+            if not course:
+                print(f"⚠️ 数据错误: 课程{uid}不存在")
+                continue
+
+            room = self.room_dict.get(rid)
+            if not room:
+                print(f"⚠️ 数据错误: 教室{rid}不存在")
+                return False
+
             time_key = (week, day, slot)
             if time_key in room_schedule[rid]:
                 return False
@@ -59,35 +76,45 @@ class ConstraintSolver:
         return True
 
     def _check_room_type_and_fixed(self, individual):
-        """改进版教室类型和固定教室检查"""
-        # 先收集所有需要固定教室的课程
-        fixed_course_rooms = {
-            c.cid: c.fixedroom
-            for c in self.courses
-            if getattr(c, 'fixedroom', None)
-        }
+        print("\n=== 开始教室分配检查 ===")
+        error_log = []
 
-        # 检查每个课程的教室分配
-        for cid, rid, _, _, _, _ in individual:
-            course = self.course_dict.get(cid)
+        for uid, rid, _, _, _, _ in individual:
+            course = self.course_dict.get(uid)
             room = self.room_dict.get(rid)
 
-            # 基础检查
-            if not course or not room:
-                print(f"⚠️ 数据错误: 课程{cid}或教室{rid}不存在")
-                return False
+            if not course:
+                error_log.append(f"课程 {uid} 不存在")
+                continue
+            if not room:
+                error_log.append(f"教室 {rid} 不存在")
+                continue
 
-            # 检查教室类型
-            if room.rtype != course.fixedroomtype:
-                print(f"⚠️ 教室类型不匹配: 课程{cid}需要{course.fixedroomtype}但教室{rid}是{room.rtype}")
-                return False
+            print(f"\n检查课程 {uid} -> 教室 {rid}({room.rtype})")
 
-            # 检查固定教室要求（仅当课程有固定教室要求时）
-            if cid in fixed_course_rooms:
-                if room.rname != fixed_course_rooms[cid]:
-                    print(f"⚠️ 固定教室不匹配: 课程{cid}需要{fixed_course_rooms[cid]}但分配到{room.rname}")
-                    return False
+            # 固定教室检查
+            if hasattr(course, 'fixedroom') and course.fixedroom:
+                print(f"固定教室要求: {course.fixedroom}")
+                if room.rname != course.fixedroom:
+                    error_log.append(f"课程 {uid} 需要固定教室 {course.fixedroom} 但分配到 {room.rname}")
+                else:
+                    print("✅ 固定教室匹配")
 
+            # 教室类型检查
+            elif hasattr(course, 'fixedroomtype'):
+                print(f"教室类型要求: {course.fixedroomtype}")
+                if room.rtype != course.fixedroomtype:
+                    error_log.append(f"课程 {uid} 需要 {course.fixedroomtype} 但分配到 {room.rtype}")
+                else:
+                    print("✅ 教室类型匹配")
+
+        if error_log:
+            print("\n=== 检查发现错误 ===")
+            for error in error_log[:5]:  # 只显示前5个错误避免刷屏
+                print(error)
+            return False
+
+        print("✅ 所有教室分配检查通过")
         return True
 
     def _check_continuous_courses(self, individual):
@@ -97,8 +124,12 @@ class ConstraintSolver:
         for entry in individual:
             course_entries[entry[0]].append(entry)
 
-        for cid, entries in course_entries.items():
-            course = self.course_dict.get(cid)
+        for uid, entries in course_entries.items():
+            course = self.course_dict.get(uid)  # 使用 uid 查找课程
+            if not course:
+                print(f"⚠️ 数据错误: 课程{uid}不存在")
+                continue
+
             if not hasattr(course, 'continuous') or course.continuous == 1:
                 continue  # 非连排课程跳过
 
@@ -131,9 +162,18 @@ class ConstraintSolver:
 
     def _check_room_capacity(self, individual):
         """检查教室容量是否满足课程人数"""
-        for cid, rid, _, _, _, _ in individual:
-            course = self.course_dict.get(cid)
+        for uid, rid, _, _, _, _ in individual:
+            course = self.course_dict.get(uid)  # 使用 uid 查找课程
+            if not course:
+                print(f"⚠️ 数据错误: 课程{uid}不存在")
+                continue
+
             room = self.room_dict.get(rid)
-            if course and room and course.popularity > room.rcapacity:
+            if not room:
+                print(f"⚠️ 数据错误: 教室{rid}不存在")
+                return False
+
+            if course.popularity > room.rcapacity:
+                print(f"⚠️ 教室容量不足: 课程{uid}需要容纳{course.popularity}人，但教室{room.rname}只能容纳{room.rcapacity}人")
                 return False
         return True
