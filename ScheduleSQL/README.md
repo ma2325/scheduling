@@ -1,12 +1,15 @@
 # :bookmark_tabs:数据库说明
+
 数据库在本地创建后使用 ***mysqldump*** 导出数据形成***sql***文件，输入本地MySQL服务器的凭据即可使用。
 
 ## :file_folder: 文件说明
+
 - schedule.sql为MySQL根据数据库结构自动导出的文件
 - data为数据源xls格式和xlsx格式
 
 ---
 ##  :tent: 导出方式
+
 使用 mysqldump 命令将数据库导出为 SQL 文件。
 ```bash
 mysqldump -u [username] -p [database_name] > [database_name.sql]

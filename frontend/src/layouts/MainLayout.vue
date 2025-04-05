@@ -1,24 +1,38 @@
 <template>
   <div class="flex h-screen bg-gray-100">
-    <!-- 侧边栏 -->
-    <aside class="w-64 bg-white shadow-md">
-      <div class="p-4 border-b">
-        <h1 class="text-xl font-bold text-gray-800">排课系统</h1>
+    <!-- Sidebar -->
+    <aside 
+      class="bg-white shadow-md transition-all duration-300 ease-in-out"
+      :class="isSidebarCollapsed ? 'w-16' : 'w-64'"
+    >
+      <div class="p-4 border-b flex justify-between items-center">
+        <h1 class="text-xl font-bold text-gray-800" :class="isSidebarCollapsed ? 'hidden' : ''">排课系统</h1>
+        <button @click="toggleSidebar" class="text-gray-500 hover:text-gray-700">
+          <ChevronRight v-if="isSidebarCollapsed" class="w-5 h-5" />
+          <ChevronLeft v-else class="w-5 h-5" />
+        </button>
       </div>
       <nav class="mt-6">
-        <!--点击切换跳转-->
-        <router-link v-for="item in menuItems" :key="item.path" :to="item.path"
-                    class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                    :class="{ 'bg-gray-100 text-gray-900': isActive(item.path) }">
-          <component :is="item.icon" class="w-5 h-5 mr-3" />
-          <span>{{ item.name }}</span>
+        <router-link 
+          v-for="item in menuItems" 
+          :key="item.path" 
+          :to="item.path"
+          class="flex items-center py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+          :class="{ 
+            'bg-gray-100 text-gray-900': isActive(item.path),
+            'px-6': !isSidebarCollapsed,
+            'px-4 justify-center': isSidebarCollapsed
+          }"
+        >
+          <component :is="item.icon" class="w-5 h-5" :class="isSidebarCollapsed ? '' : 'mr-3'" />
+          <span :class="isSidebarCollapsed ? 'hidden' : ''">{{ item.name }}</span>
         </router-link>
       </nav>
     </aside>
 
-    <!-- 主内容区 -->
+    <!-- Main content area -->
     <div class="flex-1 flex flex-col overflow-hidden">
-      <!-- 顶部导航栏 -->
+      <!-- Top navigation bar -->
       <header class="bg-white shadow-sm z-10">
         <div class="flex items-center justify-between p-4">
           <div>
@@ -31,7 +45,7 @@
         </div>
       </header>
 
-      <!-- 页面内容 -->
+      <!-- Page content -->
       <main class="flex-1 overflow-auto p-6 bg-gray-100">
         <router-view />
       </main>
@@ -42,39 +56,44 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { Calendar, Grid, BarChart2, RefreshCw } from 'lucide-vue-next';
+import { Calendar, Grid, BarChart2, RefreshCw, Database, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 
-//用于跳转
 const router = useRouter();
-//用于判断当前路径
 const route = useRoute();
 
-//TO DO
-// 用户信息
+// User information
 const username = ref('管理员');
 
-// 菜单项
+// Sidebar state
+const isSidebarCollapsed = ref(false);
+
+// Toggle sidebar
+const toggleSidebar = () => {
+  isSidebarCollapsed.value = !isSidebarCollapsed.value;
+};
+
+// Menu items
 const menuItems = [
   { name: '课表展示', path: '/dashboard', icon: Calendar },
   { name: '手动排课', path: '/manual-scheduling', icon: Grid },
   { name: '统计分析', path: '/statistics', icon: BarChart2 },
   { name: '智能调课', path: '/smart-adjustment', icon: RefreshCw },
+  { name: '排课数据', path: '/course-data', icon: Database },
 ];
 
-// 当前页面标题
+// Current page title
 const currentPageTitle = computed(() => {
   const currentPath = route.path;
   const currentItem = menuItems.find(item => item.path === currentPath);
   return currentItem ? currentItem.name : '排课系统';
 });
 
-
-// 判断当前路由是否激活
+// Check if route is active
 const isActive = (path) => {
   return route.path === path;
 };
 
-// 退出登录
+// Logout
 const logout = () => {
   localStorage.removeItem('user');
   router.push('/login');
