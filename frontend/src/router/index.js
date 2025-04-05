@@ -6,7 +6,7 @@ import ManualSchedulingView from "../views/ManualSchedulingView.vue"
 import StatisticsView from "../views/StatisticsView.vue"
 import SmartAdjustmentView from "../views/SmartAdjustmentView.vue"
 import CourseDataView from "../views/CourseDataView.vue"
-
+import SmartSchedulingView from "../views/SmartSchedulingView.vue"
 const routes = [
   {
     path: "/login",
@@ -32,6 +32,11 @@ const routes = [
         path: "/manual-scheduling",
         name: "ManualScheduling",
         component: ManualSchedulingView,
+      },
+      {
+        path: "/smart-scheduling",
+        name: "SmartScheduling",
+        component: SmartSchedulingView,
       },
       {
         path: "/statistics",

@@ -56,7 +56,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { Calendar, Grid, BarChart2, RefreshCw, Database, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { Calendar, Grid, BarChart2, RefreshCw, Database, ChevronLeft, ChevronRight, Cpu } from 'lucide-vue-next';
 
 const router = useRouter();
 const route = useRoute();
@@ -76,6 +76,7 @@ const toggleSidebar = () => {
 const menuItems = [
   { name: '课表展示', path: '/dashboard', icon: Calendar },
   { name: '手动排课', path: '/manual-scheduling', icon: Grid },
+  { name: '智能排课', path: '/smart-scheduling', icon: Cpu },
   { name: '统计分析', path: '/statistics', icon: BarChart2 },
   { name: '智能调课', path: '/smart-adjustment', icon: RefreshCw },
   { name: '排课数据', path: '/course-data', icon: Database },
