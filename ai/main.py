@@ -2,7 +2,7 @@ import ga_optimizer
 import sql.connect
 import sql.models
 from csp_solver import CSPScheduler
-from ga_optimizer import GAOptimizer
+from ga_optimizer import GeneticCourseScheduler
 from inheritance.ConstraintSolver import ConstraintSolver
 
 
@@ -140,14 +140,10 @@ try:
         print("CSP阶段未能生成有效初始解")
 
     # 3. 使用GA优化
-    ga_optimizer = GAOptimizer(
-        courses=courses,
-        rooms=rooms,
-        constraint_checker=constraint_checker  # 确保传入的是ConstraintSolver实例
-    )
 
-    optimized_solution = ga_optimizer.optimize(initial_solution=initial_solution)
 
+    ga= GeneticCourseScheduler(initial_solution, unscheduled, courses, rooms)
+    optimized_solution = ga.optimize()
     if optimized_solution:
         print("优化成功！")
 
