@@ -128,9 +128,11 @@ query:week=[week]//查询的周
     "rows":
     [
         {
-            "rname":[rname],//教室名称
+            "rid":[rid],//教室id号
+            "rname":[rname],//教室名
         },
         {
+            "rid":[rid],
             "rname":[rname]
         }
         //其他教室
@@ -174,7 +176,7 @@ query:week=[week]//查询的周
     "sctask":[sctask], 
     "sccampus":[sccampus], 
     "scbuilding":[scbuilding], 
-    "scroom":[scroom], 
+    "scroom":[scroom], //课程号
     "scbegin_week":[scbegin_week], 
     "scend_week":[scend_week], 
     "scday":[scday], //星期几
@@ -208,7 +210,7 @@ query:week=[week]//查询的周
             "scday":[scday],//星期几
             "sccampus":[sccampus],//校区
             "scbuilding":[scbuilding],//楼名
-            "scroom":[scroom],//教室
+            "scroom":[scroom],//教室号
             "scbegin_week":[scbegin_week],//开始周
             "scend_week":[scend_week],//结束周
             "scbegin_time":[scbegin_time],//上课时间

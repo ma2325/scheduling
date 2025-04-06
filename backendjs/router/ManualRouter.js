@@ -12,16 +12,16 @@ router.get("/room",async(req,res)=>{
     const campus = req.query.campus;
     let query,params;
     if(building && campus){
-        query = "SELECT `rname` FROM `room` WHERE `rbuilding` LIKE ? AND `rcampus` LIKE ? ;";
+        query = "SELECT `rid`,`rname` FROM `room` WHERE `rbuilding` LIKE ? AND `rcampus` LIKE ? ;";
         params = [`%${building}%`,`%${campus}%`];
     }else if(building){
-        query = "SELECT `rname` FROM `room` WHERE `rbuilding` LIKE ? ;";
+        query = "SELECT `rid`,`rname` FROM `room` WHERE `rbuilding` LIKE ? ;";
         params = [`%${building}%`];
     }else if(campus){
-        query = "SELECT `rname` FROM `room` WHERE `rcampus` LIKE ? ;";
+        query = "SELECT `rid`,`rname` FROM `room` WHERE `rcampus` LIKE ? ;";
         params = [`%${campus}%`];
     }else{
-        query = "SELECT `rname` FROM `room`;";
+        query = "SELECT `rid`,`rname` FROM `room`;";
         params = [];
     }
     const {err,rows} = await db.async.all(query,params);
@@ -81,7 +81,6 @@ router.get("/task",async (req,res)=>{
 
 router.post("/change",async(req,res)=>{
     const { scid, sctask, sccampus, scbuilding, scroom, scbegin_week, scend_week, scday, scbegin_time, scend_time, scteacher, scpopularity } = req.body;
-    //const { scid: oldScid, sctask: oldTask, sccampus: oldCampus, scbuilding: oldBuilding, scroom: oldRoom, scbegin_week: oldBeginWeek, scend_week: oldEndWeek, scbegin_time: oldBeginTime, scend_time: oldEndTime, scteacher: oldTeacher } = req.body.oldData || {};
     const queryOld = "SELECT * FROM `schedule` WHERE `scid` = ?;";
     const paramsOld = [scid];
     const { err: errOld, rows: rowsOld } = await db.async.all(queryOld, paramsOld);
