@@ -2,21 +2,17 @@ const express = require("express");
 const router = express.Router();
 const { db } = require("../db/DbUtils");
 
-/** 统一处理查询 */
 const getCountData = async (query, params) => {
     try {
         const { err, rows } = await db.async.all(query, params);
         if (err) throw new Error(err);
-        return { success: true, data: rows.length ? rows : [{ cnt: 0 }] }; // 空表返回 [{ cnt: 0 }]
+        return { success: true, data: rows.length ? rows : [{ cnt: 0 }] };
     } catch (error) {
         console.error("数据库查询失败:", error);
         throw error;
     }
 };
 
-router.get("/test", (req, res) => {
-    res.send("hello world");
-});
 router.get("/", async (req, res) => {
     let week = req.query.week;
     if (!week) return res.send({ code: 400, msg: "缺少 week 参数" });
@@ -56,7 +52,6 @@ router.get("/", async (req, res) => {
             }));
         }
 
-        console.log("right3");
         //获取任务类型次数
         const { success: typeSuccess, data: typeRows } = await getCountData(
             "SELECT DISTINCT tatype FROM task",
@@ -81,8 +76,6 @@ router.get("/", async (req, res) => {
                 count: typeCounts[i].success ? typeCounts[i].data[0].cnt : 0,
             }));
         }
-        console.log("right4");
-        //统一返回数据
         res.send({
             code: 200,
             data: [room_occupancy_rate, type_count],

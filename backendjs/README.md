@@ -28,7 +28,8 @@ axios.defaults.baseURL = "http://localhost:8080";
 
 ## 二、后端提供的接口名称及其功能
 ### 1.登录注册
-#### （1）admin/login:
+#### （1）/admin/login:
+作用：登录，请求形式：post，附加参数：body
 ```json
 //request
 {
@@ -46,7 +47,8 @@ axios.defaults.baseURL = "http://localhost:8080";
     "msg":"登录失败"
 }
 ```
-#### (2)admin/signup:
+#### (2)/admin/signup:
+作用：注册，请求形式：post，附加参数：body
 ```json
 //request
 {
@@ -69,6 +71,130 @@ axios.defaults.baseURL = "http://localhost:8080";
     "msg":"注册失败"
 }
 ```
+### 2.统计数据
+#### (1)/statistics:
+作用：获取统计信息，请求形式：get，附加参数：无
+```json
+//request
+query:week=[week]//查询的周
+//respond when success
+{
+    "code":200,
+    "data":[
+        [
+            {
+                "building":[building],
+                "rate":[rate]//占用率
+            },
+            {
+                "building":[building],
+                "rate":[rate]
+            }
+            //其他建筑及其对应占用率
+        ],
+        [
+            {
+                "type":[type],
+                "count":[count]//此种类型的课程数量
+            },
+            {
+                "type":[type],
+                "count":[count]
+            }
+            //其他类型课程及其数量
+        ]
+    ]
+}
+//respond when unsuccess
+{
+    "code":400,
+    "msg":"缺少week参数"
+}
+//respond when unsuccess2
+{
+    "code":500,
+    "msg":"服务器异常"
+}
+```
+### 3.手动排课
+#### (1)/manual/room:
+作用：按需获取教室，请求形式：get，附加参数：query
+参数格式：*building=[building],campus=[campus]*
+**备注：1.二者均为可选参数； 2.*building*和*campus*均为LIKE查询 3.*campus*为校区，后同**
+```json
+//respond when success
+{
+    "code":200,
+    "rows":
+    [
+        {
+            "rname":[rname],//教室名称
+        },
+        {
+            "rname":[rname]
+        }
+        //其他教室
+    ]
+}
+//respond when unsuccess
+{
+    "code":500,
+    "msg":[msg]
+}
+```
+#### (2)/manual/task:
+作用：按需获取课程，请求形式：post，附加参数：query
+参数格式：*week=[week], building=[building], campus=[campus]*
+**备注：1.三者均为可选参数; 2.*building*参数和*campus*参数均为*LIKE*查询**
+```json
+//respond when success
+{
+    "code":200,
+    "rows":
+    [
+        {
+            "scid":[scid],//任务id号
+            "sctask":[sctask]//任务名称
+        },
+        {
+            "scid":[scid],
+            "sctask":[sctask]
+        }
+        //其他课程信息
+    ]
+}
+```
+#### (3)/manual/change:
+作用：按需更改课程安排，请求形式：post，附加参数：body
+**备注：此处为更改schedule表的接口，将根据传输的数据进行更改，没有传的数据将不会更改**
+```json
+//request参数格式(scid为必选参数，其他所有参数均为可选参数)
+{ 
+    "scid":[scid], 
+    "sctask":[sctask], 
+    "sccampus":[sccampus], 
+    "scbuilding":[scbuilding], 
+    "scroom":[scroom], 
+    "scbegin_week":[scbegin_week], 
+    "scend_week":[scend_week], 
+    "scday":[scday], //星期几
+    "scbegin_time":[scbegin_time],//上课时间 
+    "scend_time":[scend_time], //下课时间
+    "scteacher":[scteacher], 
+    "scpopularity":[scpopularity]//课程最大人数
+}
+//respond when success
+{
+    "code":200,
+    "msg":"修改成功"
+}
+//respond when unsuccess
+{
+    "code":500,
+    "msg":"修改失败"
+}
+```
+
 (3)/dashboard
 1）/weekView
 输入：
