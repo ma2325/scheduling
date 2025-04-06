@@ -176,7 +176,7 @@ query:week=[week]//查询的周
     "sctask":[sctask], 
     "sccampus":[sccampus], 
     "scbuilding":[scbuilding], 
-    "scroom":[scroom], //课程号
+    "scroom":[scroom], //教室号
     "scbegin_week":[scbegin_week], 
     "scend_week":[scend_week], 
     "scday":[scday], //星期几
