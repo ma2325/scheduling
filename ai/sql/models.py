@@ -14,12 +14,13 @@ class Room:
 #课程
 '''课程号，教学班名，课程人数，老师（工号表示），时间，周节次，连排节次，指定教室类型，指定教室，指定时间，指定教学楼,开课校区,是否为合班，'''
 class Course:
-    def __init__(self, cid,formclass,popularity,total_hours,teacherid,task,continuous,fixedroomtype,fixedroom,fixedtime,fixedbuilding,capmpus,combine=False):
+    def __init__(self, cid,formclass,popularity,total_hours,taproperty,teacherid,task,continuous,fixedroomtype,fixedroom,fixedtime,fixedbuilding,capmpus,combine=False):
         self.uid = f"{cid}-{teacherid}-{task}-{fixedroom}"
         self.cid = cid
         self.formclass = formclass
         self.popularity = popularity
         self.total_hours = total_hours
+        self.taproperty = taproperty
         self.teacherid = teacherid
         self.task = task
         self.continuous = continuous

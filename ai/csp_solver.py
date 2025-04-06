@@ -4,7 +4,7 @@ from collections import defaultdict
 import time
 #排课率约:80%
 #用时约：10s
-
+#这里是好滴
 class CSPScheduler:
     """支持教学周连续性的CSP排课求解器"""
 
@@ -79,7 +79,7 @@ class CSPScheduler:
         if continuous > 1:
             allowed_starts = CONTINUOUS_SLOT_RULES.get(continuous, [])
             groups_per_week = int(lessons_per_week / continuous)
-
+            days = random.sample(range(1, DAYS_PER_WEEK + 1), groups_per_week)
             for day in random.sample(range(1, DAYS_PER_WEEK + 1), groups_per_week):
                 for start in allowed_starts:
                     if start + continuous - 1 <= SLOTS_PER_DAY:
@@ -93,6 +93,13 @@ class CSPScheduler:
         return patterns
 
     def _find_compatible_room(self, course, pattern, solution) -> Any:
+        # 策略0: 如果已安排过该课程，必须使用原教室
+        existing_room = next((e[1] for e in solution if e[0] == course.uid), None)
+        if existing_room:
+            room = next((r for r in self.rooms if r.rid == existing_room), None)
+            if room and self._check_availability(room, course, pattern, solution):
+                return room
+            return None
         """三级教室匹配策略"""
         # 策略1: 固定教室优先
         if getattr(course, 'fixedroom', None):
@@ -118,6 +125,10 @@ class CSPScheduler:
         return None
 
     def _check_availability(self, room, course, pattern, solution) -> bool:
+        existing_slots = {e[3:6] for e in solution if e[0] == course.uid}
+        new_slots = set(self._expand_pattern(course, pattern))
+        if existing_slots & new_slots:
+            return False  # 该课程已占用该教室的其他时间段
         """检查教室和教师在课程教学周内的可用性"""
         required_slots = set(self._expand_pattern(course, pattern))
         course_weeks = self._get_course_weeks(course)
@@ -139,11 +150,17 @@ class CSPScheduler:
     def _expand_pattern(self, course, pattern) -> List[Tuple[int, int, int]]:
         """将周模式扩展到具体的(周, 天, 节)时间点"""
         slots = []
-        for start_week, end_week, _ in getattr(course, 'time_slots', [(1, WEEKS_IN_SEMESTER, 1)]):
-            for week in range(start_week, end_week + 1):
-                for day, start, length in pattern:
-                    slots.extend((week, day, start + offset) for offset in range(length))
+        try:
+            for start_week, end_week, _ in getattr(course, 'time_slots', [(1, WEEKS_IN_SEMESTER, 1)]):
+                for week in range(start_week, end_week + 1):
+                    for item in pattern:
+                        day, start, length = item[:3]
+                        slots.extend((week, day, start + offset) for offset in range(length))
+        except Exception as e:
+            print("Error in _expand_pattern with pattern:", pattern)
+            raise e
         return slots
+
 
     def _get_course_weeks(self, course) -> Set[int]:
         """获取课程的所有教学周"""
@@ -194,7 +211,7 @@ class CSPScheduler:
         score = getattr(course, 'total_hours', 0)
         score += getattr(course, 'popularity', 0) * 0.5
         if getattr(course, 'fixedroom', None):
-            score += 30
+            score += 50
         return score
 
     def _build_room_pools(self) -> Dict[str, List]:

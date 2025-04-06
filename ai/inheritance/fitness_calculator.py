@@ -8,7 +8,10 @@ from collections import defaultdict
 import random
 from functools import lru_cache
 import time
+from typing import Any
+import numpy as np
 
+#试探
 class FitnessCalculator:
     def __init__(self, weights: Dict[str, float], courses: List, rooms: List):
         """
@@ -24,7 +27,11 @@ class FitnessCalculator:
         self._build_lookups()
         print(f"[Fitness] 初始化完成 | 耗时: {time.time()-start:.2f}s | "
               f"课程数: {len(courses)} | 教室数: {len(rooms)}")
-
+        # 在FitnessCalculator.__init__中添加
+        self.continuous_courses = {
+            c.uid for c in courses if getattr(c, 'continuous', 1) > 1
+        }
+        print(f"连排课程数量: {len(self.continuous_courses)}")
     def _build_lookups(self):
         """预构建加速查询的数据结构"""
         print("[Fitness] 构建查询索引...")
@@ -33,79 +40,81 @@ class FitnessCalculator:
         self.room_dict = {r.rid: r for r in self.rooms}
         self.course_ids = [c.uid for c in self.courses]  # 用于快速抽样
         print(f"[Fitness] 索引构建完成 | 耗时: {time.time()-start:.2f}s")
+    # 在 FitnessCalculator 类中
+    # fitness_calculator.py
+    def calculate(self, solution: List[Tuple]) -> Tuple[float, Dict[str, Any]]:
+        """完整适应度计算（带诊断输出）"""
+        print(f"[Fitness] 完整评估 | 解大小: {len(solution)}")
+        start = time.time()
 
-    def calculate(self,
-                  solution: List[Tuple],
-                  active_constraints: Set[str] = None) -> Tuple[float, Dict]:
-        """
-        完整适应度计算（带详细诊断输出）
-        :return: (适应度得分, 各分项得分详情)
-        """
-        print(f"\n[Fitness] 开始适应度计算 | 解大小: {len(solution)}")
-        total_start = time.time()
+        # 计算各约束项
+        unscheduled = self._calc_unscheduled(solution)
+        teacher_conflicts = self._calc_teacher_conflicts(solution)
+        room_utilization = self._calc_room_utilization(solution)
+        #student_load = self._calc_student_load(solution)
 
-        if active_constraints is None:
-            active_constraints = set(self.weights.keys())
+        # 加权求和
+        score = 100.0
+        score -= unscheduled * self.weights['unscheduled']
+        score -= teacher_conflicts * self.weights['teacher_gap']
+        score -= room_utilization * self.weights['room_utilization']
+        #score -= student_load * self.weights['student_load']
 
-        metrics = {}
-        score = 100.0  # 基础分
-        calc_details = []  # 记录各约束计算耗时
+        # 创建 metrics 字典
+        metrics = {
+            'unscheduled': unscheduled,
+            'teacher_conflicts': teacher_conflicts,
+            'room_utilization': room_utilization,
+            #'student_load': student_load,
+        }
 
-        # 1. 未排课惩罚（必须精确计算）
-        if 'unscheduled' in active_constraints:
-            start = time.time()
-            unscheduled = self._calc_unscheduled(solution)
-            elapsed = time.time() - start
-            calc_details.append(f"未排课: {elapsed:.2f}s")
-            metrics['unscheduled'] = unscheduled
-            score -= unscheduled * self.weights['unscheduled']
-            print(f"  [未排课] 耗时: {elapsed:.2f}s | 未排课程数: {unscheduled}")
+        print(f"[Fitness] 评估完成 | 耗时: {time.time()-start:.2f}s | "
+              f"得分: {score:.2f} | 未排课: {unscheduled} | "
+              f"教师冲突: {teacher_conflicts} | 教室利用: {room_utilization:.2f} | ")
+             # f"学生负荷: {student_load:.2f}")
+        return score, metrics  # 保持返回元组
 
-        # 2. 教师冲突检查
-        if 'teacher_gap' in active_constraints:
-            start = time.time()
-            teacher_gap = self._calc_teacher_conflicts(solution)
-            elapsed = time.time() - start
-            calc_details.append(f"教师冲突: {elapsed:.2f}s")
-            metrics['teacher_gap'] = teacher_gap
-            score -= teacher_gap * self.weights['teacher_gap']
-            print(f"  [教师冲突] 耗时: {elapsed:.2f}s | 冲突值: {teacher_gap}")
 
-        # 3. 教室利用率
-        if 'room_utilization' in active_constraints:
-            start = time.time()
-            room_penalty = self._calc_room_utilization(solution)
-            elapsed = time.time() - start
-            calc_details.append(f"教室利用: {elapsed:.2f}s")
-            metrics['room_utilization'] = room_penalty
-            score -= room_penalty * self.weights['room_utilization']
-            print(f"  [教室利用] 耗时: {elapsed:.2f}s | 不均衡值: {room_penalty:.2f}")
+    def _calc_continuity(self, solution: List[Tuple]) -> int:
+        """优化版连排连续性检查"""
+        print("    [连排连续] 开始检查连排课程...")
+        start = time.time()
 
-        # 4. 学生负荷
-        if 'student_load' in active_constraints:
-            start = time.time()
-            student_penalty = self._calc_student_load(solution)
-            elapsed = time.time() - start
-            calc_details.append(f"学生负荷: {elapsed:.2f}s")
-            metrics['student_load'] = student_penalty
-            score -= student_penalty * self.weights['student_load']
-            print(f"  [学生负荷] 耗时: {elapsed:.2f}s | 不均衡值: {student_penalty:.2f}")
+        # 按课程分组收集课时
+        course_slots = defaultdict(list)
+        for entry in solution:
+            course_slots[entry[0]].append((entry[3], entry[4], entry[5]))  # (周,天,节)
 
-        # 5. 连排连续性
-        if 'continuity' in active_constraints:
-            start = time.time()
-            continuity_penalty = self._calc_continuity(solution)
-            elapsed = time.time() - start
-            calc_details.append(f"连排连续: {elapsed:.2f}s")
-            metrics['continuity'] = continuity_penalty
-            score -= continuity_penalty * self.weights['continuity']
-            print(f"  [连排连续] 耗时: {elapsed:.2f}s | 违规数: {continuity_penalty}")
+        continuity_violations = 0
+        continuous_courses = 0
 
-        total_time = time.time() - total_start
-        print(f"[Fitness] 计算完成 | 总耗时: {total_time:.2f}s | 最终得分: {score:.2f}")
-        print(f"  各分项耗时: {', '.join(calc_details)}")
+        for course_id, slots in course_slots.items():
+            course = self.course_dict[course_id]
+            if getattr(course, 'continuous', 1) <= 1:
+                continue
 
-        return score, metrics
+            continuous_courses += 1
+
+            # 按周和天分组
+            week_day_slots = defaultdict(list)
+            for week, day, slot in slots:
+                week_day_slots[(week, day)].append(slot)
+
+            # 检查每天是否连续
+            for day_slots in week_day_slots.values():
+                if len(day_slots) < 2:
+                    continue
+
+                slots_sorted = sorted(day_slots)
+                expected = list(range(slots_sorted[0], slots_sorted[0] + len(slots_sorted)))
+                if slots_sorted != expected:
+                    continuity_violations += 1
+                    break  # 一门课程只要有一天不连续就算违规
+
+        print(f"    [连排连续] 检查完成 | 耗时: {time.time()-start:.2f}s | "
+              f"连排课程数: {continuous_courses} | 违规数: {continuity_violations}")
+        return continuity_violations
+
 
     def quick_calculate(self,
                         solution: List[Tuple],
@@ -206,9 +215,15 @@ class FitnessCalculator:
         return penalty
 
     def _calc_student_load(self, solution: List[Tuple]) -> float:
-        """计算学生每日负荷方差（带统计）"""
+
+        """标准化学生负荷计算"""
         print("    [学生负荷] 开始分析学生课程负荷...")
         start = time.time()
+        if not solution:
+            return 0
+        # 检查popularity值
+        popularities = [getattr(self.course_dict[e[0]], 'popularity', 1) for e in solution]
+        print(f"学生人数统计 - 平均: {np.mean(popularities):.1f}, 最大: {max(popularities)}")
 
         daily_load = defaultdict(int)
         for entry in solution:
@@ -218,18 +233,13 @@ class FitnessCalculator:
         if not daily_load:
             return 0
 
-        avg_load = sum(daily_load.values()) / len(daily_load)
-        penalty = sum((l - avg_load)**2 for l in daily_load.values()) / len(daily_load)
+        # 标准化处理（避免数值过大）
+        loads = np.array(list(daily_load.values()))
+        normalized_loads = (loads - np.min(loads)) / (np.max(loads) - np.min(loads) + 1e-6)
+        penalty = float(np.var(normalized_loads))  # 计算标准化后的方差
 
-        # 输出负荷最高和最低的天
-        if daily_load:
-            sorted_days = sorted(daily_load.items(), key=lambda x: x[1])
-            min_day = sorted_days[0]
-            max_day = sorted_days[-1]
-            print(f"    [学生负荷] 最轻松: 第{min_day[0][0]}周周{min_day[0][1]}({min_day[1]}) | "
-                  f"最繁忙: 第{max_day[0][0]}周周{max_day[0][1]}({max_day[1]})")
-
-        print(f"    [学生负荷] 分析完成 | 耗时: {time.time()-start:.2f}s | 不均衡值: {penalty:.2f}")
+        print(f"    [学生负荷] 分析完成 | 耗时: {time.time()-start:.2f}s | "
+              f"标准化不均衡值: {penalty:.4f}")
         return penalty
 
     def _calc_continuity(self, solution: List[Tuple]) -> int:

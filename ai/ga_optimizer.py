@@ -38,10 +38,10 @@ class GeneticCourseScheduler:
 
         # 软约束权重
         self.weights = {
-            'teacher_gap': 0.01,      # 教师课程间隔
-            'room_utilization': 0.01, # 教室利用率均衡
-            'student_load': 0.01,     # 学生每日课程负荷
-            'continuity': 0.01,       # 连排课程连续性
+            'teacher_gap': 0.0,      # 教师课程间隔
+            'room_utilization': 0.0, # 教室利用率均衡
+            'student_load': 0.00,     # 学生每日课程负荷
+            'continuity': 0.0,       # 连排课程连续性
             'unscheduled': 100.0      # 未安排课程的惩罚
         }
 
@@ -235,107 +235,20 @@ class GeneticCourseScheduler:
         return repaired
 #
     def _mutate(self, individual: List[Tuple]) -> List[Tuple]:
-        """增强版变异操作（包含四种变异策略）"""
-        if not individual or not self.unscheduled:
-            return individual
-
-        mutated = copy.deepcopy(individual)
-        original_unscheduled = len(self._get_unscheduled(mutated))
-        operation = random.choices(
-            ['add_course', 'reschedule', 'swap_room', 'adjust_time'],
-            weights=[0.6, 0.2, 0.1, 0.1],  # 60%概率尝试新增课程
-            k=1
-        )[0]
-
-        # 策略1：尝试安排未排课程（主要变异方式）
-        if operation == 'add_course':
-            # 选择最难安排的3门课（可用时间模式最少的优先）
-            candidates = sorted(
-                self.unscheduled,
-                key=lambda c: len(self._generate_domains(c))
-            )[:3]
-
-            for course in candidates:
-                domains = self._generate_domains(course)
-                for pattern in domains:
-                    room = self._find_compatible_room(course, pattern, mutated)
-                    if room:
-                        self._assign_course(mutated, course, pattern, room)
-                        print(f"  变异成功: 新增课程 {course.uid} (周数:{self._get_course_weeks(course)})")
-                        break
-
-        # 策略2：重新安排现有课程（腾出空间）
-        elif operation == 'reschedule':
-            scheduled_courses = {e[0] for e in mutated}
-            if scheduled_courses:
-                course_to_move = random.choice([
-                    c for c in self.courses
-                    if c.uid in scheduled_courses
-                       and not getattr(c, 'fixedroom', False)  # 不移动固定教室的课
-                ])
-
-                # 先移除原有安排
-                mutated = [e for e in mutated if e[0] != course_to_move.uid]
-
-                # 尝试重新安排
-                domains = self._generate_domains(course_to_move)
-                for pattern in domains:
-                    room = self._find_compatible_room(course_to_move, pattern, mutated)
-                    if room:
-                        self._assign_course(mutated, course_to_move, pattern, room)
-                        print(f"  变异成功: 重排课程 {course_to_move.uid}")
-                        break
-
-        # 策略3：交换教室（解决资源冲突）
-        elif operation == 'swap_room':
-            if len(mutated) >= 2:
-                idx1, idx2 = random.sample(range(len(mutated)), 2)
-                entry1, entry2 = mutated[idx1], mutated[idx2]
-
-                # 检查教室是否兼容
-                course1 = self.course_dict[entry1[0]]
-                course2 = self.course_dict[entry2[0]]
-                room1 = self.room_dict[entry1[1]]
-                room2 = self.room_dict[entry2[1]]
-
-                if (room1.rcapacity >= getattr(course2, 'popularity', 0) and
-                        room2.rcapacity >= getattr(course1, 'popularity', 0)):
-                    # 执行交换
-                    mutated[idx1] = (entry1[0], entry2[1], *entry1[2:])
-                    mutated[idx2] = (entry2[0], entry1[1], *entry2[2:])
-                    print(f"  变异成功: 交换教室 {room1.rid} <-> {room2.rid}")
-
-        # 策略4：调整时间模式
-        elif operation == 'adjust_time':
-            scheduled_courses = {e[0] for e in mutated}
-            if scheduled_courses:
-                course_to_adjust = random.choice([
-                    c for c in self.courses
-                    if c.uid in scheduled_courses
-                       and not getattr(c, 'fixedtime', False)  # 不调整固定时间的课
-                ])
-
-                # 先移除原有安排
-                mutated = [e for e in mutated if e[0] != course_to_adjust.uid]
-
-                # 生成新的时间模式
-                new_domains = self._generate_domains(course_to_adjust)
-                for pattern in new_domains:
-                    room = self._find_compatible_room(course_to_adjust, pattern, mutated)
-                    if room:
-                        self._assign_course(mutated, course_to_adjust, pattern, room)
-                        print(f"  变异成功: 调整课程 {course_to_adjust.uid} 的时间")
-                        break
-
-        # 验证变异效果
-        new_unscheduled = len(self._get_unscheduled(mutated))
-        if new_unscheduled < original_unscheduled:
-            print(f"✨ 变异有效! 未排课数从 {original_unscheduled} 减少到 {new_unscheduled}")
-        elif new_unscheduled > original_unscheduled:
-            print(f"⚠️ 变异导致退化，回滚修改")
-            return individual
-
-        return mutated
+        # 选择未排课程中优先级最高的5门
+        unscheduled = sorted(
+            self._get_unscheduled(individual),
+            key=lambda c: c.total_hours,
+            reverse=True
+        )[:10]
+        for course in unscheduled:
+            domains = self._generate_domains(course)
+            for pattern in domains:
+                room = self._find_compatible_room(course, pattern, individual)
+                if room:
+                    self._assign_course(individual, course, pattern, room)
+                    break
+        return individual
 #
     def _fitness(self, solution: List[Tuple]) -> float:
         """完整适应度计算"""
@@ -498,13 +411,15 @@ class GeneticCourseScheduler:
         return population
 
     def _create_individual(self) -> List[Tuple]:
-        """创建新个体（专注安排未排课）"""
         new_ind = copy.deepcopy(self.initial_solution)
-
-        # 尝试安排3-5门未排课
-        for course in random.sample(self.unscheduled, k=min(5, len(self.unscheduled))):
+        # 按课程优先级（如课时数）降序尝试安排未排课程
+        unscheduled_sorted = sorted(
+            self.unscheduled,
+            key=lambda c: c.total_hours,
+            reverse=True
+        )
+        for course in unscheduled_sorted[:30]:  # 增加尝试数量
             self._try_schedule_course(new_ind, course)
-
         return new_ind
 
     def _try_schedule_course(self,
@@ -579,41 +494,25 @@ class GeneticCourseScheduler:
             reverse=True
         )[:self.elite_size]
         return elites + new_pop[:self.population_size - self.elite_size]
+    # ga_optimizer.py
     def _evaluate_population(self, population: List[List[Tuple]]):
-        """评估种群（带详细诊断输出）"""
-        print(f"\n[评估] 开始评估种群（{len(population)}个个体）...")
+        """单线程评估版本"""
+        print(f"\n[评估] 开始单线程评估种群（{len(population)}个个体）...")
         start_time = time.time()
 
-        # 先评估前3个个体获取基准数据
-        sample_indices = [0, len(population)//2, -1]  # 评估第一个、中间一个和最后一个
-        for i in sample_indices:
-            ind = population[i]
-            print(f"  采样评估个体 {i}...")
+        results = []
+        for i, ind in enumerate(population):
+            print(f"  评估个体 {i+1}/{len(population)}...", end="\r")
             try:
-                score, metrics = self.fitness_calc.calculate(ind)
-                unscheduled = len(self._get_unscheduled(ind))
-                print(f"    个体 {i} 结果 | 分数: {score:.1f} | 未排课: {unscheduled} | "
-                      f"教师冲突: {metrics.get('teacher_gap',0):.1f}")
+                score, _ = self.fitness_calc.calculate(ind)  # 确保只获取分数部分
+                results.append(score)  # 现在只存储分数，而不是元组
             except Exception as e:
-                print(f"    ⚠️ 评估个体 {i} 出错: {str(e)}")
-
-        # 完整评估（保持原有逻辑）
-        print("  开始完整评估...")
-        with ThreadPoolExecutor() as executor:
-            futures = [executor.submit(self.fitness_calc.calculate, ind) for ind in population]
-            results = []
-            for i, future in enumerate(concurrent.futures.as_completed(futures)):
-                try:
-                    results.append(future.result())
-                    if i % 5 == 0:  # 每5个输出一次进度
-                        print(f"    已完成 {i+1}/{len(population)}")
-                except Exception as e:
-                    print(f"    ⚠️ 评估出错: {str(e)}")
-                    results.append((-float('inf'), {}))
+                print(f"评估个体 {i} 出错: {str(e)}")
+                results.append(-float('inf'))
 
         # 更新最优解
-        best_idx = np.argmax([r[0] for r in results])
-        self.best_fitness = results[best_idx][0]
+        best_idx = np.argmax(results)  # 现在results是纯分数列表
+        self.best_fitness = results[best_idx]
         self.best_solution = copy.deepcopy(population[best_idx])
 
         print(f"[评估] 完成 | 最佳分数: {self.best_fitness:.1f} | "

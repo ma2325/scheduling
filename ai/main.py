@@ -1,8 +1,9 @@
 import ga_optimizer
 import sql.connect
 import sql.models
+from sql.models import *
 from csp_solver import CSPScheduler
-from ga_optimizer import GeneticCourseScheduler
+from hybid import HybridScheduler
 from inheritance.ConstraintSolver import ConstraintSolver
 
 
@@ -13,7 +14,7 @@ cursor=conn.cursor()
 #载入课程
 '''课程号，教学班名，课程人数，老师（工号表示），时间，周节次，连排节次，指定教室类型，指定教室，指定时间，指定教学楼，开课校区,是否为合班，'''
 def load_course():
-    cursor.execute("SELECT tacode,taformclass,tapopularity,taclasshour ,tateacherid,tahourweek,tacontinuous,tafixedtype,tafixedroom,tafixedtime,tafixedbuilding,tacampus FROM task")
+    cursor.execute("SELECT tacode,taformclass,tapopularity,taclasshour ,taproperty,tateacherid,tahourweek,tacontinuous,tafixedtype,tafixedroom,tafixedtime,tafixedbuilding,tacampus FROM task")
     courses=[]#列表储存
     for row in cursor.fetchall():
         course=sql.models.Course(
@@ -21,6 +22,7 @@ def load_course():
             formclass=row['taformclass'],
             popularity=row['tapopularity'],
             total_hours=row['taclasshour'],
+            taproperty=row['taproperty'],
             teacherid=row['tateacherid'],
             task=row['tahourweek'],
             continuous=row['tacontinuous'],
@@ -105,6 +107,7 @@ def prepare_rooms(raw_rooms):
         })
         prepared.append(prepared_room)
     return prepared
+
 #载入行政班
 '''班名，固定教室'''
 def load_myclass():
@@ -129,147 +132,68 @@ try:
     courses = prepare_courses(raw_courses)
     rooms = prepare_rooms(raw_rooms)
 
+    print(f"\n=== 数据加载完成 ===")
+    print(f"课程总数: {len(courses)}")
+    print(f"教室总数: {len(rooms)}")
+    print(f"行政班总数: {len(myclasses)}")
 
-    constraint_checker = ConstraintSolver(courses, rooms)
+    # 使用混合排课算法
+    print("\n=== 开始排课 ===")
+    scheduler = HybridScheduler(courses, rooms)
+    schedule, unscheduled = scheduler.solve()
 
-    # 2. 使用CSP生成初始解
-    csp_scheduler = CSPScheduler(courses, rooms)
-    initial_solution, unscheduled = csp_scheduler.solve()
+    # 计算排课率
+    scheduled_courses = {entry[0] for entry in schedule}
+    total_courses = len(courses)
+    scheduling_rate = len(scheduled_courses) / total_courses * 100
 
-    if not initial_solution:
-        print("CSP阶段未能生成有效初始解")
+    print("\n=== 排课结果 ===")
+    print(f"排课成功率: {scheduling_rate:.2f}%")
+    print(f"已排课程: {len(scheduled_courses)}/{total_courses}")
+    print(f"排课记录总数: {len(schedule)}条")
+    print(f"未排课程: {len(unscheduled)}门")
 
-    # 3. 使用GA优化
+    # 打印前20条排课记录
+    print("\n=== 排课详情（前20条）===")
+    print("序号 | 课程ID | 教室ID | 教师ID | 周次 | 星期 | 节次")
+    print("-" * 60)
+    for i, entry in enumerate(schedule[:20]):
+        print(f"{i+1:3} | {entry[0]:8} | {entry[1]:6} | {entry[2]:8} | 第{entry[3]:2}周 | 周{entry[4]} | 第{entry[5]}节")
 
+    # 打印未排课程
+    if unscheduled:
+        print("\n=== 未排课程列表 ===")
+        print("课程ID | 周数要求 | 连排节次 | 教室类型要求")
+        print("-" * 60)
+        for course in unscheduled[:20]:  # 只显示前20条
+            weeks = ", ".join(f"{s}-{e}" for s, e, _ in course.time_slots)
+            print(f"{course.uid:8} | {weeks:10} | {getattr(course, 'continuous', 1):8} | {getattr(course, 'fixedroomtype', '无'):12}")
 
-    ga= GeneticCourseScheduler(initial_solution, unscheduled, courses, rooms)
-    optimized_solution = ga.optimize()
-    if optimized_solution:
-        print("优化成功！")
+    # 简单统计
+    print("\n=== 简单统计 ===")
+    room_usage = {}
+    for entry in schedule:
+        room_id = entry[1]
+        room_usage[room_id] = room_usage.get(room_id, 0) + 1
 
-        # 计算排课率
-        scheduled_courses = {entry[0] for entry in optimized_solution}  # 获取已排课程ID
-        total_courses = len(courses)  # 总课程数
-        scheduling_rate = len(scheduled_courses) / total_courses * 100
+    teacher_workload = {}
+    for entry in schedule:
+        teacher_id = entry[2]
+        teacher_workload[teacher_id] = teacher_workload.get(teacher_id, 0) + 1
 
-        print("\n=== 最终课表 ===")
-        print(f"优化完成，最终适应度: {ga_optimizer.fitness(optimized_solution):.2f}")
-        print(f"排课率: {scheduling_rate:.2f}% ({len(scheduled_courses)}/{total_courses})")
+    print("\n教室使用频率TOP5:")
+    for room_id, count in sorted(room_usage.items(), key=lambda x: -x[1])[:5]:
+        print(f"教室 {room_id}: {count}次")
 
-        # 可选：显示未排课程
-        unscheduled_courses = [c for c in courses if c.uid not in scheduled_courses]
-        if unscheduled_courses:
-            print("\n未排课程列表:")
-            for course in unscheduled_courses:
-                print(f"- {course.uid} ({course.cname})")
-    else:
-        print("优化失败")
+    print("\n教师授课量TOP5:")
+    for teacher_id, count in sorted(teacher_workload.items(), key=lambda x: -x[1])[:5]:
+        print(f"教师 {teacher_id}: {count}节课")
 
 finally:
     # 关闭数据库连接
     cursor.close()
     conn.close()
-    print("数据库连接已关闭")
+    print("\n数据库连接已关闭")
 
-    '''
-    # 测试数据
-    courses = [
-        sql.models.Course(
-            cid=1,
-            formclass="A班",
-            popularity=30,
-            total_hours=28,
-            teacherid=1,
-            task="1-8:2,10-15:2",
-            continuous=2,
-            fixedroomtype="普通教室",
-            fixedroom=None,
-            fixedtime=None,
-            fixedbuilding=None,
-            capmpus="东校区",
-            combine=False
-        ),
-        sql.models.Course(
-            cid=2,
-            formclass="B班",
-            popularity=25,
-            total_hours=6,
-            teacherid=2,
-            task="2-4:2",
-            continuous=2,
-            fixedroomtype="多媒体教室",
-            fixedroom="102教室",
-            fixedtime=None,
-            fixedbuilding=None,
-            capmpus="西校区",
-            combine=False
-        ),
-        sql.models.Course(
-            cid=3,
-            formclass="C班",
-            popularity=40,
-            total_hours=15,
-            teacherid=1,
-            task="6-10:2",
-            continuous=2,
-            fixedroomtype="普通教室",
-            fixedroom=None,
-            fixedtime=None,
-            fixedbuilding=None,
-            capmpus="东校区",
-            combine=False
-        ),
-        sql.models.Course(
-            cid=4,
-            formclass="D班",
-            popularity=20,
-            total_hours=8,
-            teacherid=3,
-            task="3-4:4",
-            continuous=4,
-            fixedroomtype="实验室",
-            fixedroom=None,
-            fixedtime=None,
-            fixedbuilding=None,
-            capmpus="西校区",
-            combine=False
-        ),
-    ]
-
-    rooms = [
-        sql.models.Room(
-            rid=101,
-            rname="101教室",
-            rtype="普通教室",
-            rcapacity=50,
-            rcampus="东校区",
-            rbuilding="教学楼A"
-        ),
-        sql.models.Room(
-            rid=102,
-            rname="102教室",
-            rtype="多媒体教室",
-            rcapacity=30,
-            rcampus="西校区",
-            rbuilding="教学楼B"
-        ),
-        sql.models.Room(
-            rid=103,
-            rname="103实验室",
-            rtype="实验室",
-            rcapacity=20,
-            rcampus="西校区",
-            rbuilding="实验楼A"
-        ),
-        sql.models.Room(
-            rid=104,
-            rname="104教室",
-            rtype="普通教室",
-            rcapacity=40,
-            rcampus="东校区",
-            rbuilding="教学楼B"
-        ),
-    ]
-    '''
 
 
