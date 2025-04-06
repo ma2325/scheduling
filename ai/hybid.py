@@ -96,7 +96,9 @@ class HybridScheduler(CSPScheduler):
             print(f"└── 本代耗时: {time_cost:.2f}s")
 
             # ------------------- 提前终止检测 -------------------
-            if elites[0]['fitness'] >= 200 * len(batch):
+            if (elites[0]['scheduled_count'] >= 0.9 * len(batch)
+                    #and (elites[0]['total_conflicts'] < 50)
+            ):
                 print(f"\n🔥 在第{gen+1}代达成完美解，终止优化")
                 break
 
@@ -311,31 +313,42 @@ class HybridScheduler(CSPScheduler):
         return parent1, parent2
 
     def mutate(self, individual):
-        """变异操作（增加适应度输出）"""
-        print(f"[变异] 当前适应度: {individual.get('fitness', '未评估')}")
-
-        # 以下是原始代码逻辑（保持原有实现）
+        """变异操作（修复适应度显示问题）"""
         try:
+            # 复制个体时重置关键字段
             mutated = {
                 'base': individual.get('base', []).copy(),
                 'full_schedule': individual.get('full_schedule', []).copy(),
                 'attempts': [a.copy() for a in individual.get('attempts', [])],
-                'scheduled_count': individual.get('scheduled_count', 0),
-                'total_conflicts': individual.get('total_conflicts', 0),
-                'fitness': individual.get('fitness', -float('inf'))
+                'scheduled_count': 0,  # 重置成功计数
+                'total_conflicts': 0,   # 重置冲突计数
+                'fitness': 0           # 初始化为0，而非 -inf
             }
 
             if not mutated['attempts']:
                 return mutated
 
+            # 随机选择一个课程尝试重新插入
             idx = random.randint(0, len(mutated['attempts'])-1)
             course = mutated['attempts'][idx]['course']
-            new_attempt = self.try_insert(course, mutated['base'])
+            success, new_slots = self.try_insert(course, mutated['base'])
 
-            if isinstance(new_attempt, dict):
-                mutated['attempts'][idx] = new_attempt
+            # 更新排课记录
+            if success:
+                mutated['full_schedule'].extend(new_slots)
+                mutated['scheduled_count'] += 1
+                mutated['attempts'][idx]['scheduled'] = True
+                mutated['attempts'][idx]['slots'] = new_slots
+            else:
+                mutated['attempts'][idx]['scheduled'] = False
+                mutated['attempts'][idx]['slots'] = []
+
+            # 关键修复：变异后立即重新计算适应度
+            eval_result = self.evaluate(mutated)
+            mutated.update(eval_result)
+
+            print(f"[变异] 新适应度: {mutated['fitness']}")  # 调试输出
             return mutated
-
         except Exception as e:
             traceback.print_exc()
             return individual

@@ -5,12 +5,57 @@ from sql.models import *
 from csp_solver import CSPScheduler
 from hybid import HybridScheduler
 from inheritance.ConstraintSolver import ConstraintSolver
-
+from collections import defaultdict
 
 #连接数据库
 conn=sql.connect.connect()
 cursor=conn.cursor()
 
+
+def convert_to_schedules(best_solution):
+    # 按课程、教室、教师、天、节次分组
+    grouped = defaultdict(list)
+    for entry in best_solution:
+        course_uid, rid, teacher, week, day, slot = entry
+        key = (course_uid, rid, teacher, day, slot)
+        grouped[key].append(week)
+
+    schedules = []
+    for key, weeks in grouped.items():
+        course_uid, rid, teacher, day, slot = key
+        weeks_sorted = sorted(weeks)
+
+        # 分割连续周次区间（如 [1,2,3,5,6,8] → [[1-3], [5-6], [8-8]）
+        ranges = []
+        if not weeks_sorted:
+            continue
+
+        start = end = weeks_sorted[0]
+        for week in weeks_sorted[1:]:
+            if week == end + 1:
+                end = week
+            else:
+                ranges.append((start, end))
+                start = end = week
+        ranges.append((start, end))
+
+        # 为每个连续区间生成记录
+        for start_week, end_week in ranges:
+            scid = f"{course_uid}_{rid}_{teacher}_{start_week}_{end_week}_{day}_{slot}"
+            schedules.append(
+                Schedule(
+                    scid=scid,
+                    course_uid=course_uid,
+                    teacher=teacher,
+                    rid=rid,
+                    start_week=start_week,
+                    end_week=end_week,
+                    day=day,
+                    slots=[slot]
+                )
+            )
+
+    return schedules
 #载入课程
 '''课程号，教学班名，课程人数，老师（工号表示），时间，周节次，连排节次，指定教室类型，指定教室，指定时间，指定教学楼，开课校区,是否为合班，'''
 def load_course():
@@ -142,6 +187,12 @@ try:
     scheduler = HybridScheduler(courses, rooms)
     schedule, unscheduled = scheduler.solve()
 
+    schedules=convert_to_schedules(schedule)
+    print("=== 转换结果 ===")
+    for idx, schedule in enumerate(schedules, 1):
+        print(f"\n记录 {idx}:")
+        for key, value in schedule.to_dict().items():
+            print(f"  {key}: {value}")
     # 计算排课率
     scheduled_courses = {entry[0] for entry in schedule}
     total_courses = len(courses)
