@@ -69,15 +69,44 @@ class myclass:
 #课程表
 '''课程号，教学班名，教室，时间'''
 class Schedule:
-    def __init__(self, scid,teacher,rid,time):
+    def __init__(
+            self,
+            scid: str,
+            course_uid: str,
+            teacher: str,
+            rid: str,
+            start_week: int,
+            end_week: int,
+            day: int,
+            slots: list
+    ):
+        """
+        :param scid: 唯一标识（规则见示例）
+        :param course_uid: 课程唯一ID
+        :param teacher: 教师ID
+        :param rid: 教室ID
+        :param start_week: 开始周（1-20）
+        :param end_week: 结束周（>=start_week）
+        :param day: 上课日（1-5，周一至周五）
+        :param slots: 节次列表（如 [1,2] 表示1-2节连排）
+        """
         self.scid = scid
+        self.course_uid = course_uid
         self.teacher = teacher
         self.rid = rid
-        self.time = time
+        self.start_week = start_week
+        self.end_week = end_week
+        self.day = day
+        self.slots = slots
+
     def to_dict(self):
-        return{
-            "scid":self.scid,
-            "teacher":self.teacher,
-            "rid":self.rid,
-            "time":self.time
+        return {
+            "scid": self.scid,
+            "course_uid": self.course_uid,
+            "teacher": self.teacher,
+            "rid": self.rid,
+            "start_week": self.start_week,
+            "end_week": self.end_week,
+            "day": self.day,
+            "slots": self.slots
         }
