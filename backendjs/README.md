@@ -194,7 +194,48 @@ query:week=[week]//查询的周
     "msg":"修改失败"
 }
 ```
-
+#### (4)/manual/all:
+作用：获取所有课程，请求形式：get，附加参数：无
+```json
+//respond when success
+{
+    "code":200,
+    "rows":
+    [
+        {
+            "scid":[scid],//任务id号
+            "sctask":[sctask],//任务名称
+            "scday":[scday],//星期几
+            "sccampus":[sccampus],//校区
+            "scbuilding":[scbuilding],//楼名
+            "scroom":[scroom],//教室
+            "scbegin_week":[scbegin_week],//开始周
+            "scend_week":[scend_week],//结束周
+            "scbegin_time":[scbegin_time],//上课时间
+            "scend_time":[scend_time],//下课时间
+            "scteacher":[scteacher],//教师
+            "scpopularity":[scpopularity],//课程最大人数
+            "composition":[composition]//课程行政班组成
+        },
+        {
+            "scid":[scid],
+            "sctask":[sctask],
+            "scday":[scday],
+            "sccampus":[sccampus],
+            "scbuilding":[scbuilding],
+            "scroom":[scroom],
+            "scbegin_week":[scbegin_week],
+            "scend_week":[scend_week],
+            "scbegin_time":[scbegin_time],
+            "scend_time":[scend_time],
+            "scteacher":[scteacher],
+            "scpopularity":[scpopularity],
+            "composition":[composition]
+        }
+        //其他课程信息
+    ]
+}
+```
 (3)/dashboard
 1）/weekView
 输入：

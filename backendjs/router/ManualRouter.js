@@ -136,4 +136,21 @@ router.post("/change",async(req,res)=>{
 
 })
 
+router.get("/all",async(req,res)=>{
+    const query = "SELECT `scid`, `sctask`, `scday`,`sccampus`, `scbuilding`, `scroom`, `scbegin_week`, `scend_week`, `scbegin_time`, `scend_time`, `scteacher`,`scpopularity`, task.taformclass as `composition` FROM `schedule` join `task` on schedule.sctask=task.taname;";
+    const params = [];
+    const {err,rows} = await db.async.all(query,params);
+    if(err){
+        res.send({
+            "code":500,
+            "msg":"数据库读取错误"
+        });
+    }else{
+        res.send({
+            "code":200,
+            rows
+        });
+    }
+})
+
 module.exports = router;
