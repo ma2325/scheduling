@@ -83,19 +83,23 @@ query:week=[week]//查询的周
     "data":[
         [
             {
-                "building":[building],
-                "rate":[rate]//占用率
+                "building": "车间",
+                "occupied": 0,//占用教室数
+                "total": 9,//总教室数
+                "rate": 0//占用率
             },
             {
                 "building":[building],
+                "occupied":[occupied],
+                "total":[total],
                 "rate":[rate]
             }
             //其他建筑及其对应占用率
         ],
         [
             {
-                "type":[type],
-                "count":[count]//此种类型的课程数量
+                "type": "理论",
+                "count": 0//此种类型的课程数量
             },
             {
                 "type":[type],
@@ -128,8 +132,8 @@ query:week=[week]//查询的周
     "rows":
     [
         {
-            "rid":[rid],//教室id号
-            "rname":[rname],//教室名
+            "rid": "CJ1-bjcj",//教室id号
+            "rname": "CJ1-钣金车间"//教室名称
         },
         {
             "rid":[rid],
@@ -155,8 +159,8 @@ query:week=[week]//查询的周
     "rows":
     [
         {
-            "scid":[scid],//任务id号
-            "sctask":[sctask]//任务名称
+            "scid": 1,//任务id号
+            "sctask": "570102KBOB032024202511017"//任务对应的task的教学班编号
         },
         {
             "scid":[scid],
@@ -172,18 +176,16 @@ query:week=[week]//查询的周
 ```json
 //request参数格式(scid为必选参数，其他所有参数均为可选参数)
 { 
-    "scid":[scid], 
-    "sctask":[sctask], 
-    "sccampus":[sccampus], 
-    "scbuilding":[scbuilding], 
+    "scid":[scid], //auto increment integer primary key唯一标识
+    "sctask":[sctask], //教学班id
     "scroom":[scroom], //教室号
     "scbegin_week":[scbegin_week], 
     "scend_week":[scend_week], 
-    "scday":[scday], //星期几
-    "scbegin_time":[scbegin_time],//上课时间 
-    "scend_time":[scend_time], //下课时间
-    "scteacher":[scteacher], 
-    "scpopularity":[scpopularity]//课程最大人数
+    "scday_of_week":[scday], //星期几
+    "scbegin_time":[scbegin_time],//上课时间(time) 
+    "scend_time":[scend_time], //下课时间(time)
+    "scteacherid":[scteacherid],
+    "scteacherdepartment":[scteacherdepartment],//教师所在部门名称
 }
 //respond when success
 {
@@ -205,33 +207,29 @@ query:week=[week]//查询的周
     "rows":
     [
         {
-            "scid":[scid],//任务id号
-            "sctask":[sctask],//任务名称
-            "scday":[scday],//星期几
-            "sccampus":[sccampus],//校区
-            "scbuilding":[scbuilding],//楼名
-            "scroom":[scroom],//教室号
-            "scbegin_week":[scbegin_week],//开始周
-            "scend_week":[scend_week],//结束周
-            "scbegin_time":[scbegin_time],//上课时间
-            "scend_time":[scend_time],//下课时间
-            "scteacher":[scteacher],//教师
-            "scpopularity":[scpopularity],//课程最大人数
-            "composition":[composition]//课程行政班组成
+            "scid": 1,
+            "sctask": "570102KBOB032024202511017",//教学班id
+            "scday_of_week": "2",//星期几
+            "scroom": "JXL517",//教室号
+            "scbegin_week": 1,
+            "scend_week": 16,
+            "scbegin_time": "08:00:00",
+            "scend_time": "09:40:00",
+            "scteacherid": "130",
+            "scteacherdepartment": "教育艺术学院",
+            "composition": "23学前教育5班"
         },
         {
             "scid":[scid],
             "sctask":[sctask],
-            "scday":[scday],
-            "sccampus":[sccampus],
-            "scbuilding":[scbuilding],
+            "scday_of_week":[scday_of_week],
             "scroom":[scroom],
             "scbegin_week":[scbegin_week],
             "scend_week":[scend_week],
             "scbegin_time":[scbegin_time],
             "scend_time":[scend_time],
-            "scteacher":[scteacher],
-            "scpopularity":[scpopularity],
+            "scteacherid":[scteacherid],
+            "scteacherdepartment":[scteacherdepartment],
             "composition":[composition]
         }
         //其他课程信息

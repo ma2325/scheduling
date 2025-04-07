@@ -38,18 +38,26 @@ router.get("/", async (req, res) => {
             const roomOccupied = await Promise.all(
                 buildingNames.map((b) =>
                     getCountData(
-                        "SELECT COUNT(*) AS `cnt` FROM `schedule` WHERE `scbegin_week` <= ? AND `scend_week` >= ? AND `scbuilding` = ?",
+                        `SELECT COUNT(*) AS cnt
+                         FROM schedule 
+                         JOIN room ON room.rid = schedule.scroom 
+                         WHERE schedule.scbegin_week <= ? 
+                           AND schedule.scend_week >= ? 
+                           AND room.rbuilding = ?`,
                         [week, week, b]
                     )
                 )
-            );
+            );            
 
             room_occupancy_rate = buildingNames.map((building, i) => ({
                 building,
+                occupied: roomOccupied[i].data[0].cnt,
+                total: roomCounts[i].data[0].cnt,
                 rate: roomCounts[i].success && roomCounts[i].data[0].cnt !== 0 
                       ? roomOccupied[i].data[0].cnt / roomCounts[i].data[0].cnt 
                       : 0,
             }));
+            
         }
 
         //获取任务类型次数
