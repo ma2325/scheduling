@@ -6,60 +6,101 @@ from csp_solver import CSPScheduler
 from hybid import HybridScheduler
 from inheritance.ConstraintSolver import ConstraintSolver
 from collections import defaultdict
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+def get_session():
+    engine = create_engine("mysql+pymysql://zq:123456@localhost/myAI?charset=utf8mb4")
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    return session
 
 #连接数据库
 conn=sql.connect.connect()
 cursor=conn.cursor()
-
+# 每节课的时间段映射（单位：小时）
+SLOT_TIME_MAP = {
+    1: (7.0, 9.0),    # 第1节
+    2: (9.1, 11.0),   # 第2节
+    3: (11.1, 13.0),  # 第3节
+    4: (13.1, 15.0),   # 第4节
+    5: (15.1, 17.0),  # 第5节
+    6: (17., 19.0),   # 第6节
+    7: (19.1, 21.0),  # 第7节
+    8: (21.1, 23.0)    # 第8节
+}
 
 def convert_to_schedules(best_solution):
-    # 按课程、教室、教师、天、节次分组
-    grouped = defaultdict(list)
+    # 假设 SLOT_TIME_MAP 是节次到时间的映射，例如：
+    # SLOT_TIME_MAP = {1: (8.0, 8.5), 2: (8.5, 9.0), ...}
+    # 请根据实际情况补充定义
+
+    # 按周、天、课程、教室、教师分组，收集该周该天的所有节次
+    weekly_entries = defaultdict(list)
     for entry in best_solution:
         course_uid, rid, teacher, week, day, slot = entry
-        key = (course_uid, rid, teacher, day, slot)
-        grouped[key].append(week)
+        key = (course_uid, rid, teacher, week, day)
+        weekly_entries[key].append(slot)
+
+    # 处理每个周次的节次，合并连续节次
+    processed = []
+    for key, slots in weekly_entries.items():
+        course_uid, rid, teacher, week, day = key
+        sorted_slots = sorted(slots)
+        # 检查节次是否连续
+        is_continuous = all(sorted_slots[i] == sorted_slots[i-1] + 1 for i in range(1, len(sorted_slots)))
+        if not is_continuous:
+            continue  # 忽略非连续节次（根据需求调整）
+        start_slot = sorted_slots[0]
+        end_slot = sorted_slots[-1]
+        processed.append((course_uid, rid, teacher, week, day, start_slot, end_slot))
+
+    # 按课程、教室、教师、天、起始终止节次分组，合并周次范围
+    grouped = defaultdict(list)
+    for entry in processed:
+        course_uid, rid, teacher, week, day, start_slot, end_slot = entry
+        group_key = (course_uid, rid, teacher, day, start_slot, end_slot)
+        grouped[group_key].append(week)
 
     schedules = []
-    for key, weeks in grouped.items():
-        course_uid, rid, teacher, day, slot = key
+    for group_key, weeks in grouped.items():
+        course_uid, rid, teacher, day, start_slot, end_slot = group_key
         weeks_sorted = sorted(weeks)
-
-        # 分割连续周次区间（如 [1,2,3,5,6,8] → [[1-3], [5-6], [8-8]）
+        # 合并周次为连续区间
         ranges = []
-        if not weeks_sorted:
-            continue
-
-        start = end = weeks_sorted[0]
+        start_week = end_week = weeks_sorted[0]
         for week in weeks_sorted[1:]:
-            if week == end + 1:
-                end = week
+            if week == end_week + 1:
+                end_week = week
             else:
-                ranges.append((start, end))
-                start = end = week
-        ranges.append((start, end))
+                ranges.append((start_week, end_week))
+                start_week = end_week = week
+        ranges.append((start_week, end_week))
 
-        # 为每个连续区间生成记录
-        for start_week, end_week in ranges:
-            scid = f"{course_uid}_{rid}_{teacher}_{start_week}_{end_week}_{day}_{slot}"
+        # 计算起止时间（需确保 SLOT_TIME_MAP 已定义）
+        start_time = SLOT_TIME_MAP[start_slot][0]
+        end_time = SLOT_TIME_MAP[end_slot][1]
+
+        # 生成 Schedule 对象
+        for start_w, end_w in ranges:
+            scid = f"{course_uid}_{rid}_{teacher}_{start_w}_{end_w}_{day}_{start_slot}-{end_slot}"
             schedules.append(
                 Schedule(
                     scid=scid,
-                    course_uid=course_uid,
-                    teacher=teacher,
-                    rid=rid,
-                    start_week=start_week,
-                    end_week=end_week,
-                    day=day,
-                    slots=[slot]
+                    sctask=course_uid,  # 假设 task 使用 course_uid 填充
+                    scteacher=teacher,
+                    scroom=rid,
+                    scbegin_week=start_w,
+                    scend_week=end_w,
+                    scday_of_week=day,
+                    scbegin_time=start_time,
+                    scend_time=end_time
                 )
             )
-
     return schedules
 #载入课程
 '''课程号，教学班名，课程人数，老师（工号表示），时间，周节次，连排节次，指定教室类型，指定教室，指定时间，指定教学楼，开课校区,是否为合班，'''
 def load_course():
-    cursor.execute("SELECT tacode,taformclass,tapopularity,taclasshour ,taproperty,tateacherid,tahourweek,tacontinuous,tafixedtype,tafixedroom,tafixedtime,tafixedbuilding,tacampus FROM task")
+    cursor.execute("SELECT tacode,taformclass,tapopularity,taclasshour ,taproperty,tateacherid,tateachername,tahourweek,tacontinuous,tafixedtype,tafixedroom,tafixedtime,tafixedbuilding,tacampus FROM task")
     courses=[]#列表储存
     for row in cursor.fetchall():
         course=sql.models.Course(
@@ -69,6 +110,7 @@ def load_course():
             total_hours=row['taclasshour'],
             taproperty=row['taproperty'],
             teacherid=row['tateacherid'],
+            teachername=row['tateachername'],
             task=row['tahourweek'],
             continuous=row['tacontinuous'],
             fixedroomtype=row['tafixedtype'],
@@ -121,21 +163,20 @@ def parse_time_slots(task_str):
     return time_slots
 
 def prepare_courses(raw_courses):
-    """将数据库课程转换为CSPScheduler需要的格式"""
+    """将数据库课程转换为CSPScheduler需要的格式（保留所有属性）"""
     prepared = []
     for course in raw_courses:
-        # 创建符合CSPScheduler期望的课程对象
-        prepared_course = type('Course', (), {
-            'uid': f"{course.cid}_{course.formclass}",
-            'time_slots': parse_time_slots(course.task),
-            'total_hours': course.total_hours,
-            'continuous': course.continuous,
-            'popularity': course.popularity,
-            'teacherid': course.teacherid,
-            'fixedroomtype': course.fixedroomtype,
-            'fixedroom': course.fixedroom,
-            # 添加其他必要属性...
-        })
+        # 确保原始课程有teacher_uid
+        if not hasattr(course, 'teacher_uid'):
+            course.teacher_uid = f"{course.teacherid}-{course.teachername}"
+
+        # 创建新对象并复制所有必要属性
+        prepared_course = type('Course', (), vars(course).copy())  # 复制所有属性
+
+        # 添加/覆盖特定属性
+        prepared_course.uid = f"{course.cid}_{course.formclass}"
+        prepared_course.time_slots = parse_time_slots(course.task)
+
         prepared.append(prepared_course)
     return prepared
 
@@ -170,6 +211,7 @@ def load_myclass():
 try:
     # 从数据库加载原始数据
     raw_courses = load_course()
+    # 数据加载后检查
     raw_rooms = load_room()
     myclasses = load_myclass()
 
@@ -178,6 +220,11 @@ try:
     rooms = prepare_rooms(raw_rooms)
 
     print(f"\n=== 数据加载完成 ===")
+    sample_course = courses[0]
+    print("\n验证课程属性:")
+    print(f"uid: {sample_course.uid}")
+    print(f"teacher_uid: {getattr(sample_course, 'teacher_uid', '属性不存在')}")
+    print(f"所有属性: {vars(sample_course).keys()}")
     print(f"课程总数: {len(courses)}")
     print(f"教室总数: {len(rooms)}")
     print(f"行政班总数: {len(myclasses)}")
@@ -193,7 +240,23 @@ try:
         print(f"\n记录 {idx}:")
         for key, value in schedule.to_dict().items():
             print(f"  {key}: {value}")
-    # 计算排课率
+    '''
+    写入数据库
+    session=get_session()
+    session = get_session()
+
+    schedules = [
+        Schedule(scid="001", sctask='111',scteacher="T001", scroom="R101",
+                 scbegin_week=1, scend_week=8, scday_of_week=1,  scbegin_time=8.0, scend_time=9.5),
+        # 更多数据...
+    ]
+
+    session.add_all(schedules)
+    session.commit()
+    session.close()
+
+    '''
+# 计算排课率
     scheduled_courses = {entry[0] for entry in schedule}
     total_courses = len(courses)
     scheduling_rate = len(scheduled_courses) / total_courses * 100
@@ -219,26 +282,6 @@ try:
         for course in unscheduled[:20]:  # 只显示前20条
             weeks = ", ".join(f"{s}-{e}" for s, e, _ in course.time_slots)
             print(f"{course.uid:8} | {weeks:10} | {getattr(course, 'continuous', 1):8} | {getattr(course, 'fixedroomtype', '无'):12}")
-
-    # 简单统计
-    print("\n=== 简单统计 ===")
-    room_usage = {}
-    for entry in schedule:
-        room_id = entry[1]
-        room_usage[room_id] = room_usage.get(room_id, 0) + 1
-
-    teacher_workload = {}
-    for entry in schedule:
-        teacher_id = entry[2]
-        teacher_workload[teacher_id] = teacher_workload.get(teacher_id, 0) + 1
-
-    print("\n教室使用频率TOP5:")
-    for room_id, count in sorted(room_usage.items(), key=lambda x: -x[1])[:5]:
-        print(f"教室 {room_id}: {count}次")
-
-    print("\n教师授课量TOP5:")
-    for teacher_id, count in sorted(teacher_workload.items(), key=lambda x: -x[1])[:5]:
-        print(f"教师 {teacher_id}: {count}节课")
 
 finally:
     # 关闭数据库连接

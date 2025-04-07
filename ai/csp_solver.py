@@ -128,23 +128,25 @@ class CSPScheduler:
         existing_slots = {e[3:6] for e in solution if e[0] == course.uid}
         new_slots = set(self._expand_pattern(course, pattern))
         if existing_slots & new_slots:
-            return False  # 该课程已占用该教室的其他时间段
-        """检查教室和教师在课程教学周内的可用性"""
+            return False
+
         required_slots = set(self._expand_pattern(course, pattern))
         course_weeks = self._get_course_weeks(course)
 
         for entry in solution:
-            # 教室冲突检查 (同一教室+同周次+同时间段)
+            # 教室冲突检查
             if entry[1] == room.rid and entry[3] in course_weeks:
                 if (entry[4], entry[5]) in {(p[0], p[1]) for p in pattern}:
                     return False
 
-            # 教师冲突检查
-            if (hasattr(course, 'teacherid') and (entry[2] == course.teacherid)):
+            # 教师冲突检查（修改点：使用teacher_uid）
+            if hasattr(course, 'teacher_uid') and (entry[2] == course.teacher_uid):
                 if (entry[3] in course_weeks) and (entry[4], entry[5]) in {(p[0], p[1]) for p in pattern}:
                     return False
 
         return True
+
+
 
     # ------------------- 工具方法 -------------------
     def _expand_pattern(self, course, pattern) -> List[Tuple[int, int, int]]:
@@ -170,15 +172,16 @@ class CSPScheduler:
         return weeks
 
     def _assign_course(self, solution, course, pattern, room):
-        """将课程安排添加到解决方案"""
+        """将课程安排添加到解决方案（修改点：使用teacher_uid）"""
         slots = self._expand_pattern(course, pattern)
         solution.extend(
-            (course.uid, room.rid, getattr(course, 'teacherid', ''),
+            (course.uid, room.rid, getattr(course, 'teacher_uid', ''),  # 关键修改
              week, day, slot
              ) for week, day, slot in slots
         )
         self._log(
             f"✅ 安排课程 {course.uid} -> 教室 {room.rid} "
+            f"教师: {getattr(course, 'teacher_uid', '未知')} "
             f"时间: {self._format_slots(slots)}",
             "SUCCESS"
         )
