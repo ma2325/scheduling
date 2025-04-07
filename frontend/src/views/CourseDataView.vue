@@ -1,5 +1,42 @@
 <template>
   <div class="space-y-6">
+    <!-- 加载状态和错误提示 -->
+    <div v-if="isLoading || loadError" class="bg-white rounded-lg shadow p-4 mb-4">
+      <div v-if="isLoading" class="flex items-center text-gray-600">
+        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        正在加载课程数据...
+      </div>
+      <div v-if="loadError" class="text-red-500">
+        <div class="font-medium">加载数据失败</div>
+        <div class="text-sm">{{ loadError }}</div>
+        <button 
+          @click="fetchCoursesFromAPI" 
+          class="mt-2 px-3 py-1 text-sm rounded-md bg-primary text-white hover:bg-primary-dark"
+        >
+          重试
+        </button>
+      </div>
+    </div>
+
+    <!-- 数据来源信息 -->
+    <div class="bg-white rounded-lg shadow p-4 mb-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <span class="text-sm font-medium">数据来源: </span>
+          <span class="text-sm">测试数据 ({{ testCourses.length }}条) + API数据 ({{ apiCourses.length }}条)</span>
+        </div>
+        <button 
+          @click="fetchCoursesFromAPI" 
+          class="px-3 py-1 text-sm rounded-md border border-input bg-background shadow-sm hover:bg-gray-50"
+        >
+          <RefreshCw class="w-4 h-4 inline-block mr-1" />
+          刷新API数据
+        </button>
+      </div>
+    </div>
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <h2 class="text-xl font-bold">排课数据展示</h2>
       <div class="flex flex-wrap gap-2">
@@ -137,7 +174,7 @@
             </tr>
             <tr class="bg-gray-50">
               <th class="border p-2"></th>
-              <template v-for="day in displayedDays">
+              <template v-for="day in displayedDays" >
                 <th 
                   v-for="period in availablePeriods" 
                   :key="`${day.value}-${period}`" 
@@ -228,7 +265,7 @@
           <tbody>
             <tr v-for="classroom in filteredClassrooms" :key="`thumb-${classroom}`">
               <td class="border p-2 font-medium bg-gray-50">{{ classroom }}</td>
-              <template v-for="day in displayedDays">
+              <template v-for="day in displayedDays" >
                 <td 
                   v-for="period in availablePeriods" 
                   :key="`thumb-${classroom}-${day.value}-${period}`" 
@@ -320,7 +357,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { Search, Download, X, LayoutGrid, Grid } from 'lucide-vue-next';
+import { Search, Download, X, LayoutGrid, Grid, RefreshCw } from 'lucide-vue-next';
 
 // View mode
 const viewMode = ref('detailed');
@@ -371,7 +408,8 @@ const periodTimes = [
 ];
 
 // Sample course data
-const courses = ref([
+// 将原来的 courses 变量重命名为 testCourses
+const testCourses = [
   {
     id: 1,
     name: '710201ZXB01',
@@ -546,7 +584,21 @@ const courses = ref([
     day: 7,
     period: 3
   }
-]);
+];
+
+// 添加API数据数组
+const apiCourses = ref([]);
+
+const courses = computed(() => {
+  if (apiCourses && apiCourses.length > 0) {
+    return apiCourses;
+  }
+  return testCourses;
+});
+
+// 添加API数据加载状态
+const isLoading = ref(false);
+const loadError = ref(null);
 
 // Filtered courses
 const filteredCourses = computed(() => {
@@ -688,6 +740,53 @@ const getCurrentDayOfWeek = () => {
   return day === 0 ? 7 : day;
 };
 
+// 添加从API获取数据的函数
+const fetchCoursesFromAPI = async () => {
+  isLoading.value = true;
+  loadError.value = null;
+  
+  try {
+    const response = await fetch('http://localhost:8080/classroom');
+    
+    if (!response.ok) {
+      throw new Error(`API请求失败: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // 解析API返回的数据
+    const parsedCourses = data.map((item, index) => {
+      // 假设返回的数据格式是 [courseNameAndClasses, classroom, teacherId, week, day, period]
+      const [courseNameAndClasses, classroom, teacherId, week, day, period] = item;
+      
+      // 分离课程名称和班级
+      // 假设格式是 "710201ZXB01_24数字媒体技术1班（五年制）,24数字媒体技术2班（五年制）,..."
+      const parts = courseNameAndClasses.split('_');
+      const name = parts[0];
+      const classes = parts.length > 1 ? parts[1] : '';
+      
+      return {
+        id: 1000 + index, // 使用较大的ID避免与测试数据冲突
+        name,
+        classes,
+        classroom,
+        teacherId,
+        week,
+        day,
+        period
+      };
+    });
+    
+    apiCourses.value = parsedCourses;
+    console.log('从API加载了', parsedCourses.length, '条课程数据');
+  } catch (error) {
+    console.error('获取课程数据失败:', error);
+    loadError.value = error.message;
+  } finally {
+    isLoading.value = false;
+  }
+};
+
 // Lifecycle hooks
 onMounted(() => {
   // Set current day of week
@@ -696,7 +795,9 @@ onMounted(() => {
   // Automatically select current day
   selectedDay.value = currentDayOfWeek.value.toString();
   
-  // Here you can add logic to fetch data from backend
+  // 从API获取数据
+  fetchCoursesFromAPI();
+  
   console.log('Component mounted');
 });
 </script>

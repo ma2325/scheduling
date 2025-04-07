@@ -118,6 +118,7 @@ query:week=[week]//查询的周
 ```
 ### 3.手动排课
 #### (1)/manual/room:
+
 作用：按需获取教室，请求形式：get，附加参数：query
 参数格式：*building=[building],campus=[campus]*
 **备注：1.二者均为可选参数； 2.*building*和*campus*均为LIKE查询 3.*campus*为校区，后同**
@@ -143,9 +144,11 @@ query:week=[week]//查询的周
 }
 ```
 #### (2)/manual/task:
+
 作用：按需获取课程，请求形式：post，附加参数：query
 参数格式：*week=[week], building=[building], campus=[campus]*
 **备注：1.三者均为可选参数; 2.*building*参数和*campus*参数均为*LIKE*查询**
+
 ```json
 //respond when success
 {
@@ -218,63 +221,64 @@ string
 export interface Request {
     /**
      * 教师编号
-     */
-    user?: string;示例值:304
-    /**
-     * 用户类型
-     */
-    userType?: string;示例值:teacher
-    /**
-     * 查看周
-     */
-    week?: string;
-    [property: string]: any;示例值:1
-}
+          */
+        user?: string;示例值:304
+        /**
+          * 用户类型
+               */
+            userType?: string;示例值:teacher
+            /**
+               * 查看周
+                    */
+                    week?: string;
 
+[property: string]: any;示例值:1
+
+}
 
 返回：
 export interface Datum {
     /**
      * 楼名
-     */
-    building: string;
-    /**
-     * 校区名
-     */
-    campus: string;
-    /**
-     * 教室名
-     */
-    classroom: string;
-    /**
-     * 结束时间
-     */
-    endTime: string;
-    /**
-     * 排课记录唯一标识
-     */
-    id: number;
-    /**
-     * 课程名
-     */
-    name: string;
-    /**
-     * 开始时间
-     */
-    startTime: string;
-    /**
-     * 结束时间
-     */
-    teacher: string;
-    /**
-     * 上课星期几
-     */
-    weekday: number;
-    /**
-     * 上课周集合
-     */
-    weeks: number[];
-    [property: string]: any;
+          */
+        building: string;
+        /**
+          * 校区名
+               */
+            campus: string;
+            /**
+               * 教室名
+                    */
+                classroom: string;
+                /**
+                    * 结束时间
+                         */
+                    endTime: string;
+                    /**
+                         * 排课记录唯一标识
+                              */
+                        id: number;
+                        /**
+                              * 课程名
+                                   */
+                            name: string;
+                            /**
+                                   * 开始时间
+                                        */
+                                startTime: string;
+                                /**
+                                        * 结束时间
+                                             */
+                                    teacher: string;
+                                    /**
+                                             * 上课星期几
+                                                  */
+                                        weekday: number;
+                                        /**
+                                                  * 上课周集合
+                                                       */
+                                            weeks: number[];
+[property: string]: any;
 }
 
 2）/termView
@@ -294,14 +298,13 @@ student
 export interface Request {
     /**
      * 教师编号
-     */
-    user?: string;示例值:304
-    /**
-     * 用户类型
-     */
-    userType?: string;示例值:teacher
+          */
+        user?: string;示例值:304
+        /**
+          * 用户类型
+               */
+            userType?: string;示例值:teacher
 }
-
 
 返回：
 同/weekView
