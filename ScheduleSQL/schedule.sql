@@ -304,16 +304,14 @@ DROP TABLE IF EXISTS `schedule`;
 CREATE TABLE `schedule` (
   `scid` int(11) NOT NULL DEFAULT '0',
   `sctask` varchar(50) NOT NULL DEFAULT '',
-  `scday` varchar(50) NOT NULL DEFAULT '',
-  `sccampus` varchar(50) NOT NULL DEFAULT '',
-  `scbuilding` varchar(50) NOT NULL DEFAULT '',
+  `scday_of_week` TINYINT NOT NULL DEFAULT 0,
   `scroom` varchar(50) NOT NULL DEFAULT '',
   `scbegin_week` int(11) NOT NULL,
   `scend_week` int(11) NOT NULL,
   `scbegin_time` time NOT NULL,
   `scend_time` time NOT NULL,
-  `scteacher` int(11) NOT NULL,
-  `scpopularity` int(11) NOT NULL,
+  `scteacherid` varchar(50) NOT NULL,
+  `scteacherdepartment` varchar(50) NOT NULL,
   PRIMARY KEY (`scid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -324,6 +322,7 @@ CREATE TABLE `schedule` (
 
 LOCK TABLES `schedule` WRITE;
 /*!40000 ALTER TABLE `schedule` DISABLE KEYS */;
+INSERT INTO schedule.schedule (scid, sctask, scday_of_week, scroom, scbegin_week, scend_week, scbegin_time, scend_time, scteacherid, scteacherdepartment) VALUES (1, '570102KBOB032024202511017', 2, 'JXL517', 1, 16, '08:00:00', '09:40:00', '0130', '教育艺术学院');
 /*!40000 ALTER TABLE `schedule` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -335,38 +334,70 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER before_schedule_insert
-BEFORE INSERT ON schedule
-FOR EACH ROW
-BEGIN
-    -- 检查时间冲突
-    IF EXISTS (
-        SELECT 1
-        FROM schedule
-        WHERE scroom = NEW.scroom
-          AND tabegin_week = NEW.tabegin_week
-          AND taend_week = NEW.taend_week
-          AND (
-              (NEW.tabegin_time BETWEEN tabegin_time AND taend_time)
-              OR (NEW.taend_time BETWEEN tabegin_time AND taend_time)
-              OR (tabegin_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
-              OR (taend_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
-          )
-    ) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Time conflict: Another course is already scheduled in this room during the specified time';
-    END IF;
-
-    IF NEW.taend_week <= NEW.tabegin_week THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'End week must better than start week';
-    END IF;
-
-    IF NEW.taend_time <= NEW.tabegin_time THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'End time must better than start time';
-    END IF;
-
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER before_schedule_insert
+
+BEFORE INSERT ON schedule
+
+FOR EACH ROW
+
+BEGIN
+
+    -- 检查时间冲突
+
+    IF EXISTS (
+
+        SELECT 1
+
+        FROM schedule
+
+        WHERE scroom = NEW.scroom
+
+          AND tabegin_week = NEW.tabegin_week
+
+          AND taend_week = NEW.taend_week
+
+          AND (
+
+              (NEW.tabegin_time BETWEEN tabegin_time AND taend_time)
+
+              OR (NEW.taend_time BETWEEN tabegin_time AND taend_time)
+
+              OR (tabegin_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
+
+              OR (taend_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
+
+          )
+
+    ) THEN
+
+        SIGNAL SQLSTATE '45000'
+
+        SET MESSAGE_TEXT = 'Time conflict: Another course is already scheduled in this room during the specified time';
+
+    END IF;
+
+
+
+    IF NEW.taend_week <= NEW.tabegin_week THEN
+
+        SIGNAL SQLSTATE '45000'
+
+        SET MESSAGE_TEXT = 'End week must better than start week';
+
+    END IF;
+
+
+
+    IF NEW.taend_time <= NEW.tabegin_time THEN
+
+        SIGNAL SQLSTATE '45000'
+
+        SET MESSAGE_TEXT = 'End time must better than start time';
+
+    END IF;
+
+
+
 END */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -382,39 +413,72 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER before_schedule_update
-BEFORE UPDATE ON schedule
-FOR EACH ROW
-BEGIN
-    -- 检查时间冲突
-    IF EXISTS (
-        SELECT 1
-        FROM schedule
-        WHERE scroom = NEW.scroom
-          AND tabegin_week = NEW.tabegin_week
-          AND taend_week = NEW.taend_week
-          AND scid != NEW.scid -- 排除自身
-          AND (
-              (NEW.tabegin_time BETWEEN tabegin_time AND taend_time)
-              OR (NEW.taend_time BETWEEN tabegin_time AND taend_time)
-              OR (tabegin_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
-              OR (taend_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
-          )
-    ) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Time conflict: Another course is already scheduled in this room during the specified time';
-    END IF;
-
-    IF NEW.taend_week <= NEW.tabegin_week THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'End week must better than start week';
-    END IF;
-
-    IF NEW.taend_time <= NEW.tabegin_time THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'End time must better than start time';
-    END IF;
-
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER before_schedule_update
+
+BEFORE UPDATE ON schedule
+
+FOR EACH ROW
+
+BEGIN
+
+    -- 检查时间冲突
+
+    IF EXISTS (
+
+        SELECT 1
+
+        FROM schedule
+
+        WHERE scroom = NEW.scroom
+
+          AND tabegin_week = NEW.tabegin_week
+
+          AND taend_week = NEW.taend_week
+
+          AND scid != NEW.scid -- 排除自身
+
+          AND (
+
+              (NEW.tabegin_time BETWEEN tabegin_time AND taend_time)
+
+              OR (NEW.taend_time BETWEEN tabegin_time AND taend_time)
+
+              OR (tabegin_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
+
+              OR (taend_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
+
+          )
+
+    ) THEN
+
+        SIGNAL SQLSTATE '45000'
+
+        SET MESSAGE_TEXT = 'Time conflict: Another course is already scheduled in this room during the specified time';
+
+    END IF;
+
+
+
+    IF NEW.taend_week <= NEW.tabegin_week THEN
+
+        SIGNAL SQLSTATE '45000'
+
+        SET MESSAGE_TEXT = 'End week must better than start week';
+
+    END IF;
+
+
+
+    IF NEW.taend_time <= NEW.tabegin_time THEN
+
+        SIGNAL SQLSTATE '45000'
+
+        SET MESSAGE_TEXT = 'End time must better than start time';
+
+    END IF;
+
+
+
 END */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
