@@ -24,3 +24,14 @@ mysql -u [username] -p [database_name] < [database_name.sql]
 法2：直接启动mysql命令行，将 SQL 文件导入到本地 MySQL 服务器
 use [database_bane]
 source [D:/Demo.sql]
+
+## :schedule表
+Scid auto increment integer primary key唯一标识
+Sctask varchar 教学班id
+Scroom varchar 教室id
+Scbegin_week 开始周 integer
+Scend_week 结束周 integer
+Scday_of_week 周几 integer
+Scbegin_time 开始时间 time
+Scend_time 结束时间 time
+Scteacher 教师姓名 varchar（工号+单位）
