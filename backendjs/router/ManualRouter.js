@@ -1,11 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const crypto = require('crypto');
 const { db } = require("../db/DbUtils");
-
-router.get("/test",async(req,res)=>{
-    res.send("hello manual scheduling");
-})
 
 router.get("/room",async(req,res)=>{
     const building = req.query.building;
@@ -78,9 +73,9 @@ router.get("/task",async (req,res)=>{
         });
     }
 });
-
+//!SCHEDULE relative
 router.post("/change",async(req,res)=>{
-    const { scid, sctask, sccampus, scbuilding, scroom, scbegin_week, scend_week, scday, scbegin_time, scend_time, scteacher, scpopularity } = req.body;
+    const { scid, sctask, scroom, scbegin_week, scend_week, scday_of_week, scbegin_time, scend_time, scteacher} = req.body;
     const queryOld = "SELECT * FROM `schedule` WHERE `scid` = ?;";
     const paramsOld = [scid];
     const { err: errOld, rows: rowsOld } = await db.async.all(queryOld, paramsOld);
@@ -100,16 +95,13 @@ router.post("/change",async(req,res)=>{
     const oldData = rowsOld[0];
     const oldScid = scid || oldData.scid;
     const oldTask = sctask || oldData.sctask;
-    const oldCampus = sccampus || oldData.sccampus;
-    const oldBuilding = scbuilding || oldData.scbuilding;
     const oldRoom = scroom || oldData.scroom;
     const oldBeginWeek = scbegin_week || oldData.scbegin_week;
     const oldEndWeek = scend_week || oldData.scend_week;
-    const oldDay = scday || oldData.scday;
+    const oldDay = scday_of_week || oldData.scday_of_week;
     const oldBeginTime = scbegin_time || oldData.scbegin_time;
     const oldEndTime = scend_time || oldData.scend_time;
     const oldTeacher = scteacher || oldData.scteacher;
-    const oldPopularity = scpopularity || oldData.scpopularity;
     //Check if the new data is valid
     if (oldBeginWeek > oldEndWeek || oldBeginTime > oldEndTime) {
         return res.send({
@@ -118,8 +110,8 @@ router.post("/change",async(req,res)=>{
         });
     }
     //update the data in database
-    const queryUpdate = "UPDATE `schedule` SET `sctask` = ?, `sccampus` = ?, `scbuilding` = ?, `scroom` = ?, `scbegin_week` = ?, `scend_week` = ?, `scday` = ?, `scbegin_time` = ?, `scend_time` = ?, `scteacher` = ?, `scpopularity` = ? WHERE `scid` = ?;";
-    const paramsUpdate = [oldTask, oldCampus, oldBuilding, oldRoom, oldBeginWeek, oldEndWeek, oldDay, oldBeginTime, oldEndTime, oldTeacher, oldPopularity, scid];
+    const queryUpdate = "UPDATE `schedule` SET `sctask` = ?, `scroom` = ?, `scbegin_week` = ?, `scend_week` = ?, `scday_of_week` = ?, `scbegin_time` = ?, `scend_time` = ?, `scteacher` = ? WHERE `scid` = ?;";
+    const paramsUpdate = [oldTask, oldRoom, oldBeginWeek, oldEndWeek, oldDay, oldBeginTime, oldEndTime, oldTeache, scid];
     const { err: errUpdate, result: resultUpdate } = await db.async.run(queryUpdate, paramsUpdate);
     if (errUpdate) {
         return res.send({
@@ -136,7 +128,7 @@ router.post("/change",async(req,res)=>{
 })
 
 router.get("/all",async(req,res)=>{
-    const query = "SELECT `scid`, `sctask`, `scday`,`sccampus`, `scbuilding`, `scroom`, `scbegin_week`, `scend_week`, `scbegin_time`, `scend_time`, `scteacher`,`scpopularity`, task.taformclass as `composition` FROM `schedule` join `task` on schedule.sctask=task.taname;";
+    const query = "SELECT `scid`, `sctask`, `scday`, `scroom`, `scbegin_week`, `scend_week`, `scbegin_time`s, `scend_time`, `scteacher`, task.taformclass as `composition` FROM `schedule` join `task` on schedule.sctask=task.taname;";
     const params = [];
     const {err,rows} = await db.async.all(query,params);
     if(err){
