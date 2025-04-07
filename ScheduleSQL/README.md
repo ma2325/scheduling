@@ -25,7 +25,7 @@ mysql -u [username] -p [database_name] < [database_name.sql]
 use [database_bane]
 source [D:/Demo.sql]
 
-## ：schedule表
+## :schedule表
 Scid auto increment integer primary key唯一标识
 Sctask varchar 教学班id
 Scroom varchar 教室id
