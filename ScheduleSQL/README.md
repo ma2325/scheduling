@@ -34,4 +34,6 @@ Scend_week 结束周 integer
 Scday_of_week 周几 integer
 Scbegin_time 开始时间 time
 Scend_time 结束时间 time
-Scteacher 教师姓名 varchar（工号+单位）
+scteacherid 教师工号 varchar
+scteacherdepartment 教师部门 varchar
+

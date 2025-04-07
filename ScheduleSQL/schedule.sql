@@ -304,7 +304,7 @@ DROP TABLE IF EXISTS `schedule`;
 CREATE TABLE `schedule` (
   `scid` int(11) NOT NULL DEFAULT '0',
   `sctask` varchar(50) NOT NULL DEFAULT '',
-  `scday_of_week` varchar(50) NOT NULL DEFAULT '',
+  `scday_of_week` TINYINT NOT NULL DEFAULT 0,
   `scroom` varchar(50) NOT NULL DEFAULT '',
   `scbegin_week` int(11) NOT NULL,
   `scend_week` int(11) NOT NULL,
@@ -322,7 +322,7 @@ CREATE TABLE `schedule` (
 
 LOCK TABLES `schedule` WRITE;
 /*!40000 ALTER TABLE `schedule` DISABLE KEYS */;
-INSERT INTO schedule.schedule (scid, sctask, scday_of_week, scroom, scbegin_week, scend_week, scbegin_time, scend_time, scteacherid, scteacherdepartment) VALUES (1, '570102KBOB032024202511017', '2', 'JXL517', 1, 16, '08:00:00', '09:40:00', '0130', '教育艺术学院');
+INSERT INTO schedule.schedule (scid, sctask, scday_of_week, scroom, scbegin_week, scend_week, scbegin_time, scend_time, scteacherid, scteacherdepartment) VALUES (1, '570102KBOB032024202511017', 2, 'JXL517', 1, 16, '08:00:00', '09:40:00', '0130', '教育艺术学院');
 /*!40000 ALTER TABLE `schedule` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
