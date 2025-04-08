@@ -24,88 +24,98 @@ SLOT_TIME_MAP = {
     3: (11.1, 13.0),  # 第3节
     4: (13.1, 15.0),   # 第4节
     5: (15.1, 17.0),  # 第5节
-    6: (17., 19.0),   # 第6节
+    6: (17.0, 19.0),   # 第6节
     7: (19.1, 21.0),  # 第7节
     8: (21.1, 23.0)    # 第8节
 }
 
-def convert_to_schedules(best_solution):
-    # 假设 SLOT_TIME_MAP 是节次到时间的映射，例如：
-    # SLOT_TIME_MAP = {1: (8.0, 8.5), 2: (8.5, 9.0), ...}
-    # 请根据实际情况补充定义
+def convert_to_schedules(best_solution, courses):
+    """将排课结果转换为合并后的时间段记录"""
+    course_map = {course.uid: course for course in courses}
 
-    # 按周、天、课程、教室、教师分组，收集该周该天的所有节次
-    weekly_entries = defaultdict(list)
+    # 按课程+教室+教师+星期+节次分组
+    schedule_groups = defaultdict(list)
     for entry in best_solution:
-        course_uid, rid, teacher, week, day, slot = entry
-        key = (course_uid, rid, teacher, week, day)
-        weekly_entries[key].append(slot)
+        course_uid, rid, teacher_uid, week, day, slot = entry
+        if course_uid not in course_map:
+            continue
 
-    # 处理每个周次的节次，合并连续节次
-    processed = []
-    for key, slots in weekly_entries.items():
-        course_uid, rid, teacher, week, day = key
-        sorted_slots = sorted(slots)
-        # 检查节次是否连续
-        is_continuous = all(sorted_slots[i] == sorted_slots[i-1] + 1 for i in range(1, len(sorted_slots)))
-        if not is_continuous:
-            continue  # 忽略非连续节次（根据需求调整）
-        start_slot = sorted_slots[0]
-        end_slot = sorted_slots[-1]
-        processed.append((course_uid, rid, teacher, week, day, start_slot, end_slot))
-
-    # 按课程、教室、教师、天、起始终止节次分组，合并周次范围
-    grouped = defaultdict(list)
-    for entry in processed:
-        course_uid, rid, teacher, week, day, start_slot, end_slot = entry
-        group_key = (course_uid, rid, teacher, day, start_slot, end_slot)
-        grouped[group_key].append(week)
+        # 分组键：(课程, 教室, 教师, 星期, 节次)
+        group_key = (course_uid, rid, teacher_uid, day, slot)
+        schedule_groups[group_key].append(week)
 
     schedules = []
-    for group_key, weeks in grouped.items():
-        course_uid, rid, teacher, day, start_slot, end_slot = group_key
-        weeks_sorted = sorted(weeks)
-        # 合并周次为连续区间
-        ranges = []
-        start_week = end_week = weeks_sorted[0]
-        for week in weeks_sorted[1:]:
-            if week == end_week + 1:
-                end_week = week
-            else:
-                ranges.append((start_week, end_week))
-                start_week = end_week = week
-        ranges.append((start_week, end_week))
+    record_id = 1
+    for key, weeks in schedule_groups.items():
+        course_uid, rid, teacher_uid, day, slot = key
+        course = course_map[course_uid]
 
-        # 计算起止时间（需确保 SLOT_TIME_MAP 已定义）
-        start_time = SLOT_TIME_MAP[start_slot][0]
-        end_time = SLOT_TIME_MAP[end_slot][1]
+        # 合并连续周次（如[1,2,3,5,6]→[(1,3),(5,6)]）
+        merged_weeks = merge_continuous_numbers(sorted(weeks))
 
-        # 生成 Schedule 对象
-        for start_w, end_w in ranges:
-            scid = f"{course_uid}_{rid}_{teacher}_{start_w}_{end_w}_{day}_{start_slot}-{end_slot}"
+        # 获取时间范围
+        start_time = SLOT_TIME_MAP[slot][0]  # 该节次的开始时间（浮点数）
+        end_time = SLOT_TIME_MAP[slot][1]    # 该节次的结束时间
+
+        for start_week, end_week in merged_weeks:
             schedules.append(
                 Schedule(
-                    scid=scid,
-                    sctask=course_uid,  # 假设 task 使用 course_uid 填充
-                    scteacher=teacher,
+                    scid=record_id,
+                    sctask=course.formclassid,
+                    scteacherid=teacher_uid,
                     scroom=rid,
-                    scbegin_week=start_w,
-                    scend_week=end_w,
+                    scbegin_week=start_week,
+                    scend_week=end_week,
                     scday_of_week=day,
-                    scbegin_time=start_time,
-                    scend_time=end_time
+                    scbegin_time=float_to_time(start_time),
+                    scend_time=float_to_time(end_time),
+                    scteacherdepartment='depart'
+                    #scampus=getattr(course, 'capmpus', '')
                 )
             )
+            record_id += 1
+
     return schedules
+
+def merge_continuous_numbers(numbers):
+    """合并连续数字 如[1,2,3,5,6]→[(1,3),(5,6)]"""
+    if not numbers:
+        return []
+
+    ranges = []
+    start = end = numbers[0]
+
+    for num in numbers[1:]:
+        if num == end + 1:
+            end = num
+        else:
+            ranges.append((start, end))
+            start = end = num
+    ranges.append((start, end))
+
+    return ranges
+
+def float_to_time(time_float):
+    """将浮点数时间转换为HH:MM:SS格式"""
+    hours = int(time_float)
+    minutes = int(round((time_float - hours) * 60))
+    return f"{hours:02d}:{minutes:02d}:00"
+
+def float_to_time(time_float):
+    """精确时间转换（处理8.0->08:00:00, 8.5->08:30:00）"""
+    hours = int(time_float)
+    minutes = int(round((time_float - hours) * 60))
+    return f"{hours:02d}:{minutes:02d}:00"
 #载入课程
 '''课程号，教学班名，课程人数，老师（工号表示），时间，周节次，连排节次，指定教室类型，指定教室，指定时间，指定教学楼，开课校区,是否为合班，'''
 def load_course():
-    cursor.execute("SELECT tacode,taformclass,tapopularity,taclasshour ,taproperty,tateacherid,tateachername,tahourweek,tacontinuous,tafixedtype,tafixedroom,tafixedtime,tafixedbuilding,tacampus FROM task")
+    cursor.execute("SELECT tacode,taformclass,taformclassid,tapopularity,taclasshour ,taproperty,tateacherid,tateachername,tahourweek,tacontinuous,tafixedtype,tafixedroom,tafixedtime,tafixedbuilding,tacampus FROM task")
     courses=[]#列表储存
     for row in cursor.fetchall():
         course=sql.models.Course(
             cid=row['tacode'],
             formclass=row['taformclass'],
+            formclassid=row['taformclassid'],
             popularity=row['tapopularity'],
             total_hours=row['taclasshour'],
             taproperty=row['taproperty'],
@@ -234,30 +244,25 @@ try:
     scheduler = HybridScheduler(courses, rooms)
     schedule, unscheduled = scheduler.solve()
 
-    schedules=convert_to_schedules(schedule)
+    schedules=convert_to_schedules(schedule,courses)
     print("=== 转换结果 ===")
     for idx, schedule in enumerate(schedules, 1):
         print(f"\n记录 {idx}:")
         for key, value in schedule.to_dict().items():
             print(f"  {key}: {value}")
-    '''
-    写入数据库
-    session=get_session()
-    session = get_session()
+    
 
-    schedules = [
-        Schedule(scid="001", sctask='111',scteacher="T001", scroom="R101",
-                 scbegin_week=1, scend_week=8, scday_of_week=1,  scbegin_time=8.0, scend_time=9.5),
-        # 更多数据...
-    ]
+    session=get_session()
+    session.query(Schedule).delete()
+    session.commit();
 
     session.add_all(schedules)
     session.commit()
     session.close()
 
-    '''
+
 # 计算排课率
-    scheduled_courses = {entry[0] for entry in schedule}
+    '''scheduled_courses = {entry[0] for entry in schedule}
     total_courses = len(courses)
     scheduling_rate = len(scheduled_courses) / total_courses * 100
 
@@ -281,7 +286,7 @@ try:
         print("-" * 60)
         for course in unscheduled[:20]:  # 只显示前20条
             weeks = ", ".join(f"{s}-{e}" for s, e, _ in course.time_slots)
-            print(f"{course.uid:8} | {weeks:10} | {getattr(course, 'continuous', 1):8} | {getattr(course, 'fixedroomtype', '无'):12}")
+            print(f"{course.uid:8} | {weeks:10} | {getattr(course, 'continuous', 1):8} | {getattr(course, 'fixedroomtype', '无'):12}")'''
 
 finally:
     # 关闭数据库连接

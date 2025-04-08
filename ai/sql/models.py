@@ -18,11 +18,12 @@ class Room:
 #课程
 '''课程号，教学班名，课程人数，老师（工号表示），时间，周节次，连排节次，指定教室类型，指定教室，指定时间，指定教学楼,开课校区,是否为合班，'''
 class Course:
-    def __init__(self, cid,formclass,popularity,total_hours,taproperty,teacherid,teachername,task,continuous,fixedroomtype,fixedroom,fixedtime,fixedbuilding,capmpus,combine=False):
+    def __init__(self, cid,formclass,formclassid,popularity,total_hours,taproperty,teacherid,teachername,task,continuous,fixedroomtype,fixedroom,fixedtime,fixedbuilding,capmpus,combine=False):
         self.uid = f"{cid}-{teacherid}-{task}-{fixedroom}"
         self.teacher_uid = f"{teacherid}-{teachername}"
         self.cid = cid
         self.formclass = formclass
+        self.formclassid = formclassid
         self.popularity = popularity
         self.total_hours = total_hours
         self.taproperty = taproperty
@@ -78,28 +79,28 @@ class Schedule(Base):
     __tablename__ = 'schedule'
 
     scid = Column(String, primary_key=True)
-    #course_uid = Column(String)
     sctask=Column(String)
-    scteacher = Column(String)
+    scteacherid = Column(String)
     scroom = Column(String)
     scbegin_week = Column(Integer)
     scend_week = Column(Integer)
     scday_of_week = Column(Integer)
     scbegin_time = Column(Float)    # 新增字段：开始时间
-    scend_time = Column(Float)      # 新增字段：结束时间
+    scend_time = Column(Float)   # 新增字段：结束时间
+    scteacherdepartment = Column(String)
 
     def __init__(
             self,
             scid: str,
-            #course_uid: str,
             sctask:str,
-            scteacher: str,
+            scteacherid: str,
             scroom: str,
             scbegin_week: int,
             scend_week: int,
             scday_of_week: int,
             scbegin_time: float,
             scend_time: float,
+            scteacherdepartment: str,
     ):
         """
         :param scid: 唯一标识
@@ -116,26 +117,28 @@ class Schedule(Base):
         self.scid = scid
         #self.course_uid = course_uid
         self.sctask = sctask
-        self.scteacher = scteacher
+        self.scteacherid = scteacherid
         self.scroom = scroom
         self.scbegin_week = scbegin_week
         self.scend_week = scend_week
         self.scday_of_week = scday_of_week
         self.scbegin_time = scbegin_time
         self.scend_time = scend_time
+        self.scteacherdepartment = scteacherdepartment
 
 
     def to_dict(self):
         return {
             "scid": self.scid,
             #"course_uid": self.course_uid,
+            'scroom': self.scroom,
             "sctask": self.sctask,
-            "teacher": self.scteacher,
-            "rid": self.scroom,
+            "teacherid": self.scteacherid,
             "start_week": self.scbegin_week,
             "end_week": self.scend_week,
             "day": self.scday_of_week,
             "start_time": self.scbegin_time,
             "end_time": self.scend_time,
+            'scteacherdepartment': self.scteacherdepartment,
         }
 
