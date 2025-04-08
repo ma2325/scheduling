@@ -17,7 +17,7 @@ class HybridScheduler(CSPScheduler):
     def __init__(self, courses, rooms):
         super().__init__(courses, rooms)
         # GA参数优化
-        self.population_size = 5    # 减少种群规模
+        self.population_size = 3    # 减少种群规模
         self.generations = 10        # 减少迭代次数
         self.mutation_rate = 0.3
         self.elitism_count = 3

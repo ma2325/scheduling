@@ -87,7 +87,8 @@ class Schedule(Base):
     scday_of_week = Column(Integer)
     scbegin_time = Column(Float)    # 新增字段：开始时间
     scend_time = Column(Float)   # 新增字段：结束时间
-    scteacherdepartment = Column(String)
+    scteachername = Column(String)
+    scslots=Column(String)
 
     def __init__(
             self,
@@ -100,7 +101,8 @@ class Schedule(Base):
             scday_of_week: int,
             scbegin_time: float,
             scend_time: float,
-            scteacherdepartment: str,
+            scteachername: str,
+            scslots: str
     ):
         """
         :param scid: 唯一标识
@@ -124,7 +126,8 @@ class Schedule(Base):
         self.scday_of_week = scday_of_week
         self.scbegin_time = scbegin_time
         self.scend_time = scend_time
-        self.scteacherdepartment = scteacherdepartment
+        self.scteachername= scteachername
+        self.scslots=scslots
 
 
     def to_dict(self):
@@ -139,6 +142,7 @@ class Schedule(Base):
             "day": self.scday_of_week,
             "start_time": self.scbegin_time,
             "end_time": self.scend_time,
-            'scteacherdepartment': self.scteacherdepartment,
+            "scteachername": self.scteachername,
+            "slots": self.scslots,
         }
 

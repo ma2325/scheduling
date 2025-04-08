@@ -13,7 +13,7 @@ def get_session():
     Session = sessionmaker(bind=engine)
     session = Session()
     return session
-
+#开始新一轮实验
 #连接数据库
 conn=sql.connect.connect()
 cursor=conn.cursor()
@@ -33,49 +33,86 @@ def convert_to_schedules(best_solution, courses):
     """将排课结果转换为合并后的时间段记录"""
     course_map = {course.uid: course for course in courses}
 
-    # 按课程+教室+教师+星期+节次分组
-    schedule_groups = defaultdict(list)
+    # 按课程+教室+教师+星期+周次分组，同时收集节次信息
+    schedule_groups = defaultdict(lambda: defaultdict(list))
     for entry in best_solution:
         course_uid, rid, teacher_uid, week, day, slot = entry
         if course_uid not in course_map:
             continue
 
-        # 分组键：(课程, 教室, 教师, 星期, 节次)
-        group_key = (course_uid, rid, teacher_uid, day, slot)
-        schedule_groups[group_key].append(week)
+        # 分组键：(课程, 教室, 教师, 星期, 周次)
+        group_key = (course_uid, rid, teacher_uid, day, week)
+        schedule_groups[group_key]['slots'].append(slot)
 
     schedules = []
     record_id = 1
-    for key, weeks in schedule_groups.items():
-        course_uid, rid, teacher_uid, day, slot = key
+    for key, slot_data in schedule_groups.items():
+        course_uid, rid, teacher_uid, day, week = key
+        slots = slot_data['slots']
         course = course_map[course_uid]
+        teacher_name = getattr(course, 'teachername', None) or teacher_uid.split('-')[-1]
+        teacher_id = getattr(course, 'teacherid', None) or teacher_uid.split('-')[0]
 
-        # 合并连续周次（如[1,2,3,5,6]→[(1,3),(5,6)]）
+        # 合并连续节次（如[1,2,3,5]→[(1,3),(5,5)]）
+        merged_slots = merge_continuous_numbers(sorted(slots))
+
+        # 创建slots字符串（如"1-3,5"）
+        slot_str = ",".join(f"{s}-{e}" if s != e else str(s) for s, e in merged_slots)
+
+        schedules.append(
+            Schedule(
+                scid=record_id,
+                sctask=course.formclassid,
+                scteacherid=teacher_id,
+                scroom=rid,
+                scbegin_week=week,
+                scend_week=week,
+                scday_of_week=day,
+                scbegin_time=0,  # 设置为0
+                scend_time=0,   # 设置为0
+                scteachername=teacher_name,
+                scslots=slot_str  # 新增的slots字段
+            )
+        )
+        record_id += 1
+
+    # 第二次合并：合并相同课程+教室+教师+星期+节次模式的连续周次
+    final_schedules = []
+    temp_dict = defaultdict(list)
+
+    for s in schedules:
+        # 使用除周次外的所有属性作为合并键
+        merge_key = (s.sctask, s.scroom, s.scteacherid, s.scday_of_week, s.scslots)
+        temp_dict[merge_key].append(s.scbegin_week)  # 只需要周次
+
+    record_id = 1
+    for key, weeks in temp_dict.items():
+        sctask, scroom, scteacherid, scday_of_week, scslots = key
+        first_schedule = next(s for s in schedules if
+                              (s.sctask, s.scroom, s.scteacherid, s.scday_of_week, s.scslots) == key)
+
+        # 合并连续周次
         merged_weeks = merge_continuous_numbers(sorted(weeks))
 
-        # 获取时间范围
-        start_time = SLOT_TIME_MAP[slot][0]  # 该节次的开始时间（浮点数）
-        end_time = SLOT_TIME_MAP[slot][1]    # 该节次的结束时间
-
         for start_week, end_week in merged_weeks:
-            schedules.append(
+            final_schedules.append(
                 Schedule(
                     scid=record_id,
-                    sctask=course.formclassid,
-                    scteacherid=teacher_uid,
-                    scroom=rid,
+                    sctask=sctask,
+                    scteacherid=scteacherid,
+                    scroom=scroom,
                     scbegin_week=start_week,
                     scend_week=end_week,
-                    scday_of_week=day,
-                    scbegin_time=float_to_time(start_time),
-                    scend_time=float_to_time(end_time),
-                    scteacherdepartment='depart'
-                    #scampus=getattr(course, 'capmpus', '')
+                    scday_of_week=scday_of_week,
+                    scbegin_time=0,
+                    scend_time=0,
+                    scteachername=first_schedule.scteachername,
+                    scslots=scslots
                 )
             )
             record_id += 1
 
-    return schedules
+    return final_schedules
 
 def merge_continuous_numbers(numbers):
     """合并连续数字 如[1,2,3,5,6]→[(1,3),(5,6)]"""
@@ -95,17 +132,6 @@ def merge_continuous_numbers(numbers):
 
     return ranges
 
-def float_to_time(time_float):
-    """将浮点数时间转换为HH:MM:SS格式"""
-    hours = int(time_float)
-    minutes = int(round((time_float - hours) * 60))
-    return f"{hours:02d}:{minutes:02d}:00"
-
-def float_to_time(time_float):
-    """精确时间转换（处理8.0->08:00:00, 8.5->08:30:00）"""
-    hours = int(time_float)
-    minutes = int(round((time_float - hours) * 60))
-    return f"{hours:02d}:{minutes:02d}:00"
 #载入课程
 '''课程号，教学班名，课程人数，老师（工号表示），时间，周节次，连排节次，指定教室类型，指定教室，指定时间，指定教学楼，开课校区,是否为合班，'''
 def load_course():
