@@ -9,8 +9,6 @@ const formatCourses = (coursesResult) => {
 
     return coursesResult.rows.map((course) => {
         const weekday = course.day_of_week || 0;
-        const startTime = course.startTime || '00:00';
-        const endTime = course.endTime || '00:00';
         const weeks = [];
 
         if (course.beginWeek && course.endWeek) {
@@ -18,6 +16,8 @@ const formatCourses = (coursesResult) => {
                 weeks.push(i);
             }
         }
+
+        course.classroom=course.classroom.replace(/^[^#\/]*[#\/]/, '');
 
         return {
             id: course.scid,
@@ -27,8 +27,7 @@ const formatCourses = (coursesResult) => {
             campus: course.campus || '未知校区',
             building: course.building || '未知教学楼',
             weekday: weekday,
-            startTime: startTime,
-            endTime: endTime,
+            slot: course.slot || '未知课次',
             weeks: weeks.length > 0 ? weeks : [1], // 默认第一周
         };
     });
@@ -52,19 +51,20 @@ router.get("/weekView", async (req, res) => {
                 SELECT
                     s.scid,
                     ta.taname as name,
-                    s.sccampus as campus,
-                    s.scbuilding as building,
+                    r.rcampus as campus,
+                    r.rbuilding as building,
                     ta.tateachername as teacher,
-                    s.scroom as classroom,
+                    r.rname as classroom,
                     s.scday_of_week as day_of_week,
-                    s.scbegin_time as startTime,
-                    s.scend_time as endTime,
                     s.scbegin_week as beginWeek,
-                    s.scend_week as endWeek
+                    s.scend_week as endWeek,
+                    s.scslot as slot
                 FROM
                     schedule s
                 LEFT JOIN
                     task ta ON ta.taformclassid = s.sctask
+                LEFT JOIN
+                    room r ON r.rid=s.scroom
                 WHERE
                     FIND_IN_SET(?, ta.taformclass) > 0 
                   AND ?>=s.scbegin_week AND ?<=s.scend_week
@@ -77,25 +77,26 @@ router.get("/weekView", async (req, res) => {
                 SELECT
                     s.scid,
                     ta.taname as name,
-                    s.sccampus as campus,
-                    s.scbuilding as building,
+                    r.rcampus as campus,
+                    r.rbuilding as building,
                     ta.tateachername as teacher,
-                    s.scroom as classroom,
+                    r.rname as classroom,
                     s.scday_of_week as day_of_week,
-                    s.scbegin_time as startTime,
-                    s.scend_time as endTime,
                     s.scbegin_week as beginWeek,
-                    s.scend_week as endWeek
+                    s.scend_week as endWeek,
+                    s.scslot as slot
                 FROM
                     schedule s
                 LEFT JOIN
                     task ta ON ta.taformclassid = s.sctask
+                LEFT JOIN
+                    room r ON r.rid=s.scroom
                 WHERE 
-                    s.scteacher = ?
+                    s.scteacherid = ?
                   AND ?>=s.scbegin_week AND ?<=s.scend_week
                 ORDER BY
                     s.scday_of_week, s.scbegin_time
-            `, [user,week,week]);
+            `, [parseInt(user),week,week]);
         } else {
             return res.status(400).send({
                 code: 400,
@@ -137,19 +138,20 @@ router.get("/termView", async (req, res) => {
                 SELECT
                     s.scid,
                     ta.taname as name,
-                    s.sccampus as campus,
-                    s.scbuilding as building,
+                    r.rcampus as campus,
+                    r.rbuilding as building,
                     ta.tateachername as teacher,
-                    s.scroom as classroom,
+                    r.rname as classroom,
                     s.scday_of_week as day_of_week,
-                    s.scbegin_time as startTime,
-                    s.scend_time as endTime,
                     s.scbegin_week as beginWeek,
-                    s.scend_week as endWeek
+                    s.scend_week as endWeek,
+                    s.scslot as slot
                 FROM
                     schedule s
-                LEFT JOIN
+                        LEFT JOIN
                     task ta ON ta.taformclassid = s.sctask
+                        LEFT JOIN
+                    room r ON r.rid=s.scroom
                 WHERE
                     FIND_IN_SET(?, ta.taformclass) > 0
                 ORDER BY
@@ -160,24 +162,25 @@ router.get("/termView", async (req, res) => {
                 SELECT
                     s.scid,
                     ta.taname as name,
-                    s.sccampus as campus,
-                    s.scbuilding as building,
+                    r.rcampus as campus,
+                    r.rbuilding as building,
                     ta.tateachername as teacher,
-                    s.scroom as classroom,
+                    r.rname as classroom,
                     s.scday_of_week as day_of_week,
-                    s.scbegin_time as startTime,
-                    s.scend_time as endTime,
                     s.scbegin_week as beginWeek,
-                    s.scend_week as endWeek
+                    s.scend_week as endWeek,
+                    s.scslot as slot
                 FROM
                     schedule s
-                LEFT JOIN
+                        LEFT JOIN
                     task ta ON ta.taformclassid = s.sctask
-                WHERE 
-                    s.scteacher = ?
+                        LEFT JOIN
+                    room r ON r.rid=s.scroom
+                WHERE
+                    s.scteacherid = ?
                 ORDER BY
                     s.scday_of_week, s.scbegin_time
-            `, [user]);
+            `, [parseInt(user)]);
         } else {
             return res.status(400).send({
                 code: 400,
