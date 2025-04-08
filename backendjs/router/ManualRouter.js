@@ -113,7 +113,7 @@ router.get("/task", async (req, res) => {
 
 //!SCHEDULE relative
 router.post("/change",async(req,res)=>{
-    const { scid, sctask, scroom, scbegin_week, scend_week, scday_of_week, scbegin_time, scend_time, scteacherid, scteacherdepartment} = req.body;
+    const { scid, sctask, scroom, scbegin_week, scend_week, scday_of_week, scslot, scteacherid, scteacherdepartment} = req.body;
     const queryOld = "SELECT * FROM `schedule` WHERE `scid` = ?;";
     const paramsOld = [scid];
     const { err: errOld, rows: rowsOld } = await db.async.all(queryOld, paramsOld);
@@ -137,20 +137,19 @@ router.post("/change",async(req,res)=>{
     const oldBeginWeek = scbegin_week || oldData.scbegin_week;
     const oldEndWeek = scend_week || oldData.scend_week;
     const oldDay = scday_of_week || oldData.scday_of_week;
-    const oldBeginTime = scbegin_time || oldData.scbegin_time;
-    const oldEndTime = scend_time || oldData.scend_time;
+    const oldSlot = scslot || oldData.scslot;
     const oldTeacherid = scteacherid || oldData.scteacherid;
     const oldTeacherdepartment = scteacherdepartment || oldData.scteacherdepartment;
     //Check if the new data is valid
-    if (oldBeginWeek > oldEndWeek || oldBeginTime > oldEndTime) {
+    if (oldBeginWeek > oldEndWeek) {
         return res.send({
             code: 400,
             msg: "参数错误"
         });
     }
     //update the data in database
-    const queryUpdate = "UPDATE `schedule` SET `sctask` = ?, `scroom` = ?, `scbegin_week` = ?, `scend_week` = ?, `scday_of_week` = ?, `scbegin_time` = ?, `scend_time` = ?, `scteacherid` = ?, `scteacherdepartment` = ? WHERE `scid` = ?;";
-    const paramsUpdate = [oldTask, oldRoom, oldBeginWeek, oldEndWeek, oldDay, oldBeginTime, oldEndTime, oldTeacherid, oldTeacherdepartment, scid];
+    const queryUpdate = "UPDATE `schedule` SET `sctask` = ?, `scroom` = ?, `scbegin_week` = ?, `scend_week` = ?, `scday_of_week` = ?,`scslot` = ?, `scteacherid` = ?, `scteacherdepartment` = ? WHERE `scid` = ?;";
+    const paramsUpdate = [oldTask, oldRoom, oldBeginWeek, oldEndWeek, oldDay,oldSlot, oldTeacherid, oldTeacherdepartment, scid];
     const { err: errUpdate, result: resultUpdate } = await db.async.run(queryUpdate, paramsUpdate);
     if (errUpdate) {
         return res.send({
@@ -167,7 +166,7 @@ router.post("/change",async(req,res)=>{
 })
 
 router.get("/all",async(req,res)=>{
-    const query = "SELECT `scid`, `sctask`, `scday_of_week`, `scroom`, `scbegin_week`, `scend_week`, `scbegin_time`, `scend_time`, `scteacherid`, `scteacherdepartment`, task.taformclass as `composition` FROM `schedule` join `task` on schedule.sctask=task.taformclassid;";
+    const query = "SELECT `scid`, `sctask`, `scday_of_week`, `scroom`, `scbegin_week`, `scend_week`,`scslot`, `scteacherid`, `scteacherdepartment`, task.taformclass as `composition` FROM `schedule` join `task` on schedule.sctask=task.taformclassid;";
     const params = [];
     const {err,rows} = await db.async.all(query,params);
     if(err){
