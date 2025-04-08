@@ -182,8 +182,7 @@ query:week=[week]//查询的周
     "scbegin_week":[scbegin_week], 
     "scend_week":[scend_week], 
     "scday_of_week":[scday], //星期几
-    "scbegin_time":[scbegin_time],//上课时间(time) 
-    "scend_time":[scend_time], //下课时间(time)
+    "scslot":[scslot], //第几节课,只有一节课的为形如“m-m”的字符串，连续的课程会出现形如“m-n”的字符串
     "scteacherid":[scteacherid],
     "scteacherdepartment":[scteacherdepartment],//教师所在部门名称
 }
@@ -209,12 +208,11 @@ query:week=[week]//查询的周
         {
             "scid": 1,
             "sctask": "570102KBOB032024202511017",//教学班id
-            "scday_of_week": "2",//星期几
+            "scday_of_week": 2,//星期几
             "scroom": "JXL517",//教室号
             "scbegin_week": 1,
             "scend_week": 16,
-            "scbegin_time": "08:00:00",
-            "scend_time": "09:40:00",
+            "scslot": "1-1",//第几节课,只有一节课的为形如“m-m”的字符串，连续的课程会出现形如“m-n”的字符串
             "scteacherid": "130",
             "scteacherdepartment": "教育艺术学院",
             "composition": "23学前教育5班"
@@ -226,8 +224,7 @@ query:week=[week]//查询的周
             "scroom":[scroom],
             "scbegin_week":[scbegin_week],
             "scend_week":[scend_week],
-            "scbegin_time":[scbegin_time],
-            "scend_time":[scend_time],
+            "scslot":[scslot], 
             "scteacherid":[scteacherid],
             "scteacherdepartment":[scteacherdepartment],
             "composition":[composition]
