@@ -14,8 +14,8 @@ SLOTS_PER_DAY = 8
 WEEKS_IN_SEMESTER = 20
 
 class HybridScheduler(CSPScheduler):
-    def __init__(self, courses, rooms):
-        super().__init__(courses, rooms)
+    def __init__(self, courses, rooms, soft_constraints=None):
+        super().__init__(courses, rooms,soft_constraints=soft_constraints)
         # GA参数优化
         self.population_size = 3    # 减少种群规模
         self.generations = 10        # 减少迭代次数

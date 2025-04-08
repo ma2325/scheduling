@@ -18,10 +18,11 @@ class Room:
 #课程
 '''课程号，教学班名，课程人数，老师（工号表示），时间，周节次，连排节次，指定教室类型，指定教室，指定时间，指定教学楼,开课校区,是否为合班，'''
 class Course:
-    def __init__(self, cid,formclass,formclassid,popularity,total_hours,taproperty,teacherid,teachername,task,continuous,fixedroomtype,fixedroom,fixedtime,fixedbuilding,capmpus,combine=False):
+    def __init__(self, cid,formclass,taname,formclassid,popularity,total_hours,taproperty,teacherid,teachername,task,continuous,fixedroomtype,fixedroom,fixedtime,fixedbuilding,capmpus,combine=False):
         self.uid = f"{cid}-{teacherid}-{task}-{fixedroom}"
         self.teacher_uid = f"{teacherid}-{teachername}"
         self.cid = cid
+        self.taname = taname
         self.formclass = formclass
         self.formclassid = formclassid
         self.popularity = popularity
@@ -35,8 +36,8 @@ class Course:
         self.fixedroom = fixedroom
         self.fixedtime = fixedtime
         self.fixedbuilding = fixedbuilding
-        self.capmpus = capmpus
-
+        self.is_pe = "体育" in getattr(self, "taname", "")
+        self.soft_scores = {}
         self.time_slots=Course.parse_task(task) if task else[]
         #是否合班？
         if self.formclass is None:
@@ -127,7 +128,7 @@ class Schedule(Base):
         self.scbegin_time = scbegin_time
         self.scend_time = scend_time
         self.scteachername= scteachername
-        self.scslots=scslots
+        self.scslot=scslot
 
 
     def to_dict(self):
@@ -143,6 +144,6 @@ class Schedule(Base):
             "start_time": self.scbegin_time,
             "end_time": self.scend_time,
             "scteachername": self.scteachername,
-            "slots": self.scslots,
+            "slots": self.scslot,
         }
 
