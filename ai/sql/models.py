@@ -88,7 +88,7 @@ class Schedule(Base):
     scbegin_time = Column(Float)    # 新增字段：开始时间
     scend_time = Column(Float)   # 新增字段：结束时间
     scteachername = Column(String)
-    scslots=Column(String)
+    scslot=Column(String)
 
     def __init__(
             self,
@@ -102,7 +102,7 @@ class Schedule(Base):
             scbegin_time: float,
             scend_time: float,
             scteachername: str,
-            scslots: str
+            scslot: str
     ):
         """
         :param scid: 唯一标识

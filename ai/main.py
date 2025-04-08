@@ -71,7 +71,7 @@ def convert_to_schedules(best_solution, courses):
                 scbegin_time=0,  # 设置为0
                 scend_time=0,   # 设置为0
                 scteachername=teacher_name,
-                scslots=slot_str  # 新增的slots字段
+                scslot=slot_str  # 新增的slots字段
             )
         )
         record_id += 1
@@ -82,14 +82,14 @@ def convert_to_schedules(best_solution, courses):
 
     for s in schedules:
         # 使用除周次外的所有属性作为合并键
-        merge_key = (s.sctask, s.scroom, s.scteacherid, s.scday_of_week, s.scslots)
+        merge_key = (s.sctask, s.scroom, s.scteacherid, s.scday_of_week, s.scslot)
         temp_dict[merge_key].append(s.scbegin_week)  # 只需要周次
 
     record_id = 1
     for key, weeks in temp_dict.items():
-        sctask, scroom, scteacherid, scday_of_week, scslots = key
+        sctask, scroom, scteacherid, scday_of_week, scslot = key
         first_schedule = next(s for s in schedules if
-                              (s.sctask, s.scroom, s.scteacherid, s.scday_of_week, s.scslots) == key)
+                              (s.sctask, s.scroom, s.scteacherid, s.scday_of_week, s.scslot) == key)
 
         # 合并连续周次
         merged_weeks = merge_continuous_numbers(sorted(weeks))
@@ -107,7 +107,7 @@ def convert_to_schedules(best_solution, courses):
                     scbegin_time=0,
                     scend_time=0,
                     scteachername=first_schedule.scteachername,
-                    scslots=scslots
+                    scslot=scslot
                 )
             )
             record_id += 1
