@@ -322,7 +322,7 @@ CREATE TABLE `schedule` (
 
 LOCK TABLES `schedule` WRITE;
 /*!40000 ALTER TABLE `schedule` DISABLE KEYS */;
-INSERT INTO schedule.schedule (scid, sctask, scday_of_week, scroom, scbegin_week, scend_week, scbegin_time, scend_time, scteacherid, scteacherdepartment) VALUES (1, '570102KBOB032024202511017', 2, 'JXL517', 1, 16, '08:00:00', '09:40:00', '130', '曹立汶');
+INSERT INTO schedule.schedule (scid, sctask, scday_of_week, scroom, scbegin_week, scend_week, scbegin_time, scend_time, scteacherid, scteachername) VALUES (1, '570102KBOB032024202511017', 2, 'JXL517', 1, 16, '08:00:00', '09:40:00', '130', '曹立汶');
 /*!40000 ALTER TABLE `schedule` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
