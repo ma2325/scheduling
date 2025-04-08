@@ -36,4 +36,5 @@ Scbegin_time 开始时间 time
 Scend_time 结束时间 time  
 scteacherid 教师工号 varchar  
 scteachername 教师姓名 varchar  
+scslot 起始周-结束周 varchar   
 
