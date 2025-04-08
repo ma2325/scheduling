@@ -261,7 +261,7 @@ query:week=[week]//查询的周
   "name": "数据结构",
   "teacher": "张老师",
   "weekday": 2,
-  "weeks": [1,3,5,7,9,11,13,15]
+  "weeks": [1,3,5,7,9,11,13,15],
   "slot": "1-2"//上课课次
 }
 2）/termView
