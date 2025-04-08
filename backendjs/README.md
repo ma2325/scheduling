@@ -232,89 +232,35 @@ query:week=[week]//查询的周
         //其他课程信息
     ]
 }
-```
-(3)/dashboard
-1）/weekView
-输入：
-1.学生：
-user
-string 
-示例值:
-24教学7班
+## 三、Dashboard 功能接口
 
-userType
-string 
-示例值:
-student
+### 1. 周视图查询接口 `/weekView`
+**作用**  
+查询指定用户（学生/教师）在特定周次的课表信息
 
-week
-string 
-示例值:
-1
+**请求方式**  
+`GET`
 
-2.教师：
-export interface Request {
-    /**
-     * 教师编号
-     */
-    user?: string;示例值:304
-    /**
-     * 用户类型
-     */
-    userType?: string;示例值:teacher
-    /**
-     * 查看周
-     */
-    week?: string;
-    [property: string]: any;示例值:1
+#### 请求参数
+| 参数名 | 类型 | 必填 | 说明 | 示例值 |
+|--------|------|------|------|--------|
+| user | string | 是 | 用户标识（班级名/教师编号） | `"24教学7班"`（学生）<br>`"304"`（教师） |
+| userType | string | 是 | 用户类型 | `"student"`（学生）<br>`"teacher"`（教师） |
+| week | string | 是 | 查询周次 | `"1"` |
+
+#### 响应示例
+```json
+{
+  "building": "教学楼",
+  "campus": "主校区",
+  "classroom": "517",
+  "id": 101,
+  "name": "数据结构",
+  "teacher": "张老师",
+  "weekday": 2,
+  "weeks": [1,3,5,7,9,11,13,15],
+  "slot": "1-2"//上课课次
 }
-
-
-返回：
-export interface Datum {
-    /**
-     * 楼名
-     */
-    building: string;
-    /**
-     * 校区名
-     */
-    campus: string;
-    /**
-     * 教室名
-     */
-    classroom: string;
-    /**
-     * 结束时间
-     */
-    endTime: string;
-    /**
-     * 排课记录唯一标识
-     */
-    id: number;
-    /**
-     * 课程名
-     */
-    name: string;
-    /**
-     * 开始时间
-     */
-    startTime: string;
-    /**
-     * 结束时间
-     */
-    teacher: string;
-    /**
-     * 上课星期几
-     */
-    weekday: number;
-    /**
-     * 上课周集合
-     */
-    weeks: number[];
-    [property: string]: any;
-}
-
 2）/termView
 输入：
 1.学生：
