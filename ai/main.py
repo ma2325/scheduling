@@ -268,14 +268,7 @@ try:
 
     # 使用混合排课算法
     print("\n=== 开始排课 ===")
-    soft_constraints = [
-        (2, 3),   # 班级排课集中，优先级3
-        (3, 2),   # 教师排课集中，优先级2
-        (4, 5),   # 体育课安排在下午，优先级5
-        (5, -1),  # 禁止体育课后第一节课
-        (6, -2)   # 禁止晚上排课
-    ]
-    scheduler = HybridScheduler(courses, rooms,soft_constraints=soft_constraints)
+    scheduler = HybridScheduler(courses, rooms)
     schedule, unscheduled = scheduler.solve()
 
     schedules=convert_to_schedules(schedule,courses)
