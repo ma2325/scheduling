@@ -121,10 +121,13 @@ query:week=[week]//查询的周
 }
 ```
 ### 3.手动排课
+
 #### (1)/manual/room:
+
 作用：按需获取教室，请求形式：get，附加参数：query
 参数格式：*building=[building],campus=[campus]*
 **备注：1.二者均为可选参数； 2.*building*和*campus*均为LIKE查询 3.*campus*为校区，后同**
+
 ```json
 //respond when success
 {
@@ -149,9 +152,11 @@ query:week=[week]//查询的周
 }
 ```
 #### (2)/manual/task:
+
 作用：按需获取课程，请求形式：post，附加参数：query
 参数格式：*week=[week], building=[building], campus=[campus]*
 **备注：1.三者均为可选参数; 2.*building*参数和*campus*参数均为*LIKE*查询**
+
 ```json
 //respond when success
 {
@@ -171,8 +176,10 @@ query:week=[week]//查询的周
 }
 ```
 #### (3)/manual/change:
+
 作用：按需更改课程安排，请求形式：post，附加参数：body
 **备注：此处为更改schedule表的接口，将根据传输的数据进行更改，没有传的数据将不会更改**
+
 ```json
 //request参数格式(scid为必选参数，其他所有参数均为可选参数)
 { 
@@ -198,6 +205,7 @@ query:week=[week]//查询的周
 }
 ```
 #### (4)/manual/all:
+
 作用：获取所有课程，请求形式：get，附加参数：无
 ```json
 //respond when success
@@ -214,8 +222,8 @@ query:week=[week]//查询的周
             "scend_week": 16,
             "scslot": "1-1",//第几节课,只有一节课的为形如“m-m”的字符串，连续的课程会出现形如“m-n”的字符串
             "scteacherid": "130",
-            "scteacherdepartment": "教育艺术学院",
-            "composition": "23学前教育5班"
+            "scteacherdepartment": "教育艺术学院", //开课学院
+            "composition": "23学前教育5班" //
         },
         {
             "scid":[scid],
@@ -278,14 +286,13 @@ student
 export interface Request {
     /**
      * 教师编号
-     */
-    user?: string;示例值:304
-    /**
-     * 用户类型
-     */
-    userType?: string;示例值:teacher
+          */
+        user?: string;示例值:304
+        /**
+          * 用户类型
+               */
+            userType?: string;示例值:teacher
 }
-
 
 返回：
 同/weekView
