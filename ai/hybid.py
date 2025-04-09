@@ -64,11 +64,12 @@ class HybridScheduler(CSPScheduler):
                 ind.update(eval_result)  # 关键点：将评估结果合并到原始个体
 
                 # 打印个体状态
+                '''
                 print(f"个体{idx+1}: "
                       f"适应度={ind.get('fitness', 'N/A')} | "
                       f"排入课程={ind.get('scheduled_count', 0)} | "
                       f"冲突={ind.get('total_conflicts', 0)}")
-
+                '''
                 evaluated_pop.append(ind)
 
             # 按适应度排序
@@ -114,7 +115,7 @@ class HybridScheduler(CSPScheduler):
             ]
 
             if any(terminate_conditions):
-                print(f"\n🔥 在第{gen+1}代终止优化（连续无改进：{no_improve_count}代，排课率：{(elites[0]['scheduled_count']/len(batch)):.1%}）")
+                #print(f"\n🔥 在第{gen+1}代终止优化（连续无改进：{no_improve_count}代，排课率：{(elites[0]['scheduled_count']/len(batch)):.1%}）")
                 break
 
 
@@ -232,7 +233,7 @@ class HybridScheduler(CSPScheduler):
             for room in rooms:
                 if self.is_valid_insertion(course, room, slots, existing):
                     # 使用 teacher_uid 替代 teacherid
-                    print(f"即将插入: 课程={course.uid}, 教师={course.teacher_uid}, 教室={room.rid}, 时间={slots}")
+                    #print(f"即将插入: 课程={course.uid}, 教师={course.teacher_uid}, 教室={room.rid}, 时间={slots}")
                     return True, [(
                         course.uid,      # 课程唯一ID
                         room.rid,        # 教室ID
@@ -469,7 +470,7 @@ class HybridScheduler(CSPScheduler):
             eval_result = self.evaluate(mutated)
             mutated.update(eval_result)
 
-            print(f"[变异] 新适应度: {mutated['fitness']}")  # 调试输出
+            #print(f"[变异] 新适应度: {mutated['fitness']}")  # 调试输出
             return mutated
         except Exception as e:
             traceback.print_exc()

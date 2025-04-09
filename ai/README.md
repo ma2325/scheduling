@@ -6,8 +6,20 @@
 engine = create_engine("mysql+pymysql://zq:123456@localhost/myAI?charset=utf8mb4")
   '''
   也做如步骤1的替换
-- 4.运行main，生成的课表数据会存入数据库中
+- 4.运行
+- ---
+（1）切换到文件路径
 
+（2）安装依赖
+- 如果没有sqlalchemy，进行安装
+  pip install sqlalchemy -i https://pypi.tuna.tsinghua.edu.cn/simple
+- 如果没有numpy，安装pip install numpy -i https://pypi.tuna.tsinghua.edu.cn/simple
+- 如果没有pymysql，安装pip install pymysql -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+（3）运行：
+python scheduler_cli.py --soft_constraints "约束列表"，如：
+
+python scheduler_cli.py --soft_constraints "(2,5),(4,3)"
 # 注意
 - 与前端的软约束交互
 软约束映射：【编号，优先级】
