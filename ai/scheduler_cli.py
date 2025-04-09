@@ -1,5 +1,3 @@
-# scheduler_cli.py
-
 from sql.models import *
 import argparse
 from main import load_course, load_room, prepare_courses, prepare_rooms, HybridScheduler, convert_to_schedules, get_session
@@ -31,12 +29,12 @@ def main(soft_constraints):
         schedules = convert_to_schedules(schedule, courses)
 
         # 保存结果到数据库
-        session = get_session()
-        session.query(Schedule).delete()
-        session.commit()
-        session.add_all(schedules)
-        session.commit()
-        session.close()
+        with get_session() as session:
+            # 在一个事务中先删除旧记录，再添加新记录
+            session.query(Schedule).delete()
+            session.add_all(schedules)
+            session.commit()
+
 
         print("\n=== 排课完成 ===")
         print(f"排课记录总数: {len(schedules)}条")
