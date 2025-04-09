@@ -25,15 +25,16 @@ mysql -u [username] -p [database_name] < [database_name.sql]
 use [database_bane]
 source [D:/Demo.sql]
 
-## :schedule表
-Scid auto increment integer primary key唯一标识
-Sctask varchar 教学班id
-Scroom varchar 教室id
-Scbegin_week 开始周 integer
-Scend_week 结束周 integer
-Scday_of_week 周几 integer
-Scbegin_time 开始时间 time
-Scend_time 结束时间 time
-scteacherid 教师工号 varchar
-scteacherdepartment 教师部门 varchar
+## :schedule表:
+Scid auto increment integer primary key唯一标识  
+Sctask varchar 教学班id  
+Scroom varchar 教室id  
+Scbegin_week 开始周 integer  
+Scend_week 结束周 integer  
+Scday_of_week 周几 integer  
+Scbegin_time 开始时间 time  
+Scend_time 结束时间 time  
+scteacherid 教师工号 varchar  
+scteachername 教师姓名 varchar  
+scslot 起始周-结束周 varchar   
 

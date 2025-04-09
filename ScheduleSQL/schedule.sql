@@ -311,7 +311,8 @@ CREATE TABLE `schedule` (
   `scbegin_time` time NOT NULL,
   `scend_time` time NOT NULL,
   `scteacherid` varchar(50) NOT NULL,
-  `scteacherdepartment` varchar(50) NOT NULL,
+  `scteachername` varchar(50) NOT NULL,
+  `scslot` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`scid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -322,7 +323,7 @@ CREATE TABLE `schedule` (
 
 LOCK TABLES `schedule` WRITE;
 /*!40000 ALTER TABLE `schedule` DISABLE KEYS */;
-INSERT INTO schedule.schedule (scid, sctask, scday_of_week, scroom, scbegin_week, scend_week, scbegin_time, scend_time, scteacherid, scteacherdepartment) VALUES (1, '570102KBOB032024202511017', 2, 'JXL517', 1, 16, '08:00:00', '09:40:00', '0130', '教育艺术学院');
+INSERT INTO schedule.schedule (scid, sctask, scday_of_week, scroom, scbegin_week, scend_week, scbegin_time, scend_time, scteacherid, scteachername,scslot) VALUES (1, '570102KBOB032024202511017', 2, 'JXL517', 1, 16, '08:00:00', '09:40:00', '130', '曹立汶','1-8');
 /*!40000 ALTER TABLE `schedule` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;

@@ -1,5 +1,9 @@
 import json
 #教室
+from sqlalchemy import Column, String, Integer, Float, JSON
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()
 '''教室编号，类型，容纳人数，校区，教学楼'''
 class Room:
     def __init__(self,rid,rname,rtype,rcapacity,rcampus,rbuilding):
@@ -14,22 +18,26 @@ class Room:
 #课程
 '''课程号，教学班名，课程人数，老师（工号表示），时间，周节次，连排节次，指定教室类型，指定教室，指定时间，指定教学楼,开课校区,是否为合班，'''
 class Course:
-    def __init__(self, cid,formclass,popularity,total_hours,taproperty,teacherid,task,continuous,fixedroomtype,fixedroom,fixedtime,fixedbuilding,capmpus,combine=False):
+    def __init__(self, cid,formclass,taname,formclassid,popularity,total_hours,taproperty,teacherid,teachername,task,continuous,fixedroomtype,fixedroom,fixedtime,fixedbuilding,capmpus,combine=False):
         self.uid = f"{cid}-{teacherid}-{task}-{fixedroom}"
+        self.teacher_uid = f"{teacherid}-{teachername}"
         self.cid = cid
+        self.taname = taname
         self.formclass = formclass
+        self.formclassid = formclassid
         self.popularity = popularity
         self.total_hours = total_hours
         self.taproperty = taproperty
         self.teacherid = teacherid
+        self.teachername = teachername
         self.task = task
         self.continuous = continuous
         self.fixedroomtype = fixedroomtype
         self.fixedroom = fixedroom
         self.fixedtime = fixedtime
         self.fixedbuilding = fixedbuilding
-        self.capmpus = capmpus
-
+        self.is_pe = "体育" in getattr(self, "taname", "")
+        self.soft_scores = {}
         self.time_slots=Course.parse_task(task) if task else[]
         #是否合班？
         if self.formclass is None:
@@ -68,45 +76,74 @@ class myclass:
 #结果：
 #课程表
 '''课程号，教学班名，教室，时间'''
-class Schedule:
+class Schedule(Base):
+    __tablename__ = 'schedule'
+
+    scid = Column(String, primary_key=True)
+    sctask=Column(String)
+    scteacherid = Column(String)
+    scroom = Column(String)
+    scbegin_week = Column(Integer)
+    scend_week = Column(Integer)
+    scday_of_week = Column(Integer)
+    scbegin_time = Column(Float)    # 新增字段：开始时间
+    scend_time = Column(Float)   # 新增字段：结束时间
+    scteachername = Column(String)
+    scslot=Column(String)
+
     def __init__(
             self,
             scid: str,
-            course_uid: str,
-            teacher: str,
-            rid: str,
-            start_week: int,
-            end_week: int,
-            day: int,
-            slots: list
+            sctask:str,
+            scteacherid: str,
+            scroom: str,
+            scbegin_week: int,
+            scend_week: int,
+            scday_of_week: int,
+            scbegin_time: float,
+            scend_time: float,
+            scteachername: str,
+            scslot: str
     ):
         """
-        :param scid: 唯一标识（规则见示例）
+        :param scid: 唯一标识
         :param course_uid: 课程唯一ID
-        :param teacher: 教师ID
+        :param scteacher: 教师ID
         :param rid: 教室ID
         :param start_week: 开始周（1-20）
-        :param end_week: 结束周（>=start_week）
+        :param end_week: 结束周（>= start_week）
         :param day: 上课日（1-5，周一至周五）
-        :param slots: 节次列表（如 [1,2] 表示1-2节连排）
+        :param slots: 节次列表（如 [1, 2] 表示1-2节连排）
+        :param start_time: 上课开始时间（如 8.0 表示 8:00）
+        :param end_time: 上课结束时间（如 9.5 表示 9:30）
         """
         self.scid = scid
-        self.course_uid = course_uid
-        self.teacher = teacher
-        self.rid = rid
-        self.start_week = start_week
-        self.end_week = end_week
-        self.day = day
-        self.slots = slots
+        #self.course_uid = course_uid
+        self.sctask = sctask
+        self.scteacherid = scteacherid
+        self.scroom = scroom
+        self.scbegin_week = scbegin_week
+        self.scend_week = scend_week
+        self.scday_of_week = scday_of_week
+        self.scbegin_time = scbegin_time
+        self.scend_time = scend_time
+        self.scteachername= scteachername
+        self.scslot=scslot
+
 
     def to_dict(self):
         return {
             "scid": self.scid,
-            "course_uid": self.course_uid,
-            "teacher": self.teacher,
-            "rid": self.rid,
-            "start_week": self.start_week,
-            "end_week": self.end_week,
-            "day": self.day,
-            "slots": self.slots
+            #"course_uid": self.course_uid,
+            'scroom': self.scroom,
+            "sctask": self.sctask,
+            "teacherid": self.scteacherid,
+            "start_week": self.scbegin_week,
+            "end_week": self.scend_week,
+            "day": self.scday_of_week,
+            "start_time": self.scbegin_time,
+            "end_time": self.scend_time,
+            "scteachername": self.scteachername,
+            "slots": self.scslot,
         }
+

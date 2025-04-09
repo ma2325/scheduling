@@ -1,8 +1,10 @@
 import traceback
 import random
 import time
+from typing import List, Dict, Tuple, Set, Any
 from csp_solver import CSPScheduler
 from collections import defaultdict
+#关于软约束
 # 文件顶部添加
 CONTINUOUS_SLOT_RULES = {
     2: [1, 3, 5, 7],  # 两节连排
@@ -13,14 +15,14 @@ SLOTS_PER_DAY = 8
 WEEKS_IN_SEMESTER = 20
 
 class HybridScheduler(CSPScheduler):
-    def __init__(self, courses, rooms):
-        super().__init__(courses, rooms)
+    def __init__(self, courses, rooms,soft_constraints: List[Tuple[int, int]] = None):
+        super().__init__(courses, rooms,soft_constraints)
         # GA参数优化
-        self.population_size = 30    # 减少种群规模
-        self.generations = 50        # 减少迭代次数
-        self.mutation_rate = 0.25
-        self.elitism_count = 2
-        self.batch_size = 25        # 每次处理课程数
+        self.population_size = 3    # 减少种群规模
+        self.generations = 10        # 减少迭代次数
+        self.mutation_rate = 0.3
+        self.elitism_count = 3
+        self.batch_size = 50        # 每次处理课程数
 
     def solve(self):
         """分批次处理未排课程"""
@@ -46,6 +48,8 @@ class HybridScheduler(CSPScheduler):
 
         # 初始化种群
         population = self.initialize_population(base, batch)
+        best_fitness = -float('inf')
+        no_improve_count = 0
 
         for gen in range(self.generations):
             start_time = time.time()
@@ -60,11 +64,12 @@ class HybridScheduler(CSPScheduler):
                 ind.update(eval_result)  # 关键点：将评估结果合并到原始个体
 
                 # 打印个体状态
+                '''
                 print(f"个体{idx+1}: "
                       f"适应度={ind.get('fitness', 'N/A')} | "
                       f"排入课程={ind.get('scheduled_count', 0)} | "
                       f"冲突={ind.get('total_conflicts', 0)}")
-
+                '''
                 evaluated_pop.append(ind)
 
             # 按适应度排序
@@ -96,11 +101,23 @@ class HybridScheduler(CSPScheduler):
             print(f"└── 本代耗时: {time_cost:.2f}s")
 
             # ------------------- 提前终止检测 -------------------
-            if (elites[0]['scheduled_count'] >= 0.9 * len(batch)
-                    #and (elites[0]['total_conflicts'] < 50)
-            ):
-                print(f"\n🔥 在第{gen+1}代达成完美解，终止优化")
+            current_best = elites[0]['fitness']
+            if current_best > best_fitness:
+                best_fitness = current_best
+                no_improve_count = 0
+            else:
+                no_improve_count += 1
+
+            # 新终止条件：连续3代无改进 或 达到95%排课率
+            terminate_conditions = [
+                no_improve_count >= 3,
+                (elites[0]['scheduled_count'] / len(batch)) >= 0.95
+            ]
+
+            if any(terminate_conditions):
+                #print(f"\n🔥 在第{gen+1}代终止优化（连续无改进：{no_improve_count}代，排课率：{(elites[0]['scheduled_count']/len(batch)):.1%}）")
                 break
+
 
         # 返回最佳解
         best = max(population, key=lambda x: x.get('fitness', -float('inf')))
@@ -151,6 +168,8 @@ class HybridScheduler(CSPScheduler):
                 # 更新课表和计数器
                 if success:
                     individual['full_schedule'].extend(new_slots)
+                    # 在 individual['full_schedule'].extend(new_slots) 后添加
+                    print(f"当前课表长度: {len(individual['full_schedule'])}, 最新插入: {new_slots[0] if new_slots else '无'}")
                     individual['scheduled_count'] += 1
 
             # 统计冲突（用于调试）
@@ -185,7 +204,6 @@ class HybridScheduler(CSPScheduler):
     def _find_room_candidates(self, course):
         """放宽教室匹配条件"""
         candidates = []
-        min_cap = max(10, int(course.popularity * 0.8))  # 允许容量稍小的教室
 
         # 1. 优先固定教室（不检查容量）
         if hasattr(course, 'fixedroom'):
@@ -194,10 +212,7 @@ class HybridScheduler(CSPScheduler):
         # 2. 匹配类型时放宽容量要求
         room_type = getattr(course, 'fixedroomtype', '普通教室')
         candidates += [r for r in self.rooms
-                       if  r.rcapacity >= min_cap]
-
-        # 3. 任意可用教室（容量>=最小要求）
-        candidates += [r for r in self.rooms if r.rcapacity >= min_cap]
+                       if  r.rcapacity >= course.popularity and r.rtype == room_type]
 
         # 去重并随机排序
         seen = set()
@@ -206,78 +221,186 @@ class HybridScheduler(CSPScheduler):
         """继承自CSP的周次展开方法"""
         return super()._expand_pattern(course, pattern)
     def try_insert(self, course, existing):
-        """改进的插入逻辑：增加随机性"""
-        # 随机打乱时间模式和候选教室顺序
+        """尝试插入课程（返回的记录中使用 teacher_uid）"""
         patterns = self._generate_all_patterns(course)
-        random.shuffle(patterns)  # 增加随机性
+        random.shuffle(patterns)
 
         for pattern in patterns:
             slots = self._expand_pattern(course, pattern)
             rooms = self._find_room_candidates(course)
-            random.shuffle(rooms)  # 增加随机性
+            random.shuffle(rooms)
 
             for room in rooms:
                 if self.is_valid_insertion(course, room, slots, existing):
-                    print("OK")
-                    return True, [(course.uid, room.rid, course.teacherid, *s) for s in slots]
-        return False, []
+                    # 使用 teacher_uid 替代 teacherid
+                    #print(f"即将插入: 课程={course.uid}, 教师={course.teacher_uid}, 教室={room.rid}, 时间={slots}")
+                    return True, [(
+                        course.uid,      # 课程唯一ID
+                        room.rid,        # 教室ID
+                        course.teacher_uid,  # 教师唯一ID（原为 teacherid）
+                        *slot            # 时间槽 (周, 天, 节)
+                    ) for slot in slots]
+
+        return False, []  # 插入失败
 
     def is_valid_insertion(self, course, room, slots, existing):
-        """简化冲突检查：仅检查教室硬冲突"""
-        occupied = defaultdict(set)
-        for entry in existing:
-            key = (entry[3], entry[4], entry[5])  # (周,天,节)
-            occupied[entry[1]].add(key)  # 教室占用记录
+        """检查插入是否有效（使用 teacher_uid）"""
+        occupied = defaultdict(lambda: {'rooms': set(), 'teachers': set()})
 
-        # 只检查教室时间冲突
+        # 统计已有占用的时间槽
+        for entry in existing:
+            key = (entry[3], entry[4], entry[5])  # (周, 天, 节)
+            occupied[key]['rooms'].add(entry[1])    # 教室占用
+            occupied[key]['teachers'].add(entry[2]) # 教师占用（使用 teacher_uid）
+
+        # 检查新插入的槽位
         for slot in slots:
             week, day, time = slot
-            if (week, day, time) in occupied.get(room.rid, set()):
+            key = (week, day, time)
+
+            # 检查教室冲突
+            if room.rid in occupied[key]['rooms']:
                 return False
-        return True
+
+            # 检查教师冲突（使用 teacher_uid）
+            if course.teacher_uid in occupied[key]['teachers']:
+                return False
+
+        return True  # 无冲突
+
 
     def evaluate(self, individual):
-        """优化适应度函数：优先排课数"""
-        scheduled_count = len(set(
-            entry[0] for entry in individual['full_schedule']
-            if entry[0] in {c.uid for c in self.courses}
-        ))
+        """优化后的适应度函数：集成软约束评分"""
+        # 基础冲突检查
+        conflicts = self.count_conflicts(individual['full_schedule'])
+        scheduled_count = individual['scheduled_count']
 
-        # 基础分数 = 排课数 * 200（提高权重）
-        fitness = scheduled_count * 200
+        # === 软约束评分 ===
+        soft_scores = 0
+        schedule = individual['full_schedule']
 
-        # 轻度冲突惩罚（原惩罚的1/10）
-        fitness -= self.count_conflicts(individual['full_schedule']) * 10
-
-        # 未排课惩罚（仅当完全失败时）
-        failed = len([a for a in individual['attempts'] if not a['scheduled']])
-        fitness -= failed * 5
-
-        return {
-            'fitness': max(fitness, 0),  # 防止负值
-            'scheduled_count': scheduled_count,
-            'total_conflicts': self.count_conflicts(individual['full_schedule'])}
-
-    def count_conflicts(self, schedule):
-        """精确冲突检测：仅检查不同课程间的冲突"""
-        conflict_count = 0
-        time_slot_map = defaultdict(set)
+        # 建立索引用于快速查询
+        course_map = defaultdict(list)  # {course_uid: [所有时间点]}
+        teacher_map = defaultdict(set)  # {teacher_uid: {(周, 天)}}
+        class_map = defaultdict(set)    # {formclass: {教室rid}}
+        pe_slots = set()               # 体育课时间段
 
         for entry in schedule:
-            key = (entry[3], entry[4], entry[5])  # (周, 天, 节)
-            course_id = entry[0]
+            course_uid, rid, teacher_uid, week, day, slot = entry
+            course = self.courses_by_uid.get(course_uid, None)
+            if not course: continue
 
-            # 同一时间点的不同课程
-            if key in time_slot_map:
-                # 检查教室冲突
-                if entry[1] in {e[1] for e in time_slot_map[key]}:
-                    conflict_count += 1
-                # 检查教师冲突
-                if entry[2] in {e[2] for e in time_slot_map[key]}:
-                    conflict_count += 1
-            time_slot_map[key].add(entry)
+            # 索引构建
+            course_map[course_uid].append( (week, day, slot) )
+            teacher_map[teacher_uid].add( (week, day) )
+            if course.formclass:
+                class_map[course.formclass].add(rid)
+            if course.is_pe:
+                pe_slots.add( (week, day, slot) )
 
-        return conflict_count
+        # 计算每个软约束得分
+        for constraint_id, priority in self.soft_constraints:
+            if constraint_id == 2:  # 班级教室集中
+                for formclass, rids in class_map.items():
+                    # 教室种类越少得分越高（log处理避免过大值）
+                    soft_scores += priority * (1 / len(rids)) * 10
+
+            elif constraint_id == 3:  # 教师排课集中
+                for teacher, days in teacher_map.items():
+                    # 教学天数越少得分越高
+                    soft_scores += priority * (1 / len(days)) * 5
+
+            elif constraint_id == 4:  # 体育课在下午（下午从第5节开始）
+                for (_, _, slot) in pe_slots:
+                    if slot < 5:
+                        soft_scores -= priority * 2  # 不在下午扣分
+
+            elif constraint_id == 6:  # 晚上禁排（晚上从第7节开始）
+                for entry in schedule:
+                    if entry[5] >= 7:
+                        soft_scores -= priority * 3  # 晚上排课扣分
+
+        # === 综合适应度计算 ===
+        base_score = scheduled_count * 200
+        penalty = (
+                conflicts['teacher'] * 10 +
+                conflicts['room'] * 5 +
+                conflicts['continuous'] * 1
+        )
+        failed_penalty = (len(individual['attempts']) - scheduled_count) * 3
+
+        # 最终适应度 = 基础分 + 软约束分 - 各项惩罚
+        fitness = base_score + soft_scores - penalty - failed_penalty
+
+        return {
+            'fitness': max(fitness, 0),
+            'scheduled_count': scheduled_count,
+            'total_conflicts': sum(conflicts.values()),
+            'soft_scores': soft_scores,  # 新增软约束得分字段
+            'conflict_details': conflicts
+        }
+
+
+    def count_conflicts(self, schedule):
+        conflict_types = {'teacher': 0, 'room': 0, 'continuous': 0,'pe_after': 0}
+        time_slot_map = defaultdict(lambda: {'rooms': set(), 'teachers': set()})
+
+        print("\n=== 冲突检查开始 ===")  # 调试日志
+        for entry in schedule:
+            key = (entry[3], entry[4], entry[5])
+            #print(f"检查记录: 课程={entry[0]}, 教室={entry[1]}, 教师={entry[2]}, 时间={key}")
+
+            # 教室冲突检查
+            if entry[1] in time_slot_map[key]['rooms']:
+                print(f"⚠️ 教室冲突: {entry[1]} 在时间 {key} 被重复使用")
+                conflict_types['room'] += 1
+            time_slot_map[key]['rooms'].add(entry[1])
+
+            # 教师冲突检查
+            if entry[2] in time_slot_map[key]['teachers']:
+                print(f"⚠️ 教师冲突: {entry[2]} 在时间 {key} 有多个课程")
+                conflict_types['teacher'] += 1
+            time_slot_map[key]['teachers'].add(entry[2])
+
+
+
+        print(f"=== 冲突统计: {conflict_types} ===\n")
+        return conflict_types
+    def check_continuity(self, schedule, entry):
+        """检查课程时间连续性"""
+        course_id = entry[0]
+        same_course = [e for e in schedule if e[0] == course_id]
+
+        # 按周、天、时间排序
+        sorted_slots = sorted(same_course, key=lambda x: (x[3], x[4], x[5]))
+
+        # 计算最大连续时间段
+        max_continuous = 1
+        current = 1
+        for i in range(1, len(sorted_slots)):
+            prev = sorted_slots[i-1]
+            curr = sorted_slots[i]
+            if (curr[3] == prev[3] and  # 同一周
+                    curr[4] == prev[4] and  # 同一天
+                    curr[5] == prev[5] + 1):  # 连续时间
+                current += 1
+                max_continuous = max(max_continuous, current)
+            else:
+                current = 1
+
+        return max_continuous
+
+    def count_pe_follow_conflict(self, schedule, pe_slots):
+        """约束5：体育课后禁排检查"""
+        conflict_count = 0
+        all_slots = {(e[3], e[4], e[5]) for e in schedule}
+
+        for (week, day, slot) in pe_slots:
+            next_slot = (week, day, slot + 1)
+            if next_slot in all_slots:
+                conflict_count += 1
+
+        return conflict_count * 10  # 乘以惩罚系数
 
     # 遗传操作保持不变，但增加调试输出
     # 在 HybridScheduler 类中添加/替换以下方法
@@ -347,7 +470,7 @@ class HybridScheduler(CSPScheduler):
             eval_result = self.evaluate(mutated)
             mutated.update(eval_result)
 
-            print(f"[变异] 新适应度: {mutated['fitness']}")  # 调试输出
+            #print(f"[变异] 新适应度: {mutated['fitness']}")  # 调试输出
             return mutated
         except Exception as e:
             traceback.print_exc()
@@ -388,3 +511,5 @@ class HybridScheduler(CSPScheduler):
         except Exception as e:
             print(f"交叉失败: {str(e)}")
             return parent1.copy()
+
+
