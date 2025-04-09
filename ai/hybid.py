@@ -1,9 +1,10 @@
 import traceback
 import random
 import time
+from typing import List, Dict, Tuple, Set, Any
 from csp_solver import CSPScheduler
 from collections import defaultdict
-
+#关于软约束
 # 文件顶部添加
 CONTINUOUS_SLOT_RULES = {
     2: [1, 3, 5, 7],  # 两节连排
@@ -14,8 +15,8 @@ SLOTS_PER_DAY = 8
 WEEKS_IN_SEMESTER = 20
 
 class HybridScheduler(CSPScheduler):
-    def __init__(self, courses, rooms):
-        super().__init__(courses, rooms)
+    def __init__(self, courses, rooms,soft_constraints: List[Tuple[int, int]] = None):
+        super().__init__(courses, rooms,soft_constraints)
         # GA参数优化
         self.population_size = 3    # 减少种群规模
         self.generations = 10        # 减少迭代次数

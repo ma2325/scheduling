@@ -5,43 +5,25 @@ import time
 #排课率约:80%
 #用时约：10s
 #进行伟大实验
+# 现在 是对的，处理软约束
 class CSPScheduler:
     """支持教学周连续性的CSP排课求解器"""
 
-    def __init__(self, courses: List, rooms: List):
-        """
-        初始化
-        :param courses: 课程列表，每个课程需包含:
-            - uid: 课程唯一ID
-            - time_slots: [(start_week, end_week, lessons_per_week)]
-            - continuous (可选): 连排节数
-            - 其他属性: fixedroom, fixedroomtype, teacherid等
-        :param rooms: 教室列表，每个教室需包含:
-            - rid: 教室ID
-            - rtype: 教室类型
-            - rcapacity: 教室容量
-        """
+    def __init__(self, courses: List, rooms: List, soft_constraints: List[Tuple[int, int]] = None):
         self.courses = sorted(courses, key=self.calculate_priority, reverse=True)
         self.rooms = rooms
         self.log = []
         self.room_pools = self._build_room_pools()
+        self.soft_constraints = soft_constraints or []
+        self.courses_by_uid = {course.uid: course for course in courses}
 
     def solve(self) -> Tuple[List[Tuple], List[Any]]:
-        """主求解入口"""
         self._log("=== CSP求解开始 ===")
-        self._log(f"课程总数: {len(self.courses)} | 教室总数: {len(self.rooms)}")
-
         solution = []
         unscheduled = []
 
         for idx, course in enumerate(self.courses):
-            course_weeks = self._get_course_weeks(course)
-            self._log(
-                f"\n处理课程 [{idx+1}/{len(self.courses)}] {course.uid} "
-                f"(周数: {course_weeks} 优先级: {self.calculate_priority(course):.1f})"
-            )
-
-            domains = self._generate_domains(course)
+            domains = self._generate_domains(course, solution)
             assigned = False
 
             for pattern in domains:
@@ -53,44 +35,80 @@ class CSPScheduler:
 
             if not assigned:
                 unscheduled.append(course)
-                self._log(f"⚠️ 无法安排课程 {course.uid}", "WARNING")
 
         self._report_stats(solution, unscheduled)
         return solution, unscheduled
 
     # ------------------- 核心算法方法 -------------------
-    def _generate_domains(self, course) -> List[List[Tuple[int, int, int]]]:
-        """
-        生成课程的有效时间模式候选域
-        返回: [ [(day, start_slot, length)], ... ]
-        """
+    def _generate_domains(self, course, solution) -> List[List[Tuple[int, int, int]]]:
         patterns = []
         continuous = getattr(course, 'continuous', 1)
         total_lessons = course.total_hours
         total_weeks = sum(end - start + 1 for start, end, _ in course.time_slots)
         lessons_per_week = total_lessons / total_weeks
 
-        # 验证连排设置
         if continuous > 1 and lessons_per_week % continuous != 0:
-            self._log(f"课程 {course.uid} 的周课时数 {lessons_per_week} 不匹配连排设置 {continuous}", "ERROR")
             return []
 
-        # 连排课程模式生成
         if continuous > 1:
             allowed_starts = CONTINUOUS_SLOT_RULES.get(continuous, [])
             groups_per_week = int(lessons_per_week / continuous)
             days = random.sample(range(1, DAYS_PER_WEEK + 1), groups_per_week)
-            for day in random.sample(range(1, DAYS_PER_WEEK + 1), groups_per_week):
+            for day in days:
                 for start in allowed_starts:
                     if start + continuous - 1 <= SLOTS_PER_DAY:
                         patterns.append([(day, start, continuous)])
-        # 非连排课程模式生成
         else:
             days = random.sample(range(1, DAYS_PER_WEEK + 1), int(lessons_per_week))
             patterns.append([(day, 1, 1) for day in days])
 
-        self._log(f"生成 {len(patterns)} 种时间模式: {patterns}", "DEBUG")
-        return patterns
+        # 计算软约束得分并排序
+        scored_patterns = []
+        for pattern in patterns:
+            score = self._calculate_soft_score(course, pattern, solution)
+            scored_patterns.append((pattern, score))
+        scored_patterns.sort(key=lambda x: -x[1])
+        return [p[0] for p in scored_patterns]
+
+    def _calculate_soft_score(self, course, pattern, solution) -> int:
+        score = 0
+        expanded_slots = self._expand_pattern(course, pattern)
+        current_week_days = {(slot[0], slot[1]) for slot in expanded_slots}
+
+        for constraint_id, priority in self.soft_constraints:
+            if constraint_id == 2:
+                # 班级排课集中
+                formclass = course.formclass
+                class_slots = set()
+                for entry in solution:
+                    existing_course = self.courses_by_uid.get(entry[0], None)
+                    if existing_course and existing_course.formclass == formclass:
+                        class_slots.add((entry[3], entry[4]))
+                overlap = len(current_week_days & class_slots)
+                score += overlap * priority
+
+            elif constraint_id == 3:
+                # 教师排课集中
+                teacher_uid = course.teacher_uid
+                teacher_slots = set()
+                for entry in solution:
+                    if entry[2] == teacher_uid:
+                        teacher_slots.add((entry[3], entry[4]))
+                overlap = len(current_week_days & teacher_slots)
+                score += overlap * priority
+
+            elif constraint_id == 4 and course.is_pe:
+                # 体育课在下午（假设下午从第5节开始）
+                if all(start >= 5 for _, start, _ in pattern):
+                    score += priority
+
+            elif constraint_id == 6:
+                # 晚上不上课（假设晚上从第7节开始）
+                if all(start < 7 for _, start, _ in pattern):
+                    score += priority
+
+        return score
+
 
     def _find_compatible_room(self, course, pattern, solution) -> Any:
         # 策略0: 如果已安排过该课程，必须使用原教室

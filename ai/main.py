@@ -15,6 +15,7 @@ def get_session():
     return session
 #开始新一轮实验
 #连接数据库
+#进行软约束
 conn=sql.connect.connect()
 cursor=conn.cursor()
 # 每节课的时间段映射（单位：小时）
@@ -268,7 +269,11 @@ try:
 
     # 使用混合排课算法
     print("\n=== 开始排课 ===")
-    scheduler = HybridScheduler(courses, rooms)
+    soft_constraints = [
+        (2, 5),  # 启用约束2，优先级5
+        (4, 3),  # 启用约束4，优先级3
+    ]
+    scheduler = HybridScheduler(courses, rooms,soft_constraints=soft_constraints)
     schedule, unscheduled = scheduler.solve()
 
     schedules=convert_to_schedules(schedule,courses)
