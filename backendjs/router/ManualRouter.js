@@ -166,7 +166,7 @@ router.post("/change",async(req,res)=>{
 })
 
 router.get("/all",async(req,res)=>{
-    const query = "SELECT `scid`, `sctask`, `scday_of_week`, `scroom`, `scbegin_week`, `scend_week`,`scslot`, `scteacherid`, `scteacherdepartment`, task.taformclass as `composition` FROM `schedule` join `task` on schedule.sctask=task.taformclassid;";
+    const query = "SELECT `scid`, `sctask`, `scday_of_week`, `scroom`, `scbegin_week`, `scend_week`,`scslot`, `scteacherid`, task.taformclass as `composition` FROM `schedule` join `task` on schedule.sctask=task.taformclassid;";
     const params = [];
     const {err,rows} = await db.async.all(query,params);
     if(err){

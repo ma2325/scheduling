@@ -1,5 +1,16 @@
 <template>
   <div class="flex flex-col h-full space-y-4">
+    <!-- 加载状态提示 -->
+    <div v-if="isLoading" class="bg-white rounded-lg shadow p-3 text-center">
+      <div class="flex items-center justify-center text-gray-600">
+        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        正在加载课程数据...
+      </div>
+    </div>
+    
     <!-- 顶部控制栏 -->
     <div class="bg-white rounded-lg shadow p-3">
       <div class="flex flex-wrap justify-between items-center gap-4">
@@ -34,90 +45,99 @@
       <!-- 左侧课程导航栏 -->
       <div 
         :class="[sidebarCollapsed ? 'w-10' : `w-${sidebarWidth}/12`]" 
-        class="bg-white rounded-lg shadow overflow-hidden flex flex-col transition-all duration-300"
+        class="bg-white rounded-lg shadow overflow-hidden flex flex-col transition-all duration-300 ease-in-out"
         :style="sidebarCollapsed ? '' : `min-width: ${sidebarMinWidth}px`"
       >
         <!-- 侧边栏标题栏 -->
         <div class="p-2 border-b flex justify-between items-center">
-          <h3 v-if="!sidebarCollapsed" class="text-lg font-medium">课程列表</h3>
+          <transition name="fade" mode="out-in">
+            <h3 v-if="!sidebarCollapsed" class="text-lg font-medium">课程列表</h3>
+          </transition>
           <button 
             @click="toggleSidebar" 
-            class="p-1 rounded-full hover:bg-gray-100"
+            class="p-1 rounded-full hover:bg-gray-100 transition-transform duration-300"
+            :class="{'rotate-180': sidebarCollapsed}"
           >
-            <ChevronLeft v-if="!sidebarCollapsed" class="w-5 h-5" />
-            <ChevronRight v-else class="w-5 h-5" />
+            <ChevronLeft class="w-5 h-5" />
           </button>
         </div>
         
         <!-- 侧边栏内容 -->
-        <template v-if="!sidebarCollapsed">
-          <div class="p-2 border-b">
-            <div class="relative">
-              <input 
-                v-model="courseSearch" 
-                type="text" 
-                placeholder="搜索课程" 
-                class="w-full h-9 rounded-md border border-input bg-background pl-9 pr-3 py-1 text-sm shadow-sm"
-              />
-              <Search class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-            </div>
-            <div class="mt-2 flex flex-wrap gap-2">
-              <button 
-                @click="filterType = 'all'" 
-                class="px-2 py-1 text-xs rounded-md"
-                :class="filterType === 'all' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'"
-              >
-                全部
-              </button>
-              <button 
-                @click="filterType = 'unscheduled'" 
-                class="px-2 py-1 text-xs rounded-md"
-                :class="filterType === 'unscheduled' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'"
-              >
-                未排课
-              </button>
-              <button 
-                @click="filterType = 'scheduled'" 
-                class="px-2 py-1 text-xs rounded-md"
-                :class="filterType === 'scheduled' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'"
-              >
-                已排课
-              </button>
-            </div>
-          </div>
-          <div class="flex-1 overflow-y-auto p-2">
-            <div 
-              v-for="course in filteredCourses" 
-              :key="course.scid"
-              class="p-3 mb-2 rounded-md cursor-pointer transition-colors"
-              :class="selectedCourse && selectedCourse.scid === course.scid ? 'bg-primary-light border-l-4 border-primary' : 'bg-gray-50 hover:bg-gray-100'"
-              @click="selectCourse(course)"
-              draggable="true"
-              @dragstart="onDragStart($event, course)"
-            >
-              <div class="font-medium">{{ course.sctask }}</div>
-              <div class="text-sm text-gray-600">{{ course.composition }}</div>
-              <div class="text-sm text-gray-600">{{ course.scteacherdepartment }}</div>
-              <div v-if="isScheduled(course)" class="mt-1 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full inline-block">
-                {{ getWeekdayName(parseInt(course.scday_of_week)) }} 第{{ course.time }}节 {{ course.scroom }}
+        <transition 
+          name="sidebar-content" 
+          mode="out-in"
+        >
+          <div v-if="!sidebarCollapsed" class="flex flex-col flex-1 overflow-hidden">
+            <div class="p-2 border-b">
+              <div class="relative">
+                <input 
+                  v-model="courseSearch" 
+                  type="text" 
+                  placeholder="搜索课程" 
+                  class="w-full h-9 rounded-md border border-input bg-background pl-9 pr-3 py-1 text-sm shadow-sm"
+                />
+                <Search class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
               </div>
-              <div v-if="isScheduled(course)" class="mt-1 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full inline-block">
-                {{ course.scbegin_week }}~{{ course.scend_week }}周
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button 
+                  @click="filterType = 'all'" 
+                  class="px-2 py-1 text-xs rounded-md transition-colors duration-200"
+                  :class="filterType === 'all' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'"
+                >
+                  全部
+                </button>
+                <button 
+                  @click="filterType = 'unscheduled'" 
+                  class="px-2 py-1 text-xs rounded-md transition-colors duration-200"
+                  :class="filterType === 'unscheduled' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'"
+                >
+                  未排课
+                </button>
+                <button 
+                  @click="filterType = 'scheduled'" 
+                  class="px-2 py-1 text-xs rounded-md transition-colors duration-200"
+                  :class="filterType === 'scheduled' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'"
+                >
+                  已排课
+                </button>
               </div>
             </div>
-            <div v-if="filteredCourses.length === 0" class="p-4 text-center text-gray-500">
-              没有找到匹配的课程
+            <div class="flex-1 overflow-y-auto p-2">
+              <div 
+                v-for="course in filteredCourses" 
+                :key="course.scid"
+                class="p-3 mb-2 rounded-md cursor-pointer transition-all duration-200"
+                :class="selectedCourse && selectedCourse.scid === course.scid ? 'bg-primary-light border-l-4 border-primary' : 'bg-gray-50 hover:bg-gray-100 border-l-4 border-transparent'"
+                @click="selectCourse(course)"
+                draggable="true"
+                @dragstart="onDragStart($event, course)"
+              >
+                <div class="font-medium">{{ course.sctask }}</div>
+                <div class="text-sm text-gray-600">{{ course.composition }}</div>
+                <div class="text-sm text-gray-600">{{ course.scteacherdepartment }}</div>
+                <div v-if="isScheduled(course)" class="mt-1 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full inline-block">
+                  {{ getWeekdayName(parseInt(course.scday_of_week)) }} 第{{ course.time }}节<span v-if="course.slot_end && course.slot_end !== course.time">-{{ course.slot_end }}节</span> {{ course.scroom }}
+                </div>
+                <div v-if="isScheduled(course)" class="mt-1 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full inline-block">
+                  {{ course.scbegin_week }}~{{ course.scend_week }}周
+                </div>
+              </div>
+              <div v-if="filteredCourses.length === 0" class="p-4 text-center text-gray-500">
+                没有找到匹配的课程
+              </div>
             </div>
           </div>
-        </template>
+        </transition>
       </div>
 
       <!-- 调整大小的拖动条 -->
-      <div 
-        v-if="!sidebarCollapsed"
-        class="w-1 bg-gray-200 hover:bg-primary hover:w-1.5 cursor-col-resize transition-all"
-        @mousedown="startResize"
-      ></div>
+      <transition name="fade">
+        <div 
+          v-if="!sidebarCollapsed"
+          class="w-1 bg-gray-200 hover:bg-primary hover:w-1.5 cursor-col-resize transition-all"
+          @mousedown="startResize"
+        ></div>
+      </transition>
 
       <!-- 右侧排课区域 -->
       <div class="flex-1 flex flex-col gap-3 overflow-hidden">
@@ -313,6 +333,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { Search, Save, X, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import axios from 'axios';
 
 // 侧边栏状态变量
 const sidebarCollapsed = ref(false);
@@ -361,8 +382,56 @@ const classrooms = [
   'JXL517'
 ];
 
-// 示例课程数据
-const courses = ref([
+// 添加API数据加载状态
+const isLoading = ref(false);
+const loadError = ref(null);
+
+// 课程数据 - 重新添加声明
+const courses = ref([]);
+
+// 解析课程槽位
+const parseSlot = (slotStr) => {
+  if (!slotStr) return { start: 0, end: 0 };
+  
+  const parts = slotStr.split('-');
+  const start = parseInt(parts[0]);
+  const end = parts.length > 1 ? parseInt(parts[1]) : start;
+  
+  return { start, end };
+};
+
+// 处理API返回的课程数据
+const processCourseData = (apiCourses) => {
+  return apiCourses.map(course => {
+    // 解析课程槽位
+    const slot = parseSlot(course.scslot);
+    
+    // 设置开始和结束时间
+    let beginTime = '';
+    let endTime = '';
+    if (slot.start > 0 && slot.start <= 8) {
+      beginTime = `08:00:00`;
+    }
+    if (slot.end > 0 && slot.end <= 8) {
+      endTime = `09:40:00`;
+    }
+    
+    // 转换数据类型确保一致性
+    return {
+      ...course,
+      scday_of_week: course.scday_of_week.toString(),
+      scbegin_week: parseInt(course.scbegin_week),
+      scend_week: parseInt(course.scend_week),
+      time: slot.start, // 使用开始槽位作为时间
+      slot_end: slot.end, // 添加结束槽位
+      scbegin_time: beginTime,
+      scend_time: endTime
+    };
+  });
+};
+
+// 测试数据
+const mockCourses = [
   {
     scid: 1,
     sctask: "570102KBOB032024202511017",
@@ -370,9 +439,7 @@ const courses = ref([
     scroom: "JXL517",
     scbegin_week: 1,
     scend_week: 16,
-    scbegin_time: "08:00:00",
-    scend_time: "09:40:00",
-    time: 1,
+    scslot: "1-2",
     scteacherid: "130",
     scteacherdepartment: "教育艺术学院",
     composition: "23学前教育5班"
@@ -384,9 +451,7 @@ const courses = ref([
     scroom: "JXL101",
     scbegin_week: 1,
     scend_week: 8,
-    scbegin_time: "10:00:00",
-    scend_time: "11:40:00",
-    time: 3,
+    scslot: "3-4",
     scteacherid: "131",
     scteacherdepartment: "计算机科学学院",
     composition: "23计算机科学1班,23计算机科学2班"
@@ -398,9 +463,7 @@ const courses = ref([
     scroom: "JXL201",
     scbegin_week: 9,
     scend_week: 16,
-    scbegin_time: "14:00:00",
-    scend_time: "15:40:00",
-    time: 5,
+    scslot: "5-6",
     scteacherid: "132",
     scteacherdepartment: "外国语学院",
     composition: "23英语1班"
@@ -408,13 +471,11 @@ const courses = ref([
   {
     scid: 4,
     sctask: "570102KBOB032024202511020",
-    scday_of_week: "",
-    scroom: "",
+    scday_of_week: "1",
+    scroom: "JXL301",
     scbegin_week: 1,
     scend_week: 16,
-    scbegin_time: "",
-    scend_time: "",
-    time: 0,
+    scslot: "1-2",
     scteacherid: "133",
     scteacherdepartment: "数学学院",
     composition: "23数学1班,23数学2班,23数学3班"
@@ -422,13 +483,11 @@ const courses = ref([
   {
     scid: 5,
     sctask: "570102KBOB032024202511021",
-    scday_of_week: "",
-    scroom: "",
+    scday_of_week: "5",
+    scroom: "JXL401",
     scbegin_week: 1,
     scend_week: 16,
-    scbegin_time: "",
-    scend_time: "",
-    time: 0,
+    scslot: "7-8",
     scteacherid: "134",
     scteacherdepartment: "物理学院",
     composition: "23物理1班"
@@ -440,9 +499,7 @@ const courses = ref([
     scroom: "JXL301",
     scbegin_week: 1,
     scend_week: 16,
-    scbegin_time: "08:00:00",
-    scend_time: "09:40:00",
-    time: 1,
+    scslot: "3-4",
     scteacherid: "135",
     scteacherdepartment: "化学学院",
     composition: "23化学1班,23化学2班"
@@ -450,13 +507,11 @@ const courses = ref([
   {
     scid: 7,
     sctask: "570102KBOB032024202511023",
-    scday_of_week: "5",
-    scroom: "JXL401",
+    scday_of_week: "2",
+    scroom: "JXL517",
     scbegin_week: 1,
     scend_week: 8,
-    scbegin_time: "16:00:00",
-    scend_time: "17:40:00",
-    time: 7,
+    scslot: "5-6",
     scteacherid: "136",
     scteacherdepartment: "生物学院",
     composition: "23生物1班"
@@ -464,18 +519,43 @@ const courses = ref([
   {
     scid: 8,
     sctask: "570102KBOB032024202511024",
-    scday_of_week: "",
-    scroom: "",
-    scbegin_week: 1,
+    scday_of_week: "3",
+    scroom: "JXL101",
+    scbegin_week: 9,
     scend_week: 16,
-    scbegin_time: "",
-    scend_time: "",
-    time: 0,
+    scslot: "1-2",
     scteacherid: "137",
     scteacherdepartment: "历史学院",
     composition: "23历史1班,23历史2班"
   }
-]);
+];
+
+// 从API获取数据的函数
+const fetchCoursesFromAPI = async () => {
+  isLoading.value = true;
+  loadError.value = null;
+  
+  try {
+    // 尝试从实际API获取数据
+    const response = await axios.get('http://localhost:8080/manual/all');
+    
+    if (response.status === 200 && response.data.code === 200) {
+      // 处理API返回的数据
+      courses.value = processCourseData(response.data.rows);
+      console.log('从API加载了', courses.value.length, '条课程数据');
+    } else {
+      throw new Error(`API返回错误: ${response.data.code || response.status}`);
+    }
+  } catch (error) {
+    console.error('获取课程数据失败:', error);
+    console.log('使用测试数据替代');
+    
+    // 使用测试数据
+    courses.value = processCourseData(mockCourses);
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 // 筛选课程
 const filteredCourses = computed(() => {
@@ -775,7 +855,9 @@ onBeforeUnmount(() => {
 
 // 生命周期钩子
 onMounted(() => {
-  // 这里可以添加从后端获取数据的逻辑
+  // 从API获取数据
+  fetchCoursesFromAPI();
+  
   console.log('手动排课组件已挂载');
 });
 </script>
@@ -799,6 +881,29 @@ onMounted(() => {
 
 .border-primary {
   border-color: #4f46e5;
+}
+
+/* 添加过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.sidebar-content-enter-active,
+.sidebar-content-leave-active {
+  transition: opacity 0.3s, transform 0.3s;
+  transform-origin: left;
+}
+
+.sidebar-content-enter-from,
+.sidebar-content-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
 }
 </style>
 
