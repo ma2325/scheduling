@@ -14,6 +14,8 @@ class CSPScheduler:
         self.rooms = rooms
         self.log = []
         self.room_pools = self._build_room_pools()
+        self.class_room_map = defaultdict(set)
+        self.pe_course_slots = set()
         self.soft_constraints = soft_constraints or []
         self.courses_by_uid = {course.uid: course for course in courses}
 
@@ -97,10 +99,8 @@ class CSPScheduler:
                 overlap = len(current_week_days & teacher_slots)
                 score += overlap * priority
 
-            elif constraint_id == 4 and course.is_pe:
-                # 体育课在下午（假设下午从第5节开始）
-                if all(start >= 5 for _, start, _ in pattern):
-                    score += priority
+            elif course.is_pe and any(start < 5 for _, start, _ in pattern):
+                score -= next((p for cid, p in self.soft_constraints if cid == 4), 0)
 
             elif constraint_id == 6:
                 # 晚上不上课（假设晚上从第7节开始）
@@ -118,6 +118,11 @@ class CSPScheduler:
             if room and self._check_availability(room, course, pattern, solution):
                 return room
             return None
+        if course.formclass and course.formclass in self.class_room_map:
+            for rid in self.class_room_map[course.formclass]:
+                room = next((r for r in self.rooms if r.rid == rid), None)
+                if room and self._check_availability(room, course, pattern, solution):
+                    return room
         """三级教室匹配策略"""
         # 策略1: 固定教室优先
         if getattr(course, 'fixedroom', None):
@@ -151,6 +156,20 @@ class CSPScheduler:
         required_slots = set(self._expand_pattern(course, pattern))
         course_weeks = self._get_course_weeks(course)
 
+        new_slots = self._expand_pattern(course, pattern)
+        if course.is_pe:
+            # 记录体育课时间段
+            self.pe_course_slots.update(new_slots)
+            # 检查后续时间段是否被占用
+            for week, day, slot in new_slots:
+                next_slot = (week, day, slot + 1)
+                if next_slot in self._get_all_booked_slots(solution):
+                    return False
+        else:
+            # 检查是否在体育课后时间段
+            for week, day, slot in new_slots:
+                if (week, day, slot - 1) in self.pe_course_slots:
+                    return False
         for entry in solution:
             # 教室冲突检查
             if entry[1] == room.rid and entry[3] in course_weeks:
@@ -188,9 +207,13 @@ class CSPScheduler:
         for start, end, _ in getattr(course, 'time_slots', [(1, WEEKS_IN_SEMESTER, 1)]):
             weeks.update(range(start, end + 1))
         return weeks
-
+    def _get_all_booked_slots(self, solution) -> Set[Tuple]:
+        """获取所有已占用的时间段"""
+        return {(e[3], e[4], e[5]) for e in solution}
     def _assign_course(self, solution, course, pattern, room):
         """将课程安排添加到解决方案（修改点：使用teacher_uid）"""
+        if course.formclass:
+            self.class_room_map[course.formclass].add(room.rid)
         slots = self._expand_pattern(course, pattern)
         solution.extend(
             (course.uid, room.rid, getattr(course, 'teacher_uid', ''),  # 关键修改
