@@ -113,7 +113,7 @@ router.get("/task", async (req, res) => {
 
 //!SCHEDULE relative
 router.post("/change",async(req,res)=>{
-    const { scid, sctask, scroom, scbegin_week, scend_week, scday_of_week, scslot, scteacherid, scteacherdepartment} = req.body;
+    const { scid, sctask, scroom, scbegin_week, scend_week, scday_of_week, scslot, scteacherid, scteachername} = req.body;
     const queryOld = "SELECT * FROM `schedule` WHERE `scid` = ?;";
     const paramsOld = [scid];
     const { err: errOld, rows: rowsOld } = await db.async.all(queryOld, paramsOld);
@@ -139,7 +139,7 @@ router.post("/change",async(req,res)=>{
     const oldDay = scday_of_week || oldData.scday_of_week;
     const oldSlot = scslot || oldData.scslot;
     const oldTeacherid = scteacherid || oldData.scteacherid;
-    const oldTeacherdepartment = scteacherdepartment || oldData.scteacherdepartment;
+    const oldTeachername = scteachername || oldData.scteachername;
     //Check if the new data is valid
     if (oldBeginWeek > oldEndWeek) {
         return res.send({
@@ -148,8 +148,8 @@ router.post("/change",async(req,res)=>{
         });
     }
     //update the data in database
-    const queryUpdate = "UPDATE `schedule` SET `sctask` = ?, `scroom` = ?, `scbegin_week` = ?, `scend_week` = ?, `scday_of_week` = ?,`scslot` = ?, `scteacherid` = ?, `scteacherdepartment` = ? WHERE `scid` = ?;";
-    const paramsUpdate = [oldTask, oldRoom, oldBeginWeek, oldEndWeek, oldDay,oldSlot, oldTeacherid, oldTeacherdepartment, scid];
+    const queryUpdate = "UPDATE `schedule` SET `sctask` = ?, `scroom` = ?, `scbegin_week` = ?, `scend_week` = ?, `scday_of_week` = ?,`scslot` = ?, `scteacherid` = ?, `scteachername` = ? WHERE `scid` = ?;";
+    const paramsUpdate = [oldTask, oldRoom, oldBeginWeek, oldEndWeek, oldDay,oldSlot, oldTeacherid, oldTeachername, scid];
     const { err: errUpdate, result: resultUpdate } = await db.async.run(queryUpdate, paramsUpdate);
     if (errUpdate) {
         return res.send({
@@ -166,7 +166,7 @@ router.post("/change",async(req,res)=>{
 })
 
 router.get("/all",async(req,res)=>{
-    const query = "SELECT `scid`, `sctask`, `scday_of_week`, `scroom`, `scbegin_week`, `scend_week`,`scslot`, `scteacherid`, task.taformclass as `composition` FROM `schedule` join `task` on schedule.sctask=task.taformclassid;";
+    const query = "SELECT `scid`, `sctask`, `scday_of_week`, `scroom`, `scbegin_week`, `scend_week`,`scslot`, `scteacherid`, `scteachername`, task.taformclass as `composition` FROM `schedule` join `task` on schedule.sctask=task.taformclassid;";
     const params = [];
     const {err,rows} = await db.async.all(query,params);
     if(err){
