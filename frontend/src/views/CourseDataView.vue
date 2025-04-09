@@ -1,5 +1,42 @@
 <template>
   <div class="space-y-6">
+    <!-- 加载状态和错误提示 -->
+    <div v-if="isLoading || loadError" class="bg-white rounded-lg shadow p-4 mb-4">
+      <div v-if="isLoading" class="flex items-center text-gray-600">
+        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        正在加载课程数据...
+      </div>
+      <div v-if="loadError" class="text-red-500">
+        <div class="font-medium">加载数据失败</div>
+        <div class="text-sm">{{ loadError }}</div>
+        <button 
+          @click="fetchCoursesFromAPI" 
+          class="mt-2 px-3 py-1 text-sm rounded-md bg-primary text-white hover:bg-primary-dark"
+        >
+          重试
+        </button>
+      </div>
+    </div>
+
+    <!-- 数据来源信息 -->
+    <div class="bg-white rounded-lg shadow p-4 mb-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <span class="text-sm font-medium">数据来源: </span>
+          <span class="text-sm">API数据 ({{ courses.length }}条)</span>
+        </div>
+        <button 
+          @click="fetchCoursesFromAPI" 
+          class="px-3 py-1 text-sm rounded-md border border-input bg-background shadow-sm hover:bg-gray-50"
+        >
+          <RefreshCw class="w-4 h-4 inline-block mr-1" />
+          刷新API数据
+        </button>
+      </div>
+    </div>
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <h2 class="text-xl font-bold">排课数据展示</h2>
       <div class="flex flex-wrap gap-2">
@@ -122,7 +159,7 @@
     <div v-if="viewMode === 'detailed'" class="bg-white rounded-lg shadow overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full border-collapse">
-          <thead>
+          <thead class="sticky top-0 bg-white z-10">
             <tr class="bg-gray-50">
               <th class="border p-2 w-40">教室 / 时间</th>
               <th 
@@ -137,11 +174,11 @@
             </tr>
             <tr class="bg-gray-50">
               <th class="border p-2"></th>
-              <template v-for="day in displayedDays">
+              <template v-for="day in displayedDays" >
                 <th 
                   v-for="period in availablePeriods" 
                   :key="`${day.value}-${period}`" 
-                  class="border p-2 min-w-[100px]"
+                  class="border p-2 w-[130px]"
                   :class="{'bg-yellow-50': day.value === currentDayOfWeek}"
                 >
                   第{{ period }}节
@@ -152,27 +189,29 @@
           </thead>
           <tbody>
             <tr v-for="classroom in filteredClassrooms" :key="classroom">
-              <td class="border p-2 font-medium bg-gray-50">{{ classroom }}</td>
+              <td class="border p-2 font-medium bg-gray-50 sticky left-0 z-10">{{ classroom }}</td>
               <template v-for="day in displayedDays" >
                 <td 
                   v-for="period in availablePeriods" 
                   :key="`${classroom}-${day.value}-${period}`" 
-                  class="border p-2 align-top relative h-24"
+                  class="border p-2 align-top relative"
                   :class="{'bg-yellow-50': day.value === currentDayOfWeek}"
+                  style="width: 130px; height: 100px; overflow: hidden;"
                 >
                   <div 
                     v-for="course in getCoursesForClassroomDayAndPeriod(classroom, day.value, period)" 
-                    :key="`${course.id}-${day.value}-${period}`"
-                    class="mb-1 p-2 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                    :key="`${course.scid}-${day.value}-${period}`"
+                    class="mb-1 p-2 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow overflow-hidden max-h-[90px]"
                     :style="`background-color: ${cardColor}20;`"
                     @click="viewCourseDetails(course)"
                   >
-                    <div class="font-medium text-sm truncate" :title="course.name">{{ course.name }}</div>
-                    <div class="text-xs truncate" :title="formatClasses(course.classes)">
-                      {{ formatClasses(course.classes) }}
+                    <div class="font-medium text-sm truncate" :title="course.sctask">{{ course.sctask }}</div>
+                    <div class="text-xs truncate" :title="course.composition">{{ course.composition }}</div>
+                    <div class="text-xs text-gray-500 truncate" :title="`教师ID: ${course.scteacherid}`">
+                      教师ID: {{ course.scteacherid }}
                     </div>
-                    <div class="text-xs text-gray-500">
-                      教师ID: {{ course.teacherId }}
+                    <div class="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded-sm inline-block mt-1">
+                      {{ course.scbegin_week }}~{{ course.scend_week }}周
                     </div>
                   </div>
                   <div 
@@ -198,9 +237,9 @@
     <div v-if="viewMode === 'thumbnail'" class="bg-white rounded-lg shadow p-4">
       <div class="overflow-x-auto">
         <table class="min-w-full border-collapse">
-          <thead>
+          <thead class="sticky top-0 bg-white z-10">
             <tr class="bg-gray-50">
-              <th class="border p-2 w-40">教室 / 时间</th>
+              <th class="border p-2 w-28 sticky left-0 z-20">教室 / 时间</th>
               <th 
                 v-for="day in displayedDays" 
                 :key="`thumb-day-${day.value}`" 
@@ -212,7 +251,7 @@
               </th>
             </tr>
             <tr class="bg-gray-50">
-              <th class="border p-2"></th>
+              <th class="border p-2 sticky left-0 z-20"></th>
               <template v-for="day in displayedDays" >
                 <th 
                   v-for="period in availablePeriods" 
@@ -227,8 +266,8 @@
           </thead>
           <tbody>
             <tr v-for="classroom in filteredClassrooms" :key="`thumb-${classroom}`">
-              <td class="border p-2 font-medium bg-gray-50">{{ classroom }}</td>
-              <template v-for="day in displayedDays">
+              <td class="border p-2 font-medium bg-gray-50 sticky left-0 z-10">{{ classroom }}</td>
+              <template v-for="day in displayedDays" >
                 <td 
                   v-for="period in availablePeriods" 
                   :key="`thumb-${classroom}-${day.value}-${period}`" 
@@ -237,10 +276,14 @@
                 >
                   <div 
                     v-if="hasCourseForDay(classroom, day.value, period)" 
-                    class="w-full h-full cursor-pointer"
+                    class="w-full h-full cursor-pointer relative"
                     :style="`background-color: ${cardColor};`"
                     @click="viewThumbnailCourseDetails(classroom, day.value, period)"
-                  ></div>
+                  >
+                    <div class="absolute bottom-0 right-0 text-[8px] text-white bg-black bg-opacity-50 px-0.5">
+                      {{ getCourseWeeks(classroom, day.value, period) }}
+                    </div>
+                  </div>
                 </td>
               </template>
             </tr>
@@ -271,31 +314,41 @@
         </div>
         <div class="space-y-3">
           <div>
-            <div class="text-sm font-medium text-gray-500">课程名称</div>
-            <div>{{ selectedCourse.name }}</div>
+            <div class="text-sm font-medium text-gray-500">课程ID</div>
+            <div>{{ selectedCourse.sctask }}</div>
           </div>
           <div>
             <div class="text-sm font-medium text-gray-500">班级</div>
-            <div class="text-sm">{{ selectedCourse.classes }}</div>
+            <div class="text-sm">{{ selectedCourse.composition }}</div>
           </div>
           <div>
             <div class="text-sm font-medium text-gray-500">教室</div>
-            <div>{{ selectedCourse.classroom }}</div>
+            <div>{{ selectedCourse.scroom }}</div>
           </div>
           <div>
             <div class="text-sm font-medium text-gray-500">教师ID</div>
-            <div>{{ selectedCourse.teacherId }}</div>
+            <div>{{ selectedCourse.scteacherid }}</div>
+          </div>
+          <div>
+            <div class="text-sm font-medium text-gray-500">开课学院</div>
+            <div>{{ selectedCourse.scteacherdepartment }}</div>
           </div>
           <div>
             <div class="text-sm font-medium text-gray-500">时间</div>
-            <div>第{{ selectedCourse.week }}周 {{ getWeekdayName(selectedCourse.day) }} 第{{ selectedCourse.period }}节</div>
+            <div>第{{ selectedCourse.time }}节 <span v-if="selectedCourse.slot_end && selectedCourse.slot_end !== selectedCourse.time">至{{ selectedCourse.slot_end }}节</span> 
+              <span v-if="selectedCourse.scbegin_time">({{ selectedCourse.scbegin_time }} - {{ selectedCourse.scend_time }})</span>
+            </div>
+          </div>
+          <div>
+            <div class="text-sm font-medium text-gray-500">周次</div>
+            <div>第{{ selectedCourse.scbegin_week }}~{{ selectedCourse.scend_week }}周</div>
           </div>
           <div>
             <div class="text-sm font-medium text-gray-500">定位信息</div>
             <div class="text-sm bg-gray-100 p-2 rounded">
-              教室: {{ selectedCourse.classroom }} | 
-              日期: 第{{ selectedCourse.week }}周{{ getWeekdayName(selectedCourse.day) }} | 
-              节次: 第{{ selectedCourse.period }}节
+              教室: {{ selectedCourse.scroom }} | 
+              日期: 第{{ selectedCourse.scbegin_week }}~{{ selectedCourse.scend_week }}周{{ getWeekdayName(parseInt(selectedCourse.scday_of_week)) }} | 
+              节次: 第{{ selectedCourse.time }}节<span v-if="selectedCourse.slot_end && selectedCourse.slot_end !== selectedCourse.time">至{{ selectedCourse.slot_end }}节</span>
             </div>
           </div>
         </div>
@@ -306,12 +359,6 @@
           >
             关闭
           </button>
-          <button 
-            @click="editCourse(selectedCourse)" 
-            class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
-          >
-            编辑
-          </button>
         </div>
       </div>
     </div>
@@ -320,7 +367,8 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { Search, Download, X, LayoutGrid, Grid } from 'lucide-vue-next';
+import { Search, Download, X, LayoutGrid, Grid, RefreshCw } from 'lucide-vue-next';
+import axios from 'axios';
 
 // View mode
 const viewMode = ref('detailed');
@@ -343,7 +391,7 @@ const weekdays = [
 const currentDayOfWeek = ref(1);
 
 // State variables
-const selectedWeek = ref(6);
+const selectedWeek = ref(1);
 const selectedDay = ref('');
 const selectedCourse = ref(null);
 const classroomSearch = ref('');
@@ -370,207 +418,80 @@ const periodTimes = [
   { start: '21:45', end: '22:30' },
 ];
 
-// Sample course data
-const courses = ref([
-  {
-    id: 1,
-    name: '710201ZXB01',
-    classes: '24数字媒体技术1班（五年制）,24数字媒体技术2班（五年制）,24计算机应用1班,24计算机应用2班',
-    classroom: 'JNL2#205-网络实训室',
-    teacherId: 439,
-    week: 6,
-    day: 4,
-    period: 1
-  },
-  {
-    id: 2,
-    name: '710201ZXB01',
-    classes: '24数字媒体技术1班（五年制）,24数字媒体技术2班（五年制）,24计算机应用1班,24计算机应用2班',
-    classroom: 'JNL2#205-网络实训室',
-    teacherId: 439,
-    week: 6,
-    day: 4,
-    period: 2
-  },
-  {
-    id: 3,
-    name: '710201ZXB01',
-    classes: '24数字媒体技术1班（五年制）,24数字媒体技术2班（五年制）,24计算机应用1班,24计算机应用2班',
-    classroom: 'JNL2#205-网络实训室',
-    teacherId: 439,
-    week: 7,
-    day: 4,
-    period: 1
-  },
-  {
-    id: 4,
-    name: '710201ZXB01',
-    classes: '24数字媒体技术1班（五年制）,24数字媒体技术2班（五年制）,24计算机应用1班,24计算机应用2班',
-    classroom: 'JNL2#205-网络实训室',
-    teacherId: 439,
-    week: 7,
-    day: 4,
-    period: 2
-  },
-  // More sample data
-  {
-    id: 5,
-    name: '710202ZXB02',
-    classes: '24数字媒体技术1班（五年制）',
-    classroom: 'JNL2#206-多媒体实训室',
-    teacherId: 440,
-    week: 6,
-    day: 1,
-    period: 3
-  },
-  {
-    id: 6,
-    name: '710203ZXB03',
-    classes: '24计算机应用1班',
-    classroom: 'JNL2#207-程序设计实训室',
-    teacherId: 441,
-    week: 6,
-    day: 2,
-    period: 4
-  },
-  {
-    id: 7,
-    name: '710204ZXB04',
-    classes: '24计算机应用2班',
-    classroom: 'JNL2#208-数据库实训室',
-    teacherId: 442,
-    week: 6,
-    day: 3,
-    period: 5
-  },
-  {
-    id: 8,
-    name: '710205ZXB05',
-    classes: '24数字媒体技术1班（五年制）,24数字媒体技术2班（五年制）',
-    classroom: 'JNL1#101-普通教室',
-    teacherId: 443,
-    week: 6,
-    day: 1,
-    period: 1
-  },
-  {
-    id: 9,
-    name: '710206ZXB06',
-    classes: '24计算机应用1班,24计算机应用2班',
-    classroom: 'JNL1#102-普通教室',
-    teacherId: 444,
-    week: 6,
-    day: 2,
-    period: 2
-  },
-  {
-    id: 10,
-    name: '710207ZXB07',
-    classes: '24数字媒体技术1班（五年制）',
-    classroom: 'JNL1#201-普通教室',
-    teacherId: 445,
-    week: 6,
-    day: 3,
-    period: 3
-  },
-  // Courses for the same classroom on different days
-  {
-    id: 11,
-    name: '710208ZXB08',
-    classes: '24计算机应用1班',
-    classroom: 'JNL2#206-多媒体实训室',
-    teacherId: 446,
-    week: 6,
-    day: 2,
-    period: 3
-  },
-  {
-    id: 12,
-    name: '710209ZXB09',
-    classes: '24计算机应用2班',
-    classroom: 'JNL2#206-多媒体实训室',
-    teacherId: 447,
-    week: 6,
-    day: 3,
-    period: 3
-  },
-  // Courses for the same classroom and period in different weeks
-  {
-    id: 13,
-    name: '710210ZXB10',
-    classes: '24数字媒体技术1班（五年制）',
-    classroom: 'JNL1#202-普通教室',
-    teacherId: 448,
-    week: 6,
-    day: 4,
-    period: 4
-  },
-  {
-    id: 14,
-    name: '710210ZXB10',
-    classes: '24数字媒体技术1班（五年制）',
-    classroom: 'JNL1#202-普通教室',
-    teacherId: 448,
-    week: 7,
-    day: 4,
-    period: 4
-  },
-  // Add more courses for different days
-  {
-    id: 15,
-    name: '710211ZXB11',
-    classes: '24数字媒体技术2班（五年制）',
-    classroom: 'JNL1#201-普通教室',
-    teacherId: 449,
-    week: 6,
-    day: 5,
-    period: 2
-  },
-  {
-    id: 16,
-    name: '710212ZXB12',
-    classes: '24计算机应用1班',
-    classroom: 'JNL2#207-程序设计实训室',
-    teacherId: 450,
-    week: 6,
-    day: 6,
-    period: 1
-  },
-  {
-    id: 17,
-    name: '710213ZXB13',
-    classes: '24计算机应用2班',
-    classroom: 'JNL2#208-数据库实训室',
-    teacherId: 451,
-    week: 6,
-    day: 7,
-    period: 3
-  }
-]);
+// 课程数据
+const courses = ref([]);
+
+// 添加API数据加载状态
+const isLoading = ref(false);
+const loadError = ref(null);
+
+// 解析课程槽位
+const parseSlot = (slotStr) => {
+  if (!slotStr) return { start: 0, end: 0 };
+  
+  const parts = slotStr.split('-');
+  const start = parseInt(parts[0]);
+  const end = parts.length > 1 ? parseInt(parts[1]) : start;
+  
+  return { start, end };
+};
+
+// 处理API返回的课程数据
+const processCourseData = (apiCourses) => {
+  return apiCourses.map(course => {
+    // 解析课程槽位
+    const slot = parseSlot(course.scslot);
+    
+    // 设置开始和结束时间
+    let beginTime = '';
+    let endTime = '';
+    if (slot.start > 0 && slot.start <= periodTimes.length) {
+      beginTime = periodTimes[slot.start - 1].start + ':00';
+    }
+    if (slot.end > 0 && slot.end <= periodTimes.length) {
+      endTime = periodTimes[slot.end - 1].end + ':00';
+    }
+    
+    // 转换数据类型确保一致性
+    return {
+      ...course,
+      scday_of_week: course.scday_of_week.toString(),
+      scbegin_week: parseInt(course.scbegin_week),
+      scend_week: parseInt(course.scend_week),
+      time: slot.start, // 使用开始槽位作为时间
+      slot_end: slot.end, // 添加结束槽位
+      scbegin_time: beginTime,
+      scend_time: endTime
+    };
+  });
+};
 
 // Filtered courses
 const filteredCourses = computed(() => {
   let result = [...courses.value];
   
   // Filter by week
-  result = result.filter(course => course.week === selectedWeek.value);
+  result = result.filter(course => 
+    course.scbegin_week <= selectedWeek.value && 
+    course.scend_week >= selectedWeek.value
+  );
   
   // Filter by day (if a specific day is selected)
   if (selectedDay.value) {
-    result = result.filter(course => course.day === parseInt(selectedDay.value));
+    result = result.filter(course => parseInt(course.scday_of_week) === parseInt(selectedDay.value));
   }
   
   // Filter by course name
   if (courseNameSearch.value) {
     result = result.filter(course => 
-      course.name.toLowerCase().includes(courseNameSearch.value.toLowerCase())
+      course.sctask.toLowerCase().includes(courseNameSearch.value.toLowerCase())
     );
   }
   
   // Filter by class
   if (classSearch.value) {
     result = result.filter(course => 
-      course.classes.toLowerCase().includes(classSearch.value.toLowerCase())
+      course.composition.toLowerCase().includes(classSearch.value.toLowerCase())
     );
   }
   
@@ -581,7 +502,9 @@ const filteredCourses = computed(() => {
 const allClassrooms = computed(() => {
   const classrooms = new Set();
   courses.value.forEach(course => {
-    classrooms.add(course.classroom);
+    if (course.scroom) {
+      classrooms.add(course.scroom);
+    }
   });
   return [...classrooms].sort();
 });
@@ -601,7 +524,9 @@ const filteredClassrooms = computed(() => {
   if (courseNameSearch.value || classSearch.value) {
     const matchedClassrooms = new Set();
     filteredCourses.value.forEach(course => {
-      matchedClassrooms.add(course.classroom);
+      if (course.scroom) {
+        matchedClassrooms.add(course.scroom);
+      }
     });
     result = result.filter(classroom => matchedClassrooms.has(classroom));
   }
@@ -620,15 +545,24 @@ const displayedDays = computed(() => {
 // Get courses for a specific classroom, day, and period
 const getCoursesForClassroomDayAndPeriod = (classroom, day, period) => {
   return filteredCourses.value.filter(course => 
-    course.classroom === classroom && 
-    course.day === day &&
-    course.period === period
+    course.scroom === classroom && 
+    parseInt(course.scday_of_week) === day &&
+    course.time <= period && (course.slot_end || course.time) >= period
   );
 };
 
 // Check if a classroom has a course for a specific day and period
 const hasCourseForDay = (classroom, day, period) => {
   return getCoursesForClassroomDayAndPeriod(classroom, day, period).length > 0;
+};
+
+// Get course weeks display for thumbnail
+const getCourseWeeks = (classroom, day, period) => {
+  const cellCourses = getCoursesForClassroomDayAndPeriod(classroom, day, period);
+  if (cellCourses.length === 0) return '';
+  
+  const course = cellCourses[0];
+  return `${course.scbegin_week }~${course.scend_week}`;
 };
 
 // Get period time label
@@ -646,14 +580,6 @@ const getWeekdayName = (day) => {
   return dayObj ? dayObj.label : '';
 };
 
-// Format class display
-const formatClasses = (classes) => {
-  if (!classes) return '';
-  const classList = classes.split(',');
-  if (classList.length <= 2) return classes;
-  return `${classList[0]}等${classList.length}个班级`;
-};
-
 // View course details
 const viewCourseDetails = (course) => {
   selectedCourse.value = course;
@@ -665,13 +591,6 @@ const viewThumbnailCourseDetails = (classroom, day, period) => {
   if (courses.length > 0) {
     selectedCourse.value = courses[0];
   }
-};
-
-// Edit course
-const editCourse = (course) => {
-  // Add logic for editing a course
-  alert(`编辑课程: ${course.name}`);
-  selectedCourse.value = null;
 };
 
 // Export data
@@ -688,6 +607,134 @@ const getCurrentDayOfWeek = () => {
   return day === 0 ? 7 : day;
 };
 
+// 测试数据
+const mockCourses = [
+  {
+    scid: 1,
+    sctask: "570102KBOB032024202511017",
+    scday_of_week: "2",
+    scroom: "JXL517",
+    scbegin_week: 1,
+    scend_week: 16,
+    scslot: "1-2",
+    scteacherid: "130",
+    scteacherdepartment: "教育艺术学院",
+    composition: "23学前教育5班"
+  },
+  {
+    scid: 2,
+    sctask: "570102KBOB032024202511018",
+    scday_of_week: "3",
+    scroom: "JXL101",
+    scbegin_week: 1,
+    scend_week: 8,
+    scslot: "3-4",
+    scteacherid: "131",
+    scteacherdepartment: "计算机科学学院",
+    composition: "23计算机科学1班,23计算机科学2班"
+  },
+  {
+    scid: 3,
+    sctask: "570102KBOB032024202511019",
+    scday_of_week: "4",
+    scroom: "JXL201",
+    scbegin_week: 9,
+    scend_week: 16,
+    scslot: "5-6",
+    scteacherid: "132",
+    scteacherdepartment: "外国语学院",
+    composition: "23英语1班"
+  },
+  {
+    scid: 4,
+    sctask: "570102KBOB032024202511020",
+    scday_of_week: "1",
+    scroom: "JXL301",
+    scbegin_week: 1,
+    scend_week: 16,
+    scslot: "1-2",
+    scteacherid: "133",
+    scteacherdepartment: "数学学院",
+    composition: "23数学1班,23数学2班,23数学3班"
+  },
+  {
+    scid: 5,
+    sctask: "570102KBOB032024202511021",
+    scday_of_week: "5",
+    scroom: "JXL401",
+    scbegin_week: 1,
+    scend_week: 16,
+    scslot: "7-8",
+    scteacherid: "134",
+    scteacherdepartment: "物理学院",
+    composition: "23物理1班"
+  },
+  {
+    scid: 6,
+    sctask: "570102KBOB032024202511022",
+    scday_of_week: "1",
+    scroom: "JXL301",
+    scbegin_week: 1,
+    scend_week: 16,
+    scslot: "3-4",
+    scteacherid: "135",
+    scteacherdepartment: "化学学院",
+    composition: "23化学1班,23化学2班"
+  },
+  {
+    scid: 7,
+    sctask: "570102KBOB032024202511023",
+    scday_of_week: "2",
+    scroom: "JXL517",
+    scbegin_week: 1,
+    scend_week: 8,
+    scslot: "5-6",
+    scteacherid: "136",
+    scteacherdepartment: "生物学院",
+    composition: "23生物1班"
+  },
+  {
+    scid: 8,
+    sctask: "570102KBOB032024202511024",
+    scday_of_week: "3",
+    scroom: "JXL101",
+    scbegin_week: 9,
+    scend_week: 16,
+    scslot: "1-2",
+    scteacherid: "137",
+    scteacherdepartment: "历史学院",
+    composition: "23历史1班,23历史2班"
+  }
+];
+
+// 从API获取数据的函数
+const fetchCoursesFromAPI = async () => {
+  isLoading.value = true;
+  loadError.value = null;
+  
+  try {
+    // 尝试从实际API获取数据
+    const response = await axios.get('http://localhost:8080/manual/all');
+    
+    if (response.status === 200 && response.data.code === 200) {
+      // 处理API返回的数据
+      courses.value = processCourseData(response.data.rows);
+      console.log('从API加载了', courses.value.length, '条课程数据');
+    } else {
+      throw new Error(`API返回错误: ${response.data.code || response.status}`);
+    }
+  } catch (error) {
+    console.error('获取课程数据失败:', error);
+    loadError.value = `无法从API获取数据: ${error.message}。使用测试数据代替。`;
+    
+    // 使用测试数据
+    courses.value = processCourseData(mockCourses);
+    console.log('使用测试数据', courses.value.length, '条');
+  } finally {
+    isLoading.value = false;
+  }
+};
+
 // Lifecycle hooks
 onMounted(() => {
   // Set current day of week
@@ -696,7 +743,9 @@ onMounted(() => {
   // Automatically select current day
   selectedDay.value = currentDayOfWeek.value.toString();
   
-  // Here you can add logic to fetch data from backend
+  // 从API获取数据
+  fetchCoursesFromAPI();
+  
   console.log('Component mounted');
 });
 </script>
@@ -718,4 +767,3 @@ onMounted(() => {
   border-color: #4f46e5;
 }
 </style>
-
