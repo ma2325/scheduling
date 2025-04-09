@@ -21,6 +21,7 @@ app.use("/admin",require("./router/AdminRouter"))
 app.use("/dashboard",require("./router/DashboardRouter"))
 app.use("/statistics",require("./router/StatisticsRouter"))
 app.use("/manual",require("./router/ManualRouter"));
+app.use("/automatic",require("./router/AutomaticRouter"));
 
 app.get("/",(req,res)=>{
     res.send("hello world");
