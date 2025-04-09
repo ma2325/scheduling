@@ -121,11 +121,13 @@ query:week=[week]//查询的周
 }
 ```
 ### 3.手动排课
+
 #### (1)/manual/room:
 
 作用：按需获取教室，请求形式：get，附加参数：query
 参数格式：*building=[building],campus=[campus]*
 **备注：1.二者均为可选参数； 2.*building*和*campus*均为LIKE查询 3.*campus*为校区，后同**
+
 ```json
 //respond when success
 {
@@ -174,8 +176,10 @@ query:week=[week]//查询的周
 }
 ```
 #### (3)/manual/change:
+
 作用：按需更改课程安排，请求形式：post，附加参数：body
 **备注：此处为更改schedule表的接口，将根据传输的数据进行更改，没有传的数据将不会更改**
+
 ```json
 //request参数格式(scid为必选参数，其他所有参数均为可选参数)
 { 
@@ -202,6 +206,7 @@ query:week=[week]//查询的周
 }
 ```
 #### (4)/manual/all:
+
 作用：获取所有课程，请求形式：get，附加参数：无
 ```json
 //respond when success
@@ -214,13 +219,13 @@ query:week=[week]//查询的周
             "sctask": "570102KBOB032024202511017",//教学班id
             "scday_of_week": "2",//星期几
             "scroom": "JXL517",//教室号
-            "scbegin_week": 1,
-            "scend_week": 16,
-            "scbegin_time": "08:00:00",
-            "scend_time": "09:40:00",
+            "scbegin_week": 1, //开课的时间
+            "scend_week": 16, //结课的时间
+            "scbegin_time": "08:00:00", 
+            "scend_time": "09:40:00", 
             "scteacherid": "130",
-            "scteacherdepartment": "教育艺术学院",
-            "composition": "23学前教育5班"
+            "scteacherdepartment": "教育艺术学院", //开课学院
+            "composition": "23学前教育5班" //
         },
         {
             "scid":[scid],
