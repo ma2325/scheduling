@@ -184,7 +184,7 @@ query:week=[week]//查询的周
     "scday_of_week":[scday], //星期几
     "scslot":[scslot], //第几节课,只有一节课的为形如“m-m”的字符串，连续的课程会出现形如“m-n”的字符串
     "scteacherid":[scteacherid],
-    "scteacherdepartment":[scteacherdepartment],//教师所在部门名称
+    "scteachername":[scteachername],//教师姓名
 }
 //respond when success
 {
@@ -214,7 +214,7 @@ query:week=[week]//查询的周
             "scend_week": 16,
             "scslot": "1-1",//第几节课,只有一节课的为形如“m-m”的字符串，连续的课程会出现形如“m-n”的字符串
             "scteacherid": "130",
-            "scteacherdepartment": "教育艺术学院",
+            "scteachername": "xxx",
             "composition": "23学前教育5班"
         },
         {
@@ -226,7 +226,7 @@ query:week=[week]//查询的周
             "scend_week":[scend_week],
             "scslot":[scslot], 
             "scteacherid":[scteacherid],
-            "scteacherdepartment":[scteacherdepartment],
+            "scteachername":[scteachername],
             "composition":[composition]
         }
         //其他课程信息
