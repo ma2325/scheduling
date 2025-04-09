@@ -71,10 +71,6 @@ router.post("/auto_schedule", async (req, res) => {
             const { err: teacherScheduledErr, rows: ScheduledTeacherRows } = await db.async.all(queryScheduledTeacherCount, []);
             const totalScheduledTeachers = ScheduledTeacherRows[0].totalScheduledTeacher;
 
-
-            // Python 脚本执行成功后，从数据库读取调度结果
-
-            // 示例：计算统计数据
             const summary = {
                 totalClasses,
                 scheduledClasses,
