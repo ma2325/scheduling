@@ -4,9 +4,14 @@ const { spawn } = require("child_process");
 const { db } = require("../db/DbUtils");
 
 // 接收前端的调课请求
-router.post("/auto_schedule", async (req, res) => {
+router.put("/", async (req, res) => {
     try {
-        const constraints = req.body.constraints;
+        const constraints = req.body.soft_constraints;
+
+        // 将 soft_constraints 数组转换为目标字符串格式
+        const constraintsString = `${constraints
+            .map(item => `(${item.constraintItem}, ${item.priority})`)
+            .join(',')}`;
 
         if (!Array.isArray(constraints)) {
             return res.send({
@@ -16,12 +21,21 @@ router.post("/auto_schedule", async (req, res) => {
         }
 
         // 构造 Python 命令行参数
-        const softConstraintsArg = JSON.stringify(constraints);
-        const pythonPath = "python"; // 可按需指定具体路径
-        const scriptPath = "D:\\fuwuwaibao\\scheduling\\ai\\main.py";
+        const softConstraintsArg = constraintsString;
+        const pythonPath = "C:\\Users\\20409\\.conda\\envs\\schedule\\python.exe"; // 可按需指定具体路径
+        const scriptPath = "D:\\fuwuwaibao\\scheduling\\ai\\scheduler_cli.py";
 
-        // 启动子进程运行 Python 脚本
-        const pythonProcess = spawn(pythonPath, [scriptPath, softConstraintsArg]);
+        // 使用 --soft_constraints 参数传递约束条件
+        const pythonProcess = spawn(pythonPath, [
+            scriptPath,
+            "--soft_constraints",
+            `(${constraintsString})`
+        ], {
+            env: {
+                ...process.env,
+                PYTHONIOENCODING: 'utf-8'  //强制 Python 输出为 UTF-8
+            }
+        });
 
         let pythonOutput = "";
         let pythonError = "";
@@ -51,7 +65,7 @@ router.post("/auto_schedule", async (req, res) => {
             const { err: scheduleErr, rows: scheduleRows } = await db.async.all(queryScheduleCount, []);
             const scheduledClasses = scheduleRows[0].totalschdule;
 
-            const unscheduledClasses=totalClasses-arrangedClasses;
+            const unscheduledClasses=totalClasses-scheduledClasses;
 
             const queryRoomCount = "SELECT COUNT(*) AS totalRooms FROM room;";
             const { err: roomErr, rows: roomRows } = await db.async.all(queryRoomCount, []);
@@ -63,7 +77,7 @@ router.post("/auto_schedule", async (req, res) => {
 
             const roomRate=usedRooms/totalRooms;
 
-            const queryTeacherCount = "SELECT COUNT(*) AS totalTeacher FROM (SELECT DISTINCT scteachername, scslot FROM task) AS unique_pairs;";
+            const queryTeacherCount = "SELECT COUNT(*) AS totalTeacher FROM (SELECT DISTINCT scteachername, scslot FROM schedule) AS unique_pairs;";
             const { err: teacherErr, rows: teacherRows } = await db.async.all(queryTeacherCount, []);
             const totalTeachers = teacherRows[0].totalTeacher;
 
@@ -86,10 +100,8 @@ router.post("/auto_schedule", async (req, res) => {
                 code: 200,
                 msg: "自动调课完成",
                 data: {
-                    schedule: rows,
                     summary
-                },
-                pythonOutput: pythonOutput.trim()
+                }
             });
         });
     } catch (error) {

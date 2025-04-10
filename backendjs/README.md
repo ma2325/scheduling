@@ -240,6 +240,7 @@ query:week=[week]//查询的周
         //其他课程信息
     ]
 }
+```
 ## 三、Dashboard 功能接口
 
 ### 1. 周视图查询接口 `/weekView`
@@ -269,20 +270,22 @@ query:week=[week]//查询的周
   "weeks": [1,3,5,7,9,11,13,15],
   "slot": "1-2"//上课课次
 }
+```
 2）/termView
-输入：
-1.学生：
-user
-string 
-示例值:
-24教学7班
+输入：  
+1.学生：  
+user  
+string   
+示例值:  
+24教学7班  
 
-userType
-string 
-示例值:
-student
+userType  
+string   
+示例值:  
+student  
 
 2.教师：
+```
 export interface Request {
     /**
      * 教师编号
@@ -293,6 +296,62 @@ export interface Request {
                */
             userType?: string;示例值:teacher
 }
+```
 
 返回：
 同/weekView
+
+## 四、/automatic
+### 1.配置
+(1)按照ai里面readme.md的要求配置好python虚拟环境，找到虚拟环境中python.exe的位置  
+(2)在router/AutomaticRouter.js中
+```
+const pythonPath = "C:\\Users\\20409\\conda\\envs\\schedule\\python.exe"; // 可按需指定具体路径
+const scriptPath = "D:\\fuwuwaibao\\scheduling\\ai\\scheduler_cli.py";
+```
+使用自己虚拟环境的python.exe替换pythonPath  
+使用scheduler_cli.py的位置替换scriptPath  
+### 2./(put类型)
+(1)输入格式  
+json格式：
+```
+export interface Request {
+    soft_constraints: SoftConstraint[];
+    "01JRDKGMRWS93H60K0V49N3WBG": any;
+    [property: string]: any;
+}
+
+export interface SoftConstraint {
+    constraintItem: number;//约束编号
+    priority: number;//优先级
+}
+```
+示例：
+```
+{
+    "soft_constraints": [
+        {
+            "constraintItem": 2,
+            "priority": 5
+        },
+        {
+            "constraintItem": 4,
+            "priority": 3
+        }
+    ]
+}
+```
+(2)输出格式  
+```
+const summary = {
+                totalClasses,
+                scheduledClasses,
+                unscheduledClasses,
+                totalRooms,
+                usedRooms,
+                roomRate,
+                totalTeachers,
+                totalScheduledTeachers
+            };
+```
+
