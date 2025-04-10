@@ -12,6 +12,19 @@ const pool = mysql.createPool({
   queueLimit: 0,            // 排队等待的连接数（0 表示不限制）
 });
 
+pool.getConnection((err, connection) => {
+  if (err) {
+    if (err.code === 'ER_ACCESS_DENIED_ERROR') {
+      console.error("数据库账号或密码错误！");
+    } else {
+      console.error("数据库连接失败：", err.message);
+    }
+    process.exit(1);
+  } else {
+    console.log("数据库连接成功！");
+    connection.release();
+  }
+});
 
 // 封装异步方法
 const db = {
