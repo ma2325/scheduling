@@ -1,13 +1,13 @@
--- MySQL dump 10.13  Distrib 5.7.9, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.41, for Win64 (x86_64)
 --
 -- Host: localhost    Database: schedule
 -- ------------------------------------------------------
--- Server version	5.7.9
+-- Server version	8.0.41
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
+/*!50503 SET NAMES utf8mb4 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -21,7 +21,7 @@
 
 DROP TABLE IF EXISTS `admin`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `admin` (
   `account` varchar(50) NOT NULL,
   `password` varchar(100) NOT NULL,
@@ -45,14 +45,14 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `building`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `building` (
   `bid` varchar(20) NOT NULL,
   `bname` varchar(20) DEFAULT NULL,
   `bcampusname` varchar(20) DEFAULT NULL,
   `bavailable` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`bid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -71,7 +71,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `class`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `class` (
   `clid` varchar(50) NOT NULL DEFAULT '',
   `clname` varchar(20) DEFAULT NULL,
@@ -84,12 +84,12 @@ CREATE TABLE `class` (
   `clheadteacher` varchar(20) DEFAULT NULL,
   `clmonitor` varchar(20) DEFAULT NULL,
   `classistantmonitor` varchar(20) DEFAULT NULL,
-  `clgraduateyear` int(11) DEFAULT NULL,
+  `clgraduateyear` int DEFAULT NULL,
   `clgraduatestatus` varchar(50) DEFAULT NULL,
-  `clpopulation` int(11) DEFAULT NULL,
+  `clpopulation` int DEFAULT NULL,
   `clsexdistribution` float(4,2) DEFAULT NULL,
-  `clmaxpopulation` int(11) DEFAULT '60',
-  `clinyear` int(11) DEFAULT NULL,
+  `clmaxpopulation` int DEFAULT '60',
+  `clinyear` int DEFAULT NULL,
   `cldepartment` varchar(50) NOT NULL DEFAULT '',
   `clmajorid` varchar(20) DEFAULT NULL,
   `clmajor` varchar(20) DEFAULT NULL,
@@ -103,7 +103,7 @@ CREATE TABLE `class` (
   `clincrease` varchar(50) DEFAULT NULL,
   `cltutor` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`clid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -122,7 +122,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `course`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `course` (
   `coid` varchar(20) NOT NULL,
   `coname` varchar(100) DEFAULT NULL,
@@ -133,17 +133,17 @@ CREATE TABLE `course` (
   `coenname` varchar(20) DEFAULT NULL,
   `codepartment` varchar(20) DEFAULT NULL,
   `coopen` varchar(50) DEFAULT NULL,
-  `costudyhour` int(11) NOT NULL,
-  `cotheoryhour` int(11) NOT NULL,
-  `copracticehour` int(11) NOT NULL,
-  `cocomputerhour` int(11) NOT NULL,
-  `coexercisehour` int(11) NOT NULL,
-  `cootherhour` int(11) NOT NULL,
-  `cocredit` int(11) DEFAULT NULL,
-  `cohourperweek` int(11) DEFAULT NULL,
+  `costudyhour` int NOT NULL,
+  `cotheoryhour` int NOT NULL,
+  `copracticehour` int NOT NULL,
+  `cocomputerhour` int NOT NULL,
+  `coexercisehour` int NOT NULL,
+  `cootherhour` int NOT NULL,
+  `cocredit` int DEFAULT NULL,
+  `cohourperweek` int DEFAULT NULL,
   `copurepractice` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`coid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -162,11 +162,11 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `department`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `department` (
   `dcode` varchar(10) DEFAULT NULL,
   `dname` varchar(20) DEFAULT NULL,
-  `dindex` int(11) DEFAULT NULL,
+  `dindex` int DEFAULT NULL,
   `denname` varchar(20) DEFAULT NULL,
   `dshort` varchar(10) DEFAULT NULL,
   `daddress` varchar(50) DEFAULT NULL,
@@ -185,7 +185,7 @@ CREATE TABLE `department` (
   `dintro` text,
   `dused` varchar(50) DEFAULT NULL,
   `dsection` varchar(50) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -204,16 +204,16 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `field`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `field` (
-  `fid` int(11) NOT NULL,
+  `fid` int NOT NULL,
   `fname` varchar(20) DEFAULT NULL,
-  `fgrade` int(11) DEFAULT NULL,
+  `fgrade` int DEFAULT NULL,
   `fdepartment` varchar(20) DEFAULT NULL,
-  `fmajorid` int(11) DEFAULT NULL,
+  `fmajorid` int DEFAULT NULL,
   `fmajorname` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`fid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -232,7 +232,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `major`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `major` (
   `mshort` varchar(10) DEFAULT NULL,
   `mstudyyear` varchar(50) DEFAULT NULL,
@@ -243,7 +243,7 @@ CREATE TABLE `major` (
   `mid` varchar(50) NOT NULL DEFAULT '',
   `mlevel` enum('专科','中职') DEFAULT '专科',
   PRIMARY KEY (`mid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -262,26 +262,26 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `room`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `room` (
   `rid` varchar(50) NOT NULL,
   `rname` varchar(40) DEFAULT NULL,
   `rcampus` varchar(10) DEFAULT NULL,
   `rbuilding` varchar(50) DEFAULT NULL,
-  `rfloor` int(11) DEFAULT NULL,
+  `rfloor` int DEFAULT NULL,
   `rtag` varchar(20) DEFAULT NULL,
   `rtype` varchar(20) DEFAULT NULL,
-  `rexamcapacity` int(11) DEFAULT NULL,
-  `rcapacity` int(11) DEFAULT '50',
+  `rexamcapacity` int DEFAULT NULL,
+  `rcapacity` int DEFAULT '50',
   `rairconditioner` varchar(50) DEFAULT NULL,
   `rused` varchar(50) DEFAULT NULL,
   `rintro` text,
   `rdepartment` varchar(50) DEFAULT NULL,
-  `rweekHours` int(11) DEFAULT NULL,
-  `rarea` int(11) DEFAULT NULL,
+  `rweekHours` int DEFAULT NULL,
+  `rarea` int DEFAULT NULL,
   `rtctype` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`rid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -290,7 +290,7 @@ CREATE TABLE `room` (
 
 LOCK TABLES `room` WRITE;
 /*!40000 ALTER TABLE `room` DISABLE KEYS */;
-INSERT INTO `room` VALUES ('CJ1-bjcj','CJ1-钣金车间','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('CJ1-hangongfang1','CJ1-焊工房1','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('CJ1-hangongfang2','CJ1-焊工房2','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('CJ1-huagongchejian','CJ1-化工车间','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('CJ1-kqf','CJ1-烤漆房','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('CJ1-qcjdwxcj','CJ1-汽车机电维修车间','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('CJ1-qczhcj','CJ1-汽车综合车间','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('CJ1-qiangongfang','CJ1-钳工房','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('CJ1-qixiuchejian','CJ1-汽修车间','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('HXGCZX105','HXGC1#105-化工仿真实训室(一)','铁门关校区','化学工程实训中心',1,NULL,'化工仿真实训室',NULL,40,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX106','HXGC1#106-化工仿真实训室(二)','铁门关校区','化学工程实训中心',1,NULL,'化工仿真实训室',NULL,40,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX107','HXGC1#107-化工实训车间(一)','铁门关校区','化学工程实训中心',1,NULL,'实训车间',NULL,120,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX108','HXGC1#108-化工实训车间(二)','铁门关校区','化学工程实训中心',1,NULL,'实训车间',NULL,120,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX201','HXGC2#201-化工分析实验室（一）','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX202','HXGC2#202','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX203','HXGC2#203-化学分析实验室（二）','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX204','HXGC2#204','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX205','HXGC2#205','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX206','HXGC2#206','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX207','HXGC2#207','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX208','HXGC2#208','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX209','HXGC2#209','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX210','HXGC2#210','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX211','HXGC2#211','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX301','HXGC3#301','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX302','HXGC3#302','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX303','HXGC3#303','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX304','HXGC3#304','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX305','HXGC3#305','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX306','HXGC3#306','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX307','HXGC3#307','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX308','HXGC3#308','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX309','HXGC3#309','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX311','HXGC3#311','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('JDGCZX104','JDGC1#104','铁门关校区','机电工程实训中心',1,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX105','JDGC1#105-智能焊接加工','铁门关校区','机电工程实训中心',1,NULL,'实训车间',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX106','JDGC1#106-数控仿真机房','铁门关校区','机电工程实训中心',1,NULL,'机房',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX107','JDGC1#107-数控实训室','铁门关校区','机电工程实训中心',1,NULL,'实训车间',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX108','1#108-机械加工中心','铁门关校区','机电工程实训中心',1,NULL,'电工实训室',NULL,50,'否','否',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX110','1#110-焊接实训中心','铁门关校区','机电工程实训中心',1,NULL,'实训车间',NULL,50,'否','否',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX203','JDGC2#203-逆向建模实训室','铁门关校区','机电工程实训中心',2,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX204','JDGC2#204-自动化生产线实训室','铁门关校区','机电工程实训中心',2,NULL,'自动化生产线实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX205','JDGC2#205','铁门关校区','机电工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX207','JDGC2#207','铁门关校区','机电工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX209','JDGC2#209-现代电气实训室','铁门关校区','机电工程实训中心',2,NULL,'现代电气控制实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX210','JDGC2#210-钳工创新实训室','铁门关校区','机电工程实训中心',2,NULL,'实训车间',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX221','JDGC2#206-液压实训室','铁门关校区','机电工程实训中心',2,NULL,'液压气动实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX303','JDGC3#303-智能仿真实训室','铁门关校区','机电工程实训中心',3,NULL,'虚拟仿真实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX304','JDGC3#304','铁门关校区','机电工程实训中心',3,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX305','JDGC3#305','铁门关校区','机电工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX306','JDGC3#306','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX307','JDGC3#307-电气实训室（一）','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX308','JDGC3#308-电气实训室（二）','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX310','JDGC3#310-电气控制实训室（一）','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX311','JDGC3#311-电气控制实训室（二）','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX312','JDGC3#312-PLC实训室','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX313','JDGC3#313-传感器实训室','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JNL1#-报告厅','1#报告厅','库尔勒校区','技能训练中心',1,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL1#-数控加工中心','1#数控加工中心','库尔勒校区','技能训练中心',1,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#201-图书室','2#201-图书室（2）','库尔勒校区','技能训练中心',2,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#202-图书室','2#202-图书室（1）','库尔勒校区','技能训练中心',2,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#203-综合布线室','2#203-综合布线室','库尔勒校区','技能训练中心',2,NULL,'网络综合布线室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#204-自动化生产线室','2#204-自动化生产线','库尔勒校区','技能训练中心',2,NULL,'自动化生产线实训室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#205-网络实训室','2#205-网络实训室','库尔勒校区','技能训练中心',2,NULL,'网络实训室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#206-现代电气控制室','2#206现代电气控制','库尔勒校区','技能训练中心',2,NULL,'现代电气控制实训室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#207-机械装调室','2#207-机械装调','库尔勒校区','技能训练中心',2,NULL,'机械装调实训室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#208-液压气动室','2#208-液压气动','库尔勒校区','技能训练中心',2,NULL,'液压气动实训室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#301-3号声乐室','3#301-3号声乐室','库尔勒校区','技能训练中心',3,NULL,'声乐教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#302-美术室','3#302-美术室','库尔勒校区','技能训练中心',3,NULL,'美术教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#303-2号声乐室','3#303-2号声乐室','库尔勒校区','技能训练中心',3,NULL,'声乐教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#304-1号琴房','3#304-1号琴房','库尔勒校区','技能训练中心',3,NULL,'琴房',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#305-1号声乐室','3#305-1号声乐室','库尔勒校区','技能训练中心',3,NULL,'声乐教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#306-1号舞蹈室','3#306-1号舞蹈室','库尔勒校区','技能训练中心',3,NULL,'舞蹈教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#307-2号舞蹈室','3#307-2号舞蹈室','库尔勒校区','技能训练中心',3,NULL,'舞蹈教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#308-2号琴房（电钢）','3#308-2号琴房（电钢）','库尔勒校区','技能训练中心',3,NULL,'琴房',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#309-3号琴房（电钢）','3#309-3号琴房（电钢）','库尔勒校区','技能训练中心',3,NULL,'琴房',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#310-婴幼儿卫生保健室','3#310-婴幼儿卫生保健','库尔勒校区','技能训练中心',3,NULL,'幼儿保健室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#311-4号琴房（电钢）','3#311-4号琴房（电钢）','库尔勒校区','技能训练中心',3,NULL,'琴房',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL4#401-3号舞蹈室','4#401-3号舞蹈室','库尔勒校区','技能训练中心',4,NULL,'舞蹈教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL4#402-蒙台梭立实训室','4#402-蒙台梭立实训室','库尔勒校区','技能训练中心',4,NULL,'蒙台梭立实训室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL4-演播厅','4#演播厅','库尔勒校区','技能训练中心',4,NULL,'公共教室',NULL,280,'否','是',NULL,NULL,NULL,NULL,NULL),('JXL121','JXL1#121-阶梯教室','铁门关校区','教学楼',1,NULL,'公共教室',NULL,215,'是','是','阶梯教室','马克思主义学院',NULL,NULL,NULL),('JXL201','JXL2#201','铁门关校区','教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL203','JXL2#203','铁门关校区','教学楼',2,NULL,'公共教室',NULL,60,'否','是',NULL,'公共基础学院',NULL,NULL,NULL),('JXL204','JXL2#204','铁门关校区','教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL205','JXL2#205','铁门关校区','教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL209','JXL2#209','铁门关校区','教学楼',2,NULL,'机房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL210','JXL2#210-美术实训室（一）','铁门关校区','教学楼',2,NULL,'美术教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL211','JXL2#211','铁门关校区','教学楼',2,NULL,'公共教室',NULL,60,'否','是',NULL,'公共基础学院',NULL,NULL,NULL),('JXL213','JXL2#213-美术实训室（二）','铁门关校区','教学楼',2,NULL,'美术教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL215','JXL2#215','铁门关校区','教学楼',2,NULL,'公共教室',NULL,60,'否','是',NULL,'公共基础学院',NULL,NULL,NULL),('JXL216','JXL2#216','铁门关校区','教学楼',2,NULL,'机房',NULL,50,'是','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('JXL218','JXL2#218','铁门关校区','教学楼',2,NULL,'机房',NULL,50,'是','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('JXL223','JXL2#223','铁门关校区','教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL224','JXL2#224','铁门关校区','教学楼',2,NULL,'公共教室',NULL,60,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('JXL304','JXL3#304','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL305','JXL3#305','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL306','JXL3#306','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL307','JXL3#307','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL308','JXL3#308','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL309','JXL3#309','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL310','JXL3#310','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL311','JXL3#311','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL313','JXL3#313','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL315','JXL3#315','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL317','JXL3#317','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL318','JXL3#318','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL320','JXL3#320','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL321','JXL3#321','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL322','JXL3#322','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL401','JXL4#401','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL403','JXL4#403','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL404','JXL4#404','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL405','JXL4#405','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL406','JXL4#406','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL407','JXL4#407','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL408','JXL4#408','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL409','JXL4#409','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL410','JXL4#410','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL411','JXL4#411','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL413','JXL4#413-古筝实训室','铁门关校区','教学楼',4,NULL,'琴房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL415','JXL4#415-乐理实训室（一）','铁门关校区','教学楼',4,NULL,'声乐教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL416','JXL4#416-乐理实训室（二）','铁门关校区','教学楼',4,NULL,'声乐教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL417','JXL4#417','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL419','JXL4#419','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL420','JXL4#420','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL421','JXL4#421','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL501','JXL5#501','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL503','JXL5#503','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL504','JXL5#504','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL505','JXL5#505','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL506','JXL5#506','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL507','JXL5#507','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL508','JXL5#508','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL509','JXL5#509','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL510','JXL5#510','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL511','JXL5#511','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL513','JXL5#513','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL515','JXL5#515','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL516','JXL5#516','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL517','JXL5#517','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL519','JXL5#519','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL520','JXL5#520','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL521','JXL5#521','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX101','JYYS1#101-舞蹈实训室（一）','铁门关校区','教育艺术中心',1,NULL,'舞蹈教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX102','JYYS1#102-舞蹈实训室（二）','铁门关校区','教育艺术中心',1,NULL,'舞蹈教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX103','JYYS1#103-舞蹈实训室（三）','铁门关校区','教育艺术中心',1,NULL,'舞蹈教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX104','JYYS1#104-舞蹈实训室（四）','铁门关校区','教育艺术中心',1,NULL,'舞蹈教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX201','JYYS2#201-声乐实训室（一）','铁门关校区','教育艺术中心',2,NULL,'声乐教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX202','JYYS2#202-声乐实训室（二）','铁门关校区','教育艺术中心',2,NULL,'声乐教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX203','JYYS2#203-幼儿园虚拟仿真实训室','铁门关校区','教育艺术中心',2,NULL,'虚拟仿真实训室',NULL,80,'是','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX205','JYYS2#205-玩具实训室','铁门关校区','教育艺术中心',2,NULL,'多媒体教室',NULL,80,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX207','JYYS2#207-幼儿游戏实训室','铁门关校区','教育艺术中心',2,NULL,'多媒体教室',NULL,80,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX208','JYYS2#208-早期教育智慧实训室','铁门关校区','教育艺术中心',2,NULL,'多媒体教室',NULL,100,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX301','JYYS3#301-电钢琴实训室（一）','铁门关校区','教育艺术中心',3,NULL,'琴房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX302','JYYS3#302-电钢琴实训室（二）','铁门关校区','教育艺术中心',3,NULL,'琴房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX303','JYYS3#303-电钢琴实训室（三）','铁门关校区','教育艺术中心',3,NULL,'琴房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX305','JYYS3#305-乐理实训室','铁门关校区','教育艺术中心',3,NULL,'声乐教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX313','JYYS3#313-电钢琴实训室（四）','铁门关校区','教育艺术中心',3,NULL,'琴房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX314','JYYS3#314-电钢琴实训室（五）','铁门关校区','教育艺术中心',3,NULL,'琴房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('QCGCZX1-101','QCGCZX1-101-汽车综合维修车间','铁门关校区','汽车工程实训中心',1,NULL,'实训车间',NULL,150,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX2-201','QCGCZX2-201-汽车底盘实训室','铁门关校区','汽车工程实训中心',2,NULL,'汽修实训室',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX2-202','QCGCZX2-202-汽车电器设备实训室','铁门关校区','汽车工程实训中心',2,NULL,'汽修实训室',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX2-203','QCGCZX2-203','铁门关校区','汽车工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是','理实一体化教室','汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX2-204','QCGCZX2-204-汽车发动机综合实训室','铁门关校区','汽车工程实训中心',2,NULL,'汽修实训室',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX2-205','QCGCZX2-205-汽车钣金综合实训室','铁门关校区','汽车工程实训中心',2,NULL,'汽修实训室',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-301','QCGCZX3-301-新能源电机实训室','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,50,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-302','QCGCZX3-302-新能源动力电池实训室','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,50,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-303','QCGCZX3-303-低压电工室(1)','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,50,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-304','QCGCZX3-304-低压电工室(2)','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,50,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-305','QCGCZX3-305-虚拟仿真实训室(1)','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,50,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-306','QCGCZX3-306-虚拟仿真实训室(2)','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,50,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-307','QCGCZX3-307','铁门关校区','汽车工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是','理实一体化教室','汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-308','QCGCZX3-308','铁门关校区','汽车工程实训中心',3,NULL,'普通教室',NULL,100,'否','是','活动教室','汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-309','QCGCZX3-309-智能网联综合实训室','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,100,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('SXL1#103','1#103','库尔勒校区','实训楼',1,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL1#104','1#104','库尔勒校区','实训楼',1,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL1#107','1#107','库尔勒校区','实训楼',1,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL1#110','1#110','库尔勒校区','实训楼',1,NULL,'移动一体机',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL2#204','2#204','库尔勒校区','实训楼',2,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL2#205','2#205','库尔勒校区','实训楼',2,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL2#206','2#206','库尔勒校区','实训楼',2,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL2#207','2#207','库尔勒校区','实训楼',2,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL2#208','2#208','库尔勒校区','实训楼',2,NULL,'移动一体机',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL2-203','2#203','库尔勒校区','实训楼',2,NULL,'多媒体教室',NULL,80,'否','是','可做合班课教室',NULL,NULL,NULL,NULL),('SXL3#301','3#301','库尔勒校区','实训楼',3,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL3#303','3#303','库尔勒校区','实训楼',3,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL3#304','3#304','库尔勒校区','实训楼',3,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL3#306','3#306','库尔勒校区','实训楼',3,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL3#307','3#307','库尔勒校区','实训楼',3,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL3#308','3#308','库尔勒校区','实训楼',3,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL3-305','3#305','库尔勒校区','实训楼',3,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL4#403','4#403','库尔勒校区','实训楼',4,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL4#405','4#405','库尔勒校区','实训楼',4,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL4#407','4#407','库尔勒校区','实训楼',4,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL4#408','4#408','库尔勒校区','实训楼',4,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL4#409','4#409','库尔勒校区','实训楼',4,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL4#410','4#410','库尔勒校区','实训楼',4,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('XDNYZX101','XDNY1#101','铁门关校区','现代农业实训中心',1,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX102','XDNY1#102','铁门关校区','现代农业实训中心',1,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX103','XDNY1#103','铁门关校区','现代农业实训中心',1,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX104','XDNY1#104','铁门关校区','现代农业实训中心',1,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX105','XDNY1#105','铁门关校区','现代农业实训中心',1,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX106','XDNY1#106-农业实训车间','铁门关校区','现代农业实训中心',1,NULL,'实训车间',NULL,120,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX201','XDNY2#201','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX202','XDNY2#202','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX203','XDNY2#203','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX204','XDNY2#204','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX205','XDNY2#205','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX206','XDNY2#206','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX207','XDNY2#207','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX208','XDNY2#208','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX209','XDNY2#209','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX210','XDNY2#210','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX211','XDNY2#211','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX301','XDNY3#301-公共机房','铁门关校区','现代农业实训中心',3,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XDNYZX302','XDNY3#302-公共机房','铁门关校区','现代农业实训中心',3,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XDNYZX303','XDNY3#303-会计实训室','铁门关校区','现代农业实训中心',3,NULL,'机房',NULL,50,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX304','XDNY3#304','铁门关校区','现代农业实训中心',3,NULL,'多媒体教室',NULL,80,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX305','XDNY3#305','铁门关校区','现代农业实训中心',3,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XDNYZX306','XDNY3#306','铁门关校区','现代农业实训中心',3,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XXJSZX301','XXJS3#301多媒体教室','铁门关校区','信息技术中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XXJSZX302','XXJS3#302录播教室','铁门关校区','信息技术中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XXJSZX303','XXJS3#303机房','铁门关校区','信息技术中心',3,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XXJSZX304','XXJS3#304电子商务机房','铁门关校区','信息技术中心',3,NULL,'机房',NULL,50,'是','是','电子商务机房','信息智能工程学院',NULL,NULL,NULL),('XXJSZX305','XXJS3#305机房','铁门关校区','信息技术中心',3,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XXJSZX306','XXJS3#306教室','铁门关校区','信息技术中心',3,NULL,'普通教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL1-dajifang','1#大机房','库尔勒校区','综合教学楼',1,NULL,'机房',NULL,60,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL1-jietijiaoshi','1#阶梯教室','库尔勒校区','综合教学楼',1,NULL,'普通教室',NULL,200,'否','是',NULL,'马克思主义学院',NULL,NULL,NULL),('ZHL1-xiaojifang','1#小机房','库尔勒校区','综合教学楼',1,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL1-xinlizhongxin','1#心理活动中心','库尔勒校区','综合教学楼',1,NULL,'活动室',NULL,80,'否','是',NULL,'心理教学部',NULL,NULL,NULL),('ZHL2-201','2#201','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-202','2#202','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-203','2#203','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-205','2#205','库尔勒校区','综合教学楼',2,NULL,'普通教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-207','2#207','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-209','2#209','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-210','2#210','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-211','2#211','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-212','2#212','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-dajifang','2#大机房','库尔勒校区','综合教学楼',2,NULL,'机房',NULL,60,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL2-lubojiaoshi','2#录播教室','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL2-xiaojifang','2#小机房','库尔勒校区','综合教学楼',2,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL3-301','3#301','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-302','3#302','库尔勒校区','综合教学楼',3,NULL,'普通教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-303','3#303','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-304','3#304','库尔勒校区','综合教学楼',3,NULL,'普通教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-305','3#305','库尔勒校区','综合教学楼',3,NULL,'普通教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-306','3#306','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-307','3#307','库尔勒校区','综合教学楼',3,NULL,'普通教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-309','3#309','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-310jifang','3#310机房','库尔勒校区','综合教学楼',3,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL3-311','3#311','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-312','3#312','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-313','3#313','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-314','3#314','库尔勒校区','综合教学楼',3,NULL,'普通教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-315','3#315','库尔勒校区','综合教学楼',3,NULL,'普通教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-dajifang','3#大机房','库尔勒校区','综合教学楼',3,NULL,'机房',NULL,60,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-401','4#401','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-403','4#403','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-404','4#404','库尔勒校区','综合教学楼',4,NULL,'普通教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-405','4#405','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-406','4#406','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-407','4#407','库尔勒校区','综合教学楼',4,NULL,'普通教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-408','4#408','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-409','4#409','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-410','4#410','库尔勒校区','综合教学楼',4,NULL,'普通教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-411','4#411','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-412','4#412','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-413','4#413','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4402','4#402','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL5#507','5#507','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('ZHL5#508','5#508','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('ZHL5#509','5#509','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('ZHL5#510','5#510','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('ZHL5#511','5#511','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('ZHL5#512','5#512','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('ZHL5#513','5#513','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('ZHL5-501','5#501','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-502','5#502','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-503','5#503','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-504','5#504','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-505','5#505','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-506','5#506','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-507','5-507','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-508','5-508','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-509','5-509','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-510','5-510','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-511','5-511','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-512','5-512','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-513','5-513','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL);
+INSERT INTO `room` VALUES ('CJ1-bjcj','CJ1-钣金车间','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('CJ1-hangongfang1','CJ1-焊工房1','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('CJ1-hangongfang2','CJ1-焊工房2','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('CJ1-huagongchejian','CJ1-化工车间','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('CJ1-kqf','CJ1-烤漆房','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('CJ1-qcjdwxcj','CJ1-汽车机电维修车间','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('CJ1-qczhcj','CJ1-汽车综合车间','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('CJ1-qiangongfang','CJ1-钳工房','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('CJ1-qixiuchejian','CJ1-汽修车间','库尔勒校区','车间',1,NULL,'实训车间',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('HXGCZX105','HXGC1#105-化工仿真实训室(一)','铁门关校区','化学工程实训中心',1,NULL,'化工仿真实训室',NULL,40,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX106','HXGC1#106-化工仿真实训室(二)','铁门关校区','化学工程实训中心',1,NULL,'化工仿真实训室',NULL,40,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX107','HXGC1#107-化工实训车间(一)','铁门关校区','化学工程实训中心',1,NULL,'实训车间',NULL,120,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX108','HXGC1#108-化工实训车间(二)','铁门关校区','化学工程实训中心',1,NULL,'实训车间',NULL,120,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX201','HXGC2#201-化工分析实验室（一）','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX202','HXGC2#202','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX203','HXGC2#203-化学分析实验室（二）','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX204','HXGC2#204','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX205','HXGC2#205','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX206','HXGC2#206','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX207','HXGC2#207','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX208','HXGC2#208','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX209','HXGC2#209','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX210','HXGC2#210','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX211','HXGC2#211','铁门关校区','化学工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX301','HXGC3#301','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX302','HXGC3#302','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX303','HXGC3#303','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX304','HXGC3#304','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX305','HXGC3#305','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX306','HXGC3#306','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX307','HXGC3#307','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX308','HXGC3#308','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX309','HXGC3#309','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('HXGCZX311','HXGC3#311','铁门关校区','化学工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('JDGCZX104','JDGC1#104','铁门关校区','机电工程实训中心',1,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX105','JDGC1#105-智能焊接加工','铁门关校区','机电工程实训中心',1,NULL,'实训车间',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX106','JDGC1#106-数控仿真机房','铁门关校区','机电工程实训中心',1,NULL,'机房',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX107','JDGC1#107-数控实训室','铁门关校区','机电工程实训中心',1,NULL,'实训车间',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX108','1#108-机械加工中心','铁门关校区','机电工程实训中心',1,NULL,'电工实训室',NULL,50,'否','否',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX110','1#110-焊接实训中心','铁门关校区','机电工程实训中心',1,NULL,'实训车间',NULL,50,'否','否',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX203','JDGC2#203-逆向建模实训室','铁门关校区','机电工程实训中心',2,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX204','JDGC2#204-自动化生产线实训室','铁门关校区','机电工程实训中心',2,NULL,'自动化生产线实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX205','JDGC2#205','铁门关校区','机电工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX207','JDGC2#207','铁门关校区','机电工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX209','JDGC2#209-现代电气实训室','铁门关校区','机电工程实训中心',2,NULL,'现代电气控制实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX210','JDGC2#210-钳工创新实训室','铁门关校区','机电工程实训中心',2,NULL,'实训车间',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX221','JDGC2#206-液压实训室','铁门关校区','机电工程实训中心',2,NULL,'液压气动实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX303','JDGC3#303-智能仿真实训室','铁门关校区','机电工程实训中心',3,NULL,'虚拟仿真实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX304','JDGC3#304','铁门关校区','机电工程实训中心',3,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX305','JDGC3#305','铁门关校区','机电工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX306','JDGC3#306','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX307','JDGC3#307-电气实训室（一）','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX308','JDGC3#308-电气实训室（二）','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX310','JDGC3#310-电气控制实训室（一）','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX311','JDGC3#311-电气控制实训室（二）','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX312','JDGC3#312-PLC实训室','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JDGCZX313','JDGC3#313-传感器实训室','铁门关校区','机电工程实训中心',3,NULL,'电工实训室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('JNL1#-报告厅','1#报告厅','库尔勒校区','技能训练中心',1,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL1#-数控加工中心','1#数控加工中心','库尔勒校区','技能训练中心',1,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#201-图书室','2#201-图书室（2）','库尔勒校区','技能训练中心',2,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#202-图书室','2#202-图书室（1）','库尔勒校区','技能训练中心',2,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#203-综合布线室','2#203-综合布线室','库尔勒校区','技能训练中心',2,NULL,'网络综合布线室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#204-自动化生产线室','2#204-自动化生产线','库尔勒校区','技能训练中心',2,NULL,'自动化生产线实训室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#205-网络实训室','2#205-网络实训室','库尔勒校区','技能训练中心',2,NULL,'网络实训室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#206-现代电气控制室','2#206现代电气控制','库尔勒校区','技能训练中心',2,NULL,'现代电气控制实训室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#207-机械装调室','2#207-机械装调','库尔勒校区','技能训练中心',2,NULL,'机械装调实训室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL2#208-液压气动室','2#208-液压气动','库尔勒校区','技能训练中心',2,NULL,'液压气动实训室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#301-3号声乐室','3#301-3号声乐室','库尔勒校区','技能训练中心',3,NULL,'声乐教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#302-美术室','3#302-美术室','库尔勒校区','技能训练中心',3,NULL,'美术教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#303-2号声乐室','3#303-2号声乐室','库尔勒校区','技能训练中心',3,NULL,'声乐教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#304-1号琴房','3#304-1号琴房','库尔勒校区','技能训练中心',3,NULL,'琴房',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#305-1号声乐室','3#305-1号声乐室','库尔勒校区','技能训练中心',3,NULL,'声乐教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#306-1号舞蹈室','3#306-1号舞蹈室','库尔勒校区','技能训练中心',3,NULL,'舞蹈教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#307-2号舞蹈室','3#307-2号舞蹈室','库尔勒校区','技能训练中心',3,NULL,'舞蹈教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#308-2号琴房（电钢）','3#308-2号琴房（电钢）','库尔勒校区','技能训练中心',3,NULL,'琴房',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#309-3号琴房（电钢）','3#309-3号琴房（电钢）','库尔勒校区','技能训练中心',3,NULL,'琴房',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#310-婴幼儿卫生保健室','3#310-婴幼儿卫生保健','库尔勒校区','技能训练中心',3,NULL,'幼儿保健室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL3#311-4号琴房（电钢）','3#311-4号琴房（电钢）','库尔勒校区','技能训练中心',3,NULL,'琴房',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL4-演播厅','4#演播厅','库尔勒校区','技能训练中心',4,NULL,'公共教室',NULL,280,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL4#401-3号舞蹈室','4#401-3号舞蹈室','库尔勒校区','技能训练中心',4,NULL,'舞蹈教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JNL4#402-蒙台梭立实训室','4#402-蒙台梭立实训室','库尔勒校区','技能训练中心',4,NULL,'蒙台梭立实训室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('JXL121','JXL1#121-阶梯教室','铁门关校区','教学楼',1,NULL,'公共教室',NULL,215,'是','是','阶梯教室','马克思主义学院',NULL,NULL,NULL),('JXL201','JXL2#201','铁门关校区','教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL203','JXL2#203','铁门关校区','教学楼',2,NULL,'公共教室',NULL,60,'否','是',NULL,'公共基础学院',NULL,NULL,NULL),('JXL204','JXL2#204','铁门关校区','教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL205','JXL2#205','铁门关校区','教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL209','JXL2#209','铁门关校区','教学楼',2,NULL,'机房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL210','JXL2#210-美术实训室（一）','铁门关校区','教学楼',2,NULL,'美术教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL211','JXL2#211','铁门关校区','教学楼',2,NULL,'公共教室',NULL,60,'否','是',NULL,'公共基础学院',NULL,NULL,NULL),('JXL213','JXL2#213-美术实训室（二）','铁门关校区','教学楼',2,NULL,'美术教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL215','JXL2#215','铁门关校区','教学楼',2,NULL,'公共教室',NULL,60,'否','是',NULL,'公共基础学院',NULL,NULL,NULL),('JXL216','JXL2#216','铁门关校区','教学楼',2,NULL,'机房',NULL,50,'是','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('JXL218','JXL2#218','铁门关校区','教学楼',2,NULL,'机房',NULL,50,'是','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('JXL223','JXL2#223','铁门关校区','教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL224','JXL2#224','铁门关校区','教学楼',2,NULL,'公共教室',NULL,60,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('JXL304','JXL3#304','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL305','JXL3#305','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL306','JXL3#306','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL307','JXL3#307','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL308','JXL3#308','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL309','JXL3#309','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL310','JXL3#310','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL311','JXL3#311','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL313','JXL3#313','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL315','JXL3#315','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL317','JXL3#317','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL318','JXL3#318','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL320','JXL3#320','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL321','JXL3#321','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL322','JXL3#322','铁门关校区','教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL401','JXL4#401','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL403','JXL4#403','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL404','JXL4#404','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL405','JXL4#405','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL406','JXL4#406','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL407','JXL4#407','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL408','JXL4#408','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL409','JXL4#409','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL410','JXL4#410','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL411','JXL4#411','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL413','JXL4#413-古筝实训室','铁门关校区','教学楼',4,NULL,'琴房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL415','JXL4#415-乐理实训室（一）','铁门关校区','教学楼',4,NULL,'声乐教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL416','JXL4#416-乐理实训室（二）','铁门关校区','教学楼',4,NULL,'声乐教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL417','JXL4#417','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL419','JXL4#419','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL420','JXL4#420','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL421','JXL4#421','铁门关校区','教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教务处',NULL,NULL,NULL),('JXL501','JXL5#501','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL503','JXL5#503','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL504','JXL5#504','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL505','JXL5#505','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL506','JXL5#506','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL507','JXL5#507','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL508','JXL5#508','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL509','JXL5#509','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL510','JXL5#510','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL511','JXL5#511','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL513','JXL5#513','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL515','JXL5#515','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL516','JXL5#516','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL517','JXL5#517','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL519','JXL5#519','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL520','JXL5#520','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JXL521','JXL5#521','铁门关校区','教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX101','JYYS1#101-舞蹈实训室（一）','铁门关校区','教育艺术中心',1,NULL,'舞蹈教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX102','JYYS1#102-舞蹈实训室（二）','铁门关校区','教育艺术中心',1,NULL,'舞蹈教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX103','JYYS1#103-舞蹈实训室（三）','铁门关校区','教育艺术中心',1,NULL,'舞蹈教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX104','JYYS1#104-舞蹈实训室（四）','铁门关校区','教育艺术中心',1,NULL,'舞蹈教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX201','JYYS2#201-声乐实训室（一）','铁门关校区','教育艺术中心',2,NULL,'声乐教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX202','JYYS2#202-声乐实训室（二）','铁门关校区','教育艺术中心',2,NULL,'声乐教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX203','JYYS2#203-幼儿园虚拟仿真实训室','铁门关校区','教育艺术中心',2,NULL,'虚拟仿真实训室',NULL,80,'是','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX205','JYYS2#205-玩具实训室','铁门关校区','教育艺术中心',2,NULL,'多媒体教室',NULL,80,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX207','JYYS2#207-幼儿游戏实训室','铁门关校区','教育艺术中心',2,NULL,'多媒体教室',NULL,80,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX208','JYYS2#208-早期教育智慧实训室','铁门关校区','教育艺术中心',2,NULL,'多媒体教室',NULL,100,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX301','JYYS3#301-电钢琴实训室（一）','铁门关校区','教育艺术中心',3,NULL,'琴房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX302','JYYS3#302-电钢琴实训室（二）','铁门关校区','教育艺术中心',3,NULL,'琴房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX303','JYYS3#303-电钢琴实训室（三）','铁门关校区','教育艺术中心',3,NULL,'琴房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX305','JYYS3#305-乐理实训室','铁门关校区','教育艺术中心',3,NULL,'声乐教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX313','JYYS3#313-电钢琴实训室（四）','铁门关校区','教育艺术中心',3,NULL,'琴房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('JYYSZX314','JYYS3#314-电钢琴实训室（五）','铁门关校区','教育艺术中心',3,NULL,'琴房',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('QCGCZX1-101','QCGCZX1-101-汽车综合维修车间','铁门关校区','汽车工程实训中心',1,NULL,'实训车间',NULL,150,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX2-201','QCGCZX2-201-汽车底盘实训室','铁门关校区','汽车工程实训中心',2,NULL,'汽修实训室',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX2-202','QCGCZX2-202-汽车电器设备实训室','铁门关校区','汽车工程实训中心',2,NULL,'汽修实训室',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX2-203','QCGCZX2-203','铁门关校区','汽车工程实训中心',2,NULL,'多媒体教室',NULL,50,'否','是','理实一体化教室','汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX2-204','QCGCZX2-204-汽车发动机综合实训室','铁门关校区','汽车工程实训中心',2,NULL,'汽修实训室',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX2-205','QCGCZX2-205-汽车钣金综合实训室','铁门关校区','汽车工程实训中心',2,NULL,'汽修实训室',NULL,80,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-301','QCGCZX3-301-新能源电机实训室','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,50,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-302','QCGCZX3-302-新能源动力电池实训室','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,50,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-303','QCGCZX3-303-低压电工室(1)','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,50,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-304','QCGCZX3-304-低压电工室(2)','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,50,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-305','QCGCZX3-305-虚拟仿真实训室(1)','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,50,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-306','QCGCZX3-306-虚拟仿真实训室(2)','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,50,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-307','QCGCZX3-307','铁门关校区','汽车工程实训中心',3,NULL,'多媒体教室',NULL,50,'否','是','理实一体化教室','汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-308','QCGCZX3-308','铁门关校区','汽车工程实训中心',3,NULL,'普通教室',NULL,100,'否','是','活动教室','汽车与智能交通学院',NULL,NULL,NULL),('QCGCZX3-309','QCGCZX3-309-智能网联综合实训室','铁门关校区','汽车工程实训中心',3,NULL,'汽修实训室',NULL,100,'否','是',NULL,'汽车与智能交通学院',NULL,NULL,NULL),('SXL1#103','1#103','库尔勒校区','实训楼',1,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL1#104','1#104','库尔勒校区','实训楼',1,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL1#107','1#107','库尔勒校区','实训楼',1,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL1#110','1#110','库尔勒校区','实训楼',1,NULL,'移动一体机',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL2-203','2#203','库尔勒校区','实训楼',2,NULL,'多媒体教室',NULL,80,'否','是','可做合班课教室',NULL,NULL,NULL,NULL),('SXL2#204','2#204','库尔勒校区','实训楼',2,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL2#205','2#205','库尔勒校区','实训楼',2,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL2#206','2#206','库尔勒校区','实训楼',2,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL2#207','2#207','库尔勒校区','实训楼',2,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL2#208','2#208','库尔勒校区','实训楼',2,NULL,'移动一体机',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL3-305','3#305','库尔勒校区','实训楼',3,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL3#301','3#301','库尔勒校区','实训楼',3,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL3#303','3#303','库尔勒校区','实训楼',3,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL3#304','3#304','库尔勒校区','实训楼',3,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL3#306','3#306','库尔勒校区','实训楼',3,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL3#307','3#307','库尔勒校区','实训楼',3,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL3#308','3#308','库尔勒校区','实训楼',3,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL4#403','4#403','库尔勒校区','实训楼',4,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL4#405','4#405','库尔勒校区','实训楼',4,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL4#407','4#407','库尔勒校区','实训楼',4,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL4#408','4#408','库尔勒校区','实训楼',4,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL4#409','4#409','库尔勒校区','实训楼',4,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('SXL4#410','4#410','库尔勒校区','实训楼',4,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('XDNYZX101','XDNY1#101','铁门关校区','现代农业实训中心',1,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX102','XDNY1#102','铁门关校区','现代农业实训中心',1,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX103','XDNY1#103','铁门关校区','现代农业实训中心',1,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX104','XDNY1#104','铁门关校区','现代农业实训中心',1,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX105','XDNY1#105','铁门关校区','现代农业实训中心',1,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX106','XDNY1#106-农业实训车间','铁门关校区','现代农业实训中心',1,NULL,'实训车间',NULL,120,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX201','XDNY2#201','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX202','XDNY2#202','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX203','XDNY2#203','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX204','XDNY2#204','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX205','XDNY2#205','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX206','XDNY2#206','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX207','XDNY2#207','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX208','XDNY2#208','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX209','XDNY2#209','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX210','XDNY2#210','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX211','XDNY2#211','铁门关校区','现代农业实训中心',2,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX301','XDNY3#301-公共机房','铁门关校区','现代农业实训中心',3,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XDNYZX302','XDNY3#302-公共机房','铁门关校区','现代农业实训中心',3,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XDNYZX303','XDNY3#303-会计实训室','铁门关校区','现代农业实训中心',3,NULL,'机房',NULL,50,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX304','XDNY3#304','铁门关校区','现代农业实训中心',3,NULL,'多媒体教室',NULL,80,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XDNYZX305','XDNY3#305','铁门关校区','现代农业实训中心',3,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XDNYZX306','XDNY3#306','铁门关校区','现代农业实训中心',3,NULL,'多媒体教室',NULL,35,'否','是',NULL,'现代农业学院',NULL,NULL,NULL),('XXJSZX301','XXJS3#301多媒体教室','铁门关校区','信息技术中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XXJSZX302','XXJS3#302录播教室','铁门关校区','信息技术中心',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XXJSZX303','XXJS3#303机房','铁门关校区','信息技术中心',3,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XXJSZX304','XXJS3#304电子商务机房','铁门关校区','信息技术中心',3,NULL,'机房',NULL,50,'是','是','电子商务机房','信息智能工程学院',NULL,NULL,NULL),('XXJSZX305','XXJS3#305机房','铁门关校区','信息技术中心',3,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('XXJSZX306','XXJS3#306教室','铁门关校区','信息技术中心',3,NULL,'普通教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL1-dajifang','1#大机房','库尔勒校区','综合教学楼',1,NULL,'机房',NULL,60,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL1-jietijiaoshi','1#阶梯教室','库尔勒校区','综合教学楼',1,NULL,'普通教室',NULL,200,'否','是',NULL,'马克思主义学院',NULL,NULL,NULL),('ZHL1-xiaojifang','1#小机房','库尔勒校区','综合教学楼',1,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL1-xinlizhongxin','1#心理活动中心','库尔勒校区','综合教学楼',1,NULL,'活动室',NULL,80,'否','是',NULL,'心理教学部',NULL,NULL,NULL),('ZHL2-201','2#201','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-202','2#202','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-203','2#203','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-205','2#205','库尔勒校区','综合教学楼',2,NULL,'普通教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-207','2#207','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-209','2#209','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-210','2#210','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-211','2#211','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-212','2#212','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'化学与材料工程学院',NULL,NULL,NULL),('ZHL2-dajifang','2#大机房','库尔勒校区','综合教学楼',2,NULL,'机房',NULL,60,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL2-lubojiaoshi','2#录播教室','库尔勒校区','综合教学楼',2,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL2-xiaojifang','2#小机房','库尔勒校区','综合教学楼',2,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL3-301','3#301','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-302','3#302','库尔勒校区','综合教学楼',3,NULL,'普通教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-303','3#303','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-304','3#304','库尔勒校区','综合教学楼',3,NULL,'普通教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-305','3#305','库尔勒校区','综合教学楼',3,NULL,'普通教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-306','3#306','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-307','3#307','库尔勒校区','综合教学楼',3,NULL,'普通教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-309','3#309','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-310jifang','3#310机房','库尔勒校区','综合教学楼',3,NULL,'机房',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL3-311','3#311','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-312','3#312','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-313','3#313','库尔勒校区','综合教学楼',3,NULL,'多媒体教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-314','3#314','库尔勒校区','综合教学楼',3,NULL,'普通教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-315','3#315','库尔勒校区','综合教学楼',3,NULL,'普通教室',NULL,50,'否','是',NULL,'教育艺术学院',NULL,NULL,NULL),('ZHL3-dajifang','3#大机房','库尔勒校区','综合教学楼',3,NULL,'机房',NULL,60,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-401','4#401','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-403','4#403','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-404','4#404','库尔勒校区','综合教学楼',4,NULL,'普通教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-405','4#405','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-406','4#406','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-407','4#407','库尔勒校区','综合教学楼',4,NULL,'普通教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-408','4#408','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-409','4#409','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-410','4#410','库尔勒校区','综合教学楼',4,NULL,'普通教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-411','4#411','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-412','4#412','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4-413','4#413','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL4402','4#402','库尔勒校区','综合教学楼',4,NULL,'多媒体教室',NULL,50,'否','是',NULL,'信息智能工程学院',NULL,NULL,NULL),('ZHL5-501','5#501','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-502','5#502','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-503','5#503','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-504','5#504','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-505','5#505','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-506','5#506','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-507','5-507','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-508','5-508','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-509','5-509','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-510','5-510','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-511','5-511','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-512','5-512','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5-513','5-513','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,50,'否','是',NULL,'机械电气工程学院',NULL,NULL,NULL),('ZHL5#507','5#507','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('ZHL5#508','5#508','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('ZHL5#509','5#509','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('ZHL5#510','5#510','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('ZHL5#511','5#511','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('ZHL5#512','5#512','库尔勒校区','综合教学楼',5,NULL,'多媒体教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL),('ZHL5#513','5#513','库尔勒校区','综合教学楼',5,NULL,'普通教室',NULL,80,'否','是',NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `room` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -300,21 +300,21 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `schedule`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `schedule` (
-  `scid` int(11) NOT NULL DEFAULT '0',
+  `scid` int NOT NULL DEFAULT '0',
   `sctask` varchar(50) NOT NULL DEFAULT '',
-  `scday_of_week` TINYINT NOT NULL DEFAULT 0,
+  `scday_of_week` tinyint NOT NULL DEFAULT '0',
   `scroom` varchar(50) NOT NULL DEFAULT '',
-  `scbegin_week` int(11) NOT NULL,
-  `scend_week` int(11) NOT NULL,
+  `scbegin_week` int NOT NULL,
+  `scend_week` int NOT NULL,
   `scbegin_time` time NOT NULL,
   `scend_time` time NOT NULL,
   `scteacherid` varchar(50) NOT NULL,
   `scteachername` varchar(50) NOT NULL,
   `scslot` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`scid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -323,169 +323,9 @@ CREATE TABLE `schedule` (
 
 LOCK TABLES `schedule` WRITE;
 /*!40000 ALTER TABLE `schedule` DISABLE KEYS */;
-INSERT INTO schedule.schedule (scid, sctask, scday_of_week, scroom, scbegin_week, scend_week, scbegin_time, scend_time, scteacherid, scteachername,scslot) VALUES (1, '570102KBOB032024202511017', 2, 'JXL517', 1, 16, '08:00:00', '09:40:00', '130', '曹立汶','1-8');
+INSERT INTO `schedule` VALUES (1,'570102KBOB032024202511017',2,'JXL517',1,16,'08:00:00','09:40:00','130','曹立汶','1-8');
 /*!40000 ALTER TABLE `schedule` ENABLE KEYS */;
 UNLOCK TABLES;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER before_schedule_insert
-
-BEFORE INSERT ON schedule
-
-FOR EACH ROW
-
-BEGIN
-
-    -- 检查时间冲突
-
-    IF EXISTS (
-
-        SELECT 1
-
-        FROM schedule
-
-        WHERE scroom = NEW.scroom
-
-          AND tabegin_week = NEW.tabegin_week
-
-          AND taend_week = NEW.taend_week
-
-          AND (
-
-              (NEW.tabegin_time BETWEEN tabegin_time AND taend_time)
-
-              OR (NEW.taend_time BETWEEN tabegin_time AND taend_time)
-
-              OR (tabegin_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
-
-              OR (taend_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
-
-          )
-
-    ) THEN
-
-        SIGNAL SQLSTATE '45000'
-
-        SET MESSAGE_TEXT = 'Time conflict: Another course is already scheduled in this room during the specified time';
-
-    END IF;
-
-
-
-    IF NEW.taend_week <= NEW.tabegin_week THEN
-
-        SIGNAL SQLSTATE '45000'
-
-        SET MESSAGE_TEXT = 'End week must better than start week';
-
-    END IF;
-
-
-
-    IF NEW.taend_time <= NEW.tabegin_time THEN
-
-        SIGNAL SQLSTATE '45000'
-
-        SET MESSAGE_TEXT = 'End time must better than start time';
-
-    END IF;
-
-
-
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER before_schedule_update
-
-BEFORE UPDATE ON schedule
-
-FOR EACH ROW
-
-BEGIN
-
-    -- 检查时间冲突
-
-    IF EXISTS (
-
-        SELECT 1
-
-        FROM schedule
-
-        WHERE scroom = NEW.scroom
-
-          AND tabegin_week = NEW.tabegin_week
-
-          AND taend_week = NEW.taend_week
-
-          AND scid != NEW.scid -- 排除自身
-
-          AND (
-
-              (NEW.tabegin_time BETWEEN tabegin_time AND taend_time)
-
-              OR (NEW.taend_time BETWEEN tabegin_time AND taend_time)
-
-              OR (tabegin_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
-
-              OR (taend_time BETWEEN NEW.tabegin_time AND NEW.taend_time)
-
-          )
-
-    ) THEN
-
-        SIGNAL SQLSTATE '45000'
-
-        SET MESSAGE_TEXT = 'Time conflict: Another course is already scheduled in this room during the specified time';
-
-    END IF;
-
-
-
-    IF NEW.taend_week <= NEW.tabegin_week THEN
-
-        SIGNAL SQLSTATE '45000'
-
-        SET MESSAGE_TEXT = 'End week must better than start week';
-
-    END IF;
-
-
-
-    IF NEW.taend_time <= NEW.tabegin_time THEN
-
-        SIGNAL SQLSTATE '45000'
-
-        SET MESSAGE_TEXT = 'End time must better than start time';
-
-    END IF;
-
-
-
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `task`
@@ -493,12 +333,12 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `task`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `task` (
   `tasemester` varchar(50) DEFAULT NULL,
   `tacode` varchar(50) DEFAULT NULL,
   `taname` varchar(100) DEFAULT NULL,
-  `tateacherid` int(11) DEFAULT NULL,
+  `tateacherid` int DEFAULT NULL,
   `tateachername` varchar(20) DEFAULT NULL,
   `taformclass` varchar(100) DEFAULT NULL,
   `taformclassid` varchar(50) DEFAULT NULL,
@@ -506,22 +346,22 @@ CREATE TABLE `task` (
   `tacredit` float DEFAULT NULL,
   `taclassname` varchar(100) DEFAULT NULL,
   `tatype` varchar(10) DEFAULT NULL,
-  `taclasshour` int(11) DEFAULT NULL,
-  `taschedulehour` int(11) DEFAULT NULL,
-  `tatotalhour` int(11) DEFAULT NULL,
-  `tapriority` int(11) DEFAULT NULL,
-  `tapopularity` int(11) DEFAULT NULL,
+  `taclasshour` int DEFAULT NULL,
+  `taschedulehour` int DEFAULT NULL,
+  `tatotalhour` int DEFAULT NULL,
+  `tapriority` int DEFAULT NULL,
+  `tapopularity` int DEFAULT NULL,
   `taproperty` varchar(20) DEFAULT NULL,
   `tacampus` varchar(20) DEFAULT NULL,
   `taforeign` enum('是','否') DEFAULT NULL,
   `tadepartment` varchar(20) DEFAULT NULL,
   `tahourweek` varchar(20) DEFAULT NULL,
-  `tacontinuous` int(11) DEFAULT NULL,
+  `tacontinuous` int DEFAULT NULL,
   `tafixedtype` varchar(20) DEFAULT NULL,
   `tafixedroom` varchar(50) DEFAULT NULL,
   `tafixedbuilding` varchar(20) DEFAULT NULL,
   `tafixedtime` varchar(20) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -540,7 +380,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `teacher`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `teacher` (
   `tcode` varchar(20) DEFAULT NULL,
   `tname` varchar(50) DEFAULT NULL,
@@ -551,7 +391,7 @@ CREATE TABLE `teacher` (
   `tdepartment` varchar(50) DEFAULT NULL,
   `tforeign` enum('是','否') DEFAULT NULL,
   `ttype` varchar(20) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -573,4 +413,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-06 16:03:12
+-- Dump completed on 2025-04-10 15:20:56
