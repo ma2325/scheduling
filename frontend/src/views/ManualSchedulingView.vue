@@ -175,28 +175,8 @@
       <div class="flex-1 flex flex-col gap-3 overflow-hidden">
         <!-- 课程详情卡片 (只在选中课程时显示) -->
         <div v-if="selectedCourse" class="bg-white rounded-lg shadow p-3">
-          <div class="flex justify-between items-start">
-            <div class="flex-1 grid grid-cols-3 gap-3">
-              <div class="col-span-2">
-                <h3 class="text-base font-medium">{{ selectedCourse.sctask }}</h3>
-                <div class="text-sm text-gray-600">{{ selectedCourse.composition }}</div>
-                <div class="text-xs text-gray-600">教师ID: {{ selectedCourse.scteacherid }} | 学院: {{ selectedCourse.scteacherdepartment }}</div>
-              </div>
-              
-              <div class="flex gap-2 justify-end">
-                <button 
-                  v-if="isScheduled(selectedCourse)"
-                  @click="unschedule(selectedCourse)" 
-                  class="px-3 py-1 text-sm bg-red-50 text-red-600 rounded-md hover:bg-red-100"
-                >
-                  取消排课
-                </button>
-              </div>
-            </div>
-          </div>
-          
           <!-- 排课表单 -->
-          <div class="mt-3 grid grid-cols-6 gap-3">
+          <div class="grid grid-cols-6 gap-3">
             <div>
               <label class="block text-xs font-medium mb-1">教室</label>
               <input 
@@ -295,7 +275,6 @@
                       <div 
                         v-if="hasCourse(classroom, day.value, period)" 
                         class="w-full h-full cursor-pointer relative"
-                        :class="{'bg-yellow-400': isHighlighted(classroom, day.value, period)}"
                         :style="getCellStyle(classroom, day.value, period)"
                         @click="viewCellDetails(classroom, day.value, period)"
                       >
@@ -400,18 +379,19 @@ const weekdays = [
 ];
 
 // 示例教室列表
-const classrooms = [
-  'JXL101',
-  'JXL102',
-  'JXL201',
-  'JXL202',
-  'JXL301',
-  'JXL302',
-  'JXL401',
-  'JXL402',
-  'JXL501',
-  'JXL517'
-];
+// const classrooms = [
+//   'JXL101',
+//   'JXL102',
+//   'JXL201',
+//   'JXL202',
+//   'JXL301',
+//   'JXL302',
+//   'JXL401',
+//   'JXL402',
+//   'JXL501',
+//   'JXL517'
+// ];
+const classrooms = ref([]);
 
 // 添加API数据加载状态
 const isLoading = ref(false);
@@ -598,6 +578,11 @@ const fetchCoursesFromAPI = async () => {
       // 处理API返回的数据
       courses.value = processCourseData(response.data.rows);
       console.log('从API加载了', courses.value.length, '条课程数据');
+      
+      // 从加载的数据中提取教室列表
+      const uniqueClassrooms = [...new Set(courses.value.map(course => course.scroom).filter(Boolean))];
+      classrooms.value = uniqueClassrooms.sort();
+
     } else {
       throw new Error(`API返回错误: ${response.data.code || response.status}`);
     }
@@ -607,6 +592,10 @@ const fetchCoursesFromAPI = async () => {
     
     // 使用测试数据
     courses.value = processCourseData(mockCourses);
+    // 从模拟数据中提取教室列表
+    const uniqueMockClassrooms = [...new Set(courses.value.map(course => course.scroom).filter(Boolean))];
+    classrooms.value = uniqueMockClassrooms.sort();
+
   } finally {
     isLoading.value = false;
   }
@@ -653,7 +642,8 @@ const getWeekdayName = (day) => {
 
 // 选择课程
 const selectCourse = (course) => {
-  selectedCourse.value = JSON.parse(JSON.stringify(course)); // 使用深拷贝确保独立
+  selectedCourse.value = JSON.parse(JSON.stringify(course)); // 恢复使用 JSON.parse/stringify 进行深拷贝
+  // selectedCourse.value = structuredClone(course); // 暂时注释掉 structuredClone
   
   // 确保数值类型正确 (如果processCourseData还没处理)
   // selectedCourse.value.scbegin_week = parseInt(selectedCourse.value.scbegin_week);
