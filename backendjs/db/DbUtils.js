@@ -8,9 +8,11 @@ const pool = mysql.createPool({
   password: "123456", // 数据库密码
   database: "schedule",  // 数据库名称
   waitForConnections: true, // 是否等待连接
-  connectionLimit: 100,      // 连接池最大连接数
+  connectionLimit: 200,      // 连接池最大连接数
   queueLimit: 0,            // 排队等待的连接数（0 表示不限制）
 });
+
+require('events').EventEmitter.defaultMaxListeners = 150;
 
 pool.getConnection((err, connection) => {
   if (err) {
@@ -22,6 +24,7 @@ pool.getConnection((err, connection) => {
     process.exit(1);
   } else {
     console.log("数据库连接成功！");
+    connection.setMaxListeners(150); 
     connection.release();
   }
 });
