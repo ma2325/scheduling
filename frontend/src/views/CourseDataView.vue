@@ -178,11 +178,11 @@
                 <th 
                   v-for="period in availablePeriods" 
                   :key="`${day.value}-${period}`" 
-                  class="border p-2 w-[130px]"
+                  class="border p-1 w-[60px]"
                   :class="{'bg-yellow-50': day.value === currentDayOfWeek}"
                 >
                   第{{ period }}节
-                  <div class="text-xs text-gray-500">{{ getPeriodTimeLabel(period) }}</div>
+                  <div class="text-[9px] text-gray-500">{{ getPeriodTimeLabel(period) }}</div>
                 </th>
               </template>
             </tr>
@@ -194,29 +194,28 @@
                 <td 
                   v-for="period in availablePeriods" 
                   :key="`${classroom}-${day.value}-${period}`" 
-                  class="border p-2 align-top relative"
+                  class="border p-0.5 align-top relative"
                   :class="{'bg-yellow-50': day.value === currentDayOfWeek}"
-                  style="width: 130px; height: 100px; overflow: hidden;"
+                  style="width: 60px; height: 60px; overflow: hidden;"
                 >
+                  <!-- Apply mini-card style if course exists -->
                   <div 
-                    v-for="course in getCoursesForClassroomDayAndPeriod(classroom, day.value, period)" 
-                    :key="`${course.scid}-${day.value}-${period}`"
-                    class="mb-1 p-2 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow overflow-hidden max-h-[90px]"
-                    :style="`background-color: ${cardColor}20;`"
-                    @click="viewCourseDetails(course)"
+                    v-if="getCoursesForClassroomDayAndPeriod(classroom, day.value, period).length > 0"
+                    class="h-full w-full p-1 rounded-[3px] bg-primary/10 hover:bg-primary/20 cursor-pointer flex flex-col justify-center text-[9px] leading-tight"
+                    @click="viewCourseDetails(getCoursesForClassroomDayAndPeriod(classroom, day.value, period)[0])"
                   >
-                    <div class="font-medium text-sm truncate" :title="course.sctask">{{ course.sctask }}</div>
-                    <div class="text-xs truncate" :title="course.composition">{{ course.composition }}</div>
-                    <div class="text-xs text-gray-500 truncate" :title="`教师ID: ${course.scteacherid}`">
-                      教师ID: {{ course.scteacherid }}
+                    <div class="font-medium text-primary/90 truncate" :title="getCoursesForClassroomDayAndPeriod(classroom, day.value, period)[0].sctask">
+                      {{ getCoursesForClassroomDayAndPeriod(classroom, day.value, period)[0].sctask }}
                     </div>
-                    <div class="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded-sm inline-block mt-1">
-                      {{ course.scbegin_week }}~{{ course.scend_week }}周
+                    <div class="truncate text-gray-600 text-[8px]" :title="getCoursesForClassroomDayAndPeriod(classroom, day.value, period)[0].composition">
+                      {{ getCoursesForClassroomDayAndPeriod(classroom, day.value, period)[0].composition }}
                     </div>
+                    <div class="text-[8px] text-blue-700">{{ getCoursesForClassroomDayAndPeriod(classroom, day.value, period)[0].scbegin_week }}~{{ getCoursesForClassroomDayAndPeriod(classroom, day.value, period)[0].scend_week }}周</div>
                   </div>
+                  <!-- Empty cell style -->
                   <div 
-                    v-if="!getCoursesForClassroomDayAndPeriod(classroom, day.value, period).length" 
-                    class="text-xs text-gray-400 h-full flex items-center justify-center"
+                    v-else
+                    class="text-[9px] text-gray-400 h-full flex items-center justify-center"
                   >
                     空闲
                   </div>
@@ -256,10 +255,19 @@
                 <th 
                   v-for="period in availablePeriods" 
                   :key="`thumb-${day.value}-${period}`" 
-                  class="border p-1 w-8"
+                  class="border p-0 align-middle text-center h-6 w-6"
                   :class="{'bg-yellow-50': day.value === currentDayOfWeek}"
                 >
-                  {{ period }}
+                  <div 
+                    v-if="hasCourseForDay(classroom, day.value, period)" 
+                    class="w-full h-full cursor-pointer relative"
+                    :style="`background-color: ${cardColor};`"
+                    @click="viewThumbnailCourseDetails(classroom, day.value, period)"
+                  >
+                    <div class="absolute bottom-0 right-0 text-[8px] text-white bg-black bg-opacity-50 px-0.5">
+                      {{ getCourseWeeks(classroom, day.value, period) }}
+                    </div>
+                  </div>
                 </th>
               </template>
             </tr>
@@ -271,7 +279,7 @@
                 <td 
                   v-for="period in availablePeriods" 
                   :key="`thumb-${classroom}-${day.value}-${period}`" 
-                  class="border p-0 align-middle text-center h-8 w-8"
+                  class="border p-0 align-middle text-center h-6 w-6"
                   :class="{'bg-yellow-50': day.value === currentDayOfWeek}"
                 >
                   <div 
@@ -366,7 +374,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { Search, Download, X, LayoutGrid, Grid, RefreshCw } from 'lucide-vue-next';
 import axios from 'axios';
 
@@ -402,6 +410,15 @@ const classSearch = ref('');
 const availableWeeks = ref([...Array(20)].map((_, i) => i + 1)); // Weeks 1-20
 const availablePeriods = ref([1, 2, 3, 4, 5, 6, 7, 8]); // Periods 1-8
 
+// 优化：将所有课程数据缓存在内存中
+const allCourses = ref([]);
+// 显示给用户看的课程数据
+const courses = ref([]);
+
+// 添加API数据加载状态
+const isLoading = ref(false);
+const loadError = ref(null);
+
 // Period time settings
 const periodTimes = [
   { start: '08:00', end: '08:45' },
@@ -417,13 +434,6 @@ const periodTimes = [
   { start: '20:50', end: '21:35' },
   { start: '21:45', end: '22:30' },
 ];
-
-// 课程数据
-const courses = ref([]);
-
-// 添加API数据加载状态
-const isLoading = ref(false);
-const loadError = ref(null);
 
 // 解析课程槽位
 const parseSlot = (slotStr) => {
@@ -446,10 +456,10 @@ const processCourseData = (apiCourses) => {
     let beginTime = '';
     let endTime = '';
     if (slot.start > 0 && slot.start <= periodTimes.length) {
-      beginTime = periodTimes[slot.start - 1].start + ':00';
+      beginTime = periodTimes[slot.start - 1].start;
     }
     if (slot.end > 0 && slot.end <= periodTimes.length) {
-      endTime = periodTimes[slot.end - 1].end + ':00';
+      endTime = periodTimes[slot.end - 1].end;
     }
     
     // 转换数据类型确保一致性
@@ -466,39 +476,50 @@ const processCourseData = (apiCourses) => {
   });
 };
 
-// Filtered courses
-const filteredCourses = computed(() => {
-  let result = [...courses.value];
+// 优化：根据筛选条件从主数据集中过滤数据，而不是每次都重新计算
+const applyFilters = () => {
+  // 创建一个新的筛选后的数据集
+  let result = [...allCourses.value];
   
-  // Filter by week
+  // 筛选周次
   result = result.filter(course => 
     course.scbegin_week <= selectedWeek.value && 
     course.scend_week >= selectedWeek.value
   );
   
-  // Filter by day (if a specific day is selected)
+  // 筛选星期
   if (selectedDay.value) {
     result = result.filter(course => parseInt(course.scday_of_week) === parseInt(selectedDay.value));
   }
   
-  // Filter by course name
+  // 筛选课程名称
   if (courseNameSearch.value) {
+    const searchTerm = courseNameSearch.value.toLowerCase();
     result = result.filter(course => 
-      course.sctask.toLowerCase().includes(courseNameSearch.value.toLowerCase())
+      course.sctask.toLowerCase().includes(searchTerm)
     );
   }
   
-  // Filter by class
+  // 筛选班级
   if (classSearch.value) {
+    const searchTerm = classSearch.value.toLowerCase();
     result = result.filter(course => 
-      course.composition.toLowerCase().includes(classSearch.value.toLowerCase())
+      course.composition.toLowerCase().includes(searchTerm)
     );
   }
   
-  return result;
-});
+  // 更新筛选后的课程数据
+  courses.value = result;
+};
 
-// Get all classrooms
+// 添加监听器，当筛选条件变化时，更新数据
+watch([selectedWeek, selectedDay, courseNameSearch, classSearch], () => {
+  nextTick(() => {
+    applyFilters();
+  });
+}, { deep: true });
+
+// 计算所有教室
 const allClassrooms = computed(() => {
   const classrooms = new Set();
   courses.value.forEach(course => {
@@ -509,32 +530,17 @@ const allClassrooms = computed(() => {
   return [...classrooms].sort();
 });
 
-// Filtered classrooms
+// 根据搜索条件筛选教室
 const filteredClassrooms = computed(() => {
-  let result = [...allClassrooms.value];
+  if (!classroomSearch.value) return allClassrooms.value;
   
-  // Filter by classroom name
-  if (classroomSearch.value) {
-    result = result.filter(classroom => 
-      classroom.toLowerCase().includes(classroomSearch.value.toLowerCase())
-    );
-  }
-  
-  // If there's a course name or class filter, only show classrooms with matching courses
-  if (courseNameSearch.value || classSearch.value) {
-    const matchedClassrooms = new Set();
-    filteredCourses.value.forEach(course => {
-      if (course.scroom) {
-        matchedClassrooms.add(course.scroom);
-      }
-    });
-    result = result.filter(classroom => matchedClassrooms.has(classroom));
-  }
-  
-  return result;
+  const searchTerm = classroomSearch.value.toLowerCase();
+  return allClassrooms.value.filter(classroom => 
+    classroom.toLowerCase().includes(searchTerm)
+  );
 });
 
-// Displayed days based on selection
+// 根据选择的天数显示
 const displayedDays = computed(() => {
   if (selectedDay.value) {
     return weekdays.filter(day => day.value === parseInt(selectedDay.value));
@@ -542,30 +548,58 @@ const displayedDays = computed(() => {
   return weekdays;
 });
 
-// Get courses for a specific classroom, day, and period
+// 优化：使用索引加速查找课程
+const courseIndexes = ref(new Map()); // 教室-日期-节次 索引
+
+// 优化：创建查找索引以加快数据检索
+const createCourseIndexes = () => {
+  const indexMap = new Map();
+  
+  courses.value.forEach(course => {
+    const classroom = course.scroom;
+    const day = parseInt(course.scday_of_week);
+    const startSlot = course.time;
+    const endSlot = course.slot_end || course.time;
+    
+    for (let slot = startSlot; slot <= endSlot; slot++) {
+      const key = `${classroom}-${day}-${slot}`;
+      if (!indexMap.has(key)) {
+        indexMap.set(key, []);
+      }
+      indexMap.get(key).push(course);
+    }
+  });
+  
+  courseIndexes.value = indexMap;
+};
+
+// 监听课程数据变化，重建索引
+watch(courses, () => {
+  createCourseIndexes();
+}, { deep: true });
+
+// 优化：使用索引获取课程
 const getCoursesForClassroomDayAndPeriod = (classroom, day, period) => {
-  return filteredCourses.value.filter(course => 
-    course.scroom === classroom && 
-    parseInt(course.scday_of_week) === day &&
-    course.time <= period && (course.slot_end || course.time) >= period
-  );
+  const key = `${classroom}-${day}-${period}`;
+  return courseIndexes.value.get(key) || [];
 };
 
-// Check if a classroom has a course for a specific day and period
+// 检查教室在特定日期和节次是否有课
 const hasCourseForDay = (classroom, day, period) => {
-  return getCoursesForClassroomDayAndPeriod(classroom, day, period).length > 0;
+  const key = `${classroom}-${day}-${period}`;
+  return courseIndexes.value.has(key) && courseIndexes.value.get(key).length > 0;
 };
 
-// Get course weeks display for thumbnail
+// 获取课程周次显示
 const getCourseWeeks = (classroom, day, period) => {
   const cellCourses = getCoursesForClassroomDayAndPeriod(classroom, day, period);
   if (cellCourses.length === 0) return '';
   
   const course = cellCourses[0];
-  return `${course.scbegin_week }~${course.scend_week}`;
+  return `${course.scbegin_week}~${course.scend_week}`;
 };
 
-// Get period time label
+// 获取时间段标签
 const getPeriodTimeLabel = (period) => {
   if (period <= periodTimes.length) {
     const time = periodTimes[period - 1];
@@ -574,18 +608,18 @@ const getPeriodTimeLabel = (period) => {
   return '';
 };
 
-// Get day name
+// 获取星期名称
 const getWeekdayName = (day) => {
   const dayObj = weekdays.find(d => d.value === day);
   return dayObj ? dayObj.label : '';
 };
 
-// View course details
+// 查看课程详情
 const viewCourseDetails = (course) => {
   selectedCourse.value = course;
 };
 
-// View course details from thumbnail
+// 从缩略图查看课程详情
 const viewThumbnailCourseDetails = (classroom, day, period) => {
   const courses = getCoursesForClassroomDayAndPeriod(classroom, day, period);
   if (courses.length > 0) {
@@ -593,12 +627,12 @@ const viewThumbnailCourseDetails = (classroom, day, period) => {
   }
 };
 
-// Export data
+// 导出数据
 const exportData = () => {
   alert('导出功能将在未来版本中实现');
 };
 
-// Get current day of week
+// 获取当前星期几
 const getCurrentDayOfWeek = () => {
   const today = new Date();
   // getDay() returns 0 for Sunday, 1 for Monday, etc.
@@ -718,8 +752,10 @@ const fetchCoursesFromAPI = async () => {
     
     if (response.status === 200 && response.data.code === 200) {
       // 处理API返回的数据
-      courses.value = processCourseData(response.data.rows);
-      console.log('从API加载了', courses.value.length, '条课程数据');
+      const processedData = processCourseData(response.data.rows);
+      allCourses.value = processedData; // 存储完整数据集
+      applyFilters(); // 应用筛选条件
+      console.log('从API加载了', allCourses.value.length, '条课程数据');
     } else {
       throw new Error(`API返回错误: ${response.data.code || response.status}`);
     }
@@ -728,19 +764,20 @@ const fetchCoursesFromAPI = async () => {
     loadError.value = `无法从API获取数据: ${error.message}。使用测试数据代替。`;
     
     // 使用测试数据
-    courses.value = processCourseData(mockCourses);
-    console.log('使用测试数据', courses.value.length, '条');
+    allCourses.value = processCourseData(mockCourses);
+    applyFilters();
+    console.log('使用测试数据', allCourses.value.length, '条');
   } finally {
     isLoading.value = false;
   }
 };
 
-// Lifecycle hooks
+// 生命周期钩子
 onMounted(() => {
-  // Set current day of week
+  // 设置当前星期几
   currentDayOfWeek.value = getCurrentDayOfWeek();
   
-  // Automatically select current day
+  // 自动选择当前日期
   selectedDay.value = currentDayOfWeek.value.toString();
   
   // 从API获取数据
@@ -765,5 +802,16 @@ onMounted(() => {
 
 .border-primary {
   border-color: #4f46e5;
+}
+
+/* Add specific style for the mini-card appearance */
+.bg-primary\/10 {
+  background-color: rgba(79, 70, 229, 0.1);
+}
+.hover\:bg-primary\/20:hover {
+  background-color: rgba(79, 70, 229, 0.2);
+}
+.text-primary\/90 {
+  color: rgba(79, 70, 229, 0.9);
 }
 </style>
