@@ -15,7 +15,7 @@
             <td class="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-gray-500">
               {{ timeSlot.label }}
             </td>
-            <td v-for="day in weekdays" :key="day.value" class="px-1 sm:px-2 py-2 h-24 sm:h-28 align-top relative">
+            <td v-for="day in weekdays" :key="day.value" class="px-1 sm:px-2 py-2 h-16 sm:h-20 align-top relative">
               <div v-for="course in getCoursesForTimeAndDay(timeSlot.value, day.value)" :key="course.id" 
                   class="p-1 sm:p-2 rounded-md bg-primary-light text-primary-dark text-xs sm:text-sm cursor-pointer hover:bg-primary-lighter w-full h-full overflow-y-auto"
                   @click="openCourseDetails(course)">
@@ -51,7 +51,7 @@
             <span class="font-medium">教室:</span> {{ selectedCourse.classroom }}
           </div>
           <div>
-            <span class="font-medium">时间:</span> 周{{ getWeekdayName(selectedCourse.weekday) }} {{ formatTime(selectedCourse.startTime) }}-{{ formatTime(selectedCourse.endTime) }}
+            <span class="font-medium">时间:</span> 周{{ getWeekdayName(selectedCourse.weekday) }} {{ getSlotTimeRange(selectedCourse.slot) }}
           </div>
           <div>
             <span class="font-medium">周次:</span> 第{{ selectedCourse.weeks.join(', ') }}周
@@ -68,7 +68,7 @@
 </template>
 
 <script setup>
-import { defineProps, ref } from 'vue';
+import { defineProps, ref, computed } from 'vue';
 
 const props = defineProps({
   courses: {
@@ -92,24 +92,61 @@ const weekdays = [
   { label: '周日', value: 7 }
 ];
 
-// 时间段
-const timeSlots = [
-  { label: '08:00-09:40', value: '08:00:00-09:40:00' },
-  { label: '10:00-11:40', value: '10:00:00-11:40:00' },
-  { label: '14:00-15:40', value: '14:00:00-15:40:00' },
-  { label: '16:00-17:40', value: '16:00:00-17:40:00' },
-  { label: '19:00-20:40', value: '19:00:00-20:40:00' }
+// Period time settings
+const periodTimes = [
+  { start: '08:00', end: '08:45' },
+  { start: '08:55', end: '09:40' },
+  { start: '10:00', end: '10:45' },
+  { start: '10:55', end: '11:40' },
+  { start: '14:00', end: '14:45' },
+  { start: '14:55', end: '15:40' },
+  { start: '16:00', end: '16:45' },
+  { start: '16:55', end: '17:40' },
+  { start: '19:00', end: '19:45' },
+  { start: '19:55', end: '20:40' },
+  { start: '20:50', end: '21:35' },
+  { start: '21:45', end: '22:30' },
 ];
 
+// 生成时间段 - 每节课一行
+const timeSlots = periodTimes.map((time, index) => {
+  const period = index + 1;
+  return {
+    value: period,
+    label: `第${period}节 ${time.start}-${time.end}`
+  };
+});
+
 // 获取特定时间和星期的课程
-const getCoursesForTimeAndDay = (timeSlot, weekday) => {
-  const [startTime, endTime] = timeSlot.split('-');
+const getCoursesForTimeAndDay = (period, weekday) => {
   return props.courses.filter(course => {
+    // 检查课程的 slot 是否包含当前时间段
     return course.weekday === weekday && 
-           course.startTime === startTime && 
-           course.endTime === endTime &&
+           isPeriodInSlot(period, course.slot) &&
            course.weeks.includes(props.currentWeek);
   });
+};
+
+// 检查特定节次是否在课程的 slot 范围内
+const isPeriodInSlot = (period, courseSlot) => {
+  if (!courseSlot) return false;
+  
+  // 解析课程的 slot 范围
+  const [start, end] = courseSlot.split('-').map(Number);
+  
+  // 检查当前节次是否在课程的 slot 范围内
+  return period >= start && period <= end;
+};
+
+// 获取时间段的显示文本
+const getSlotTimeRange = (slot) => {
+  if (!slot) return '';
+  
+  const [start, end] = slot.split('-').map(Number);
+  if (start <= periodTimes.length && end <= periodTimes.length) {
+    return `${periodTimes[start-1].start}-${periodTimes[end-1].end}`;
+  }
+  return slot; // 如果无法解析，则返回原始 slot 值
 };
 
 // 课程详情弹窗
@@ -126,12 +163,6 @@ const openCourseDetails = (course) => {
 const getWeekdayName = (weekday) => {
   const weekdays = ['日', '一', '二', '三', '四', '五', '六', '日'];
   return weekdays[weekday];
-};
-
-// 格式化时间（去掉秒）
-const formatTime = (time) => {
-  if (!time) return '';
-  return time.split(':').slice(0, 2).join(':');
 };
 </script>
 
@@ -175,4 +206,3 @@ td > div {
   line-height: 1.3;
 }
 </style>
-

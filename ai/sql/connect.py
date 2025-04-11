@@ -5,9 +5,9 @@ def connect():
     try:
         conn = pymysql.connect(#我的本地数据库
             host='localhost',
-            user='zq',
+            user='root',
             passwd='123456',
-            database='myAI',
+            database='schedule',
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor  # 返回字典格式结果
         )
