@@ -42,14 +42,13 @@
 
     <!-- 主内容区域 -->
     <div class="flex flex-1 gap-4 overflow-hidden">
-      <!-- 左侧课程导航栏 -->
+      <!-- 左侧课程导航栏 - 修改宽度绑定 -->
       <div 
-        :class="[sidebarCollapsed ? 'w-10' : `w-${sidebarWidth}/12`]" 
+        :style="sidebarStyle" 
         class="bg-white rounded-lg shadow overflow-hidden flex flex-col transition-all duration-300 ease-in-out"
-        :style="sidebarCollapsed ? '' : `min-width: ${sidebarMinWidth}px`"
       >
         <!-- 侧边栏标题栏 -->
-        <div class="p-2 border-b flex justify-between items-center">
+        <div class="p-2 border-b flex justify-between items-center flex-shrink-0">
           <transition name="fade" mode="out-in">
             <h3 v-if="!sidebarCollapsed" class="text-lg font-medium">课程列表</h3>
           </transition>
@@ -62,13 +61,14 @@
           </button>
         </div>
         
-        <!-- 侧边栏内容 -->
+        <!-- 侧边栏内容 - 确保flex布局正确 -->
         <transition 
           name="sidebar-content" 
           mode="out-in"
         >
           <div v-if="!sidebarCollapsed" class="flex flex-col flex-1 overflow-hidden">
-            <div class="p-2 border-b">
+            <!-- 搜索和过滤 - 保持flex-shrink: 0 -->
+            <div class="p-2 border-b flex-shrink-0">
               <div class="relative">
                 <input 
                   v-model="courseSearch" 
@@ -102,24 +102,56 @@
                 </button>
               </div>
             </div>
-            <div class="flex-1 overflow-y-auto p-2">
+            
+            <!-- 课程列表容器 - 保持 overflow-y-auto -->
+            <div class="flex-1 overflow-y-auto p-1 space-y-1">
               <div 
                 v-for="course in filteredCourses" 
-                :key="course.scid"
-                class="p-3 mb-2 rounded-md cursor-pointer transition-all duration-200"
-                :class="selectedCourse && selectedCourse.scid === course.scid ? 'bg-primary-light border-l-4 border-primary' : 'bg-gray-50 hover:bg-gray-100 border-l-4 border-transparent'"
-                @click="selectCourse(course)"
+                :key="course.scid" 
+                class="border rounded-md cursor-pointer transition-all duration-150 overflow-hidden"
+                :class="[
+                  selectedCourse && selectedCourse.scid === course.scid ? 'bg-primary-light border-primary' : 'bg-white border-gray-200 hover:border-gray-300',
+                  isCourseExpanded(course.scid) ? 'shadow-sm' : ''
+                ]"
+                @click="toggleAndSelectCourse(course)"
                 draggable="true"
                 @dragstart="onDragStart($event, course)"
               >
-                <div class="font-medium">{{ course.sctask }}</div>
-                <div class="text-sm text-gray-600">{{ course.composition }}</div>
-                <div class="text-sm text-gray-600">{{ course.scteacherdepartment }}</div>
-                <div v-if="isScheduled(course)" class="mt-1 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full inline-block">
-                  {{ getWeekdayName(parseInt(course.scday_of_week)) }} 第{{ course.time }}节<span v-if="course.slot_end && course.slot_end !== course.time">-{{ course.slot_end }}节</span> {{ course.scroom }}
+                <!-- 基础信息 (始终显示) -->
+                <div class="p-2 flex justify-between items-center">
+                  <div>
+                    <div class="font-medium text-sm truncate" :title="course.sctask">{{ course.sctask }}</div>
+                    <div class="text-xs text-gray-600 truncate" :title="course.composition">{{ course.composition }}</div>
+                  </div>
+                  <button 
+                    class="p-1 rounded hover:bg-gray-100"
+                    @click.stop="toggleExpand(course.scid)" 
+                  >
+                    <ChevronDown 
+                      class="w-4 h-4 text-gray-500 transition-transform duration-200"
+                      :class="{'rotate-180': isCourseExpanded(course.scid)}"
+                    />
+                  </button>
                 </div>
-                <div v-if="isScheduled(course)" class="mt-1 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full inline-block">
-                  {{ course.scbegin_week }}~{{ course.scend_week }}周
+                
+                <!-- 详细信息 (可折叠) -->
+                <div v-if="isCourseExpanded(course.scid)" class="p-2 border-t border-gray-200 bg-gray-50">
+                  <div class="text-xs text-gray-600 truncate mb-1">教师ID: {{ course.scteacherid }}</div>
+                  <div class="text-xs text-gray-600 truncate mb-1">学院: {{ course.scteacherdepartment }}</div>
+                  <div v-if="isScheduled(course)" class="flex flex-wrap gap-1">
+                    <span class="text-[10px] bg-green-100 text-green-800 px-1 py-0.5 rounded-sm inline-block">
+                      {{ getWeekdayName(parseInt(course.scday_of_week)) }} {{ course.time }}<span v-if="course.slot_end && course.slot_end !== course.time">-{{ course.slot_end }}</span>
+                    </span>
+                    <span class="text-[10px] bg-blue-100 text-blue-800 px-1 py-0.5 rounded-sm inline-block">
+                      {{ course.scbegin_week }}~{{ course.scend_week }}
+                    </span>
+                    <span class="text-[10px] bg-gray-200 text-gray-800 px-1 py-0.5 rounded-sm inline-block truncate">
+                      {{ course.scroom }}
+                    </span>
+                  </div>
+                  <div v-else class="text-xs text-gray-400 italic">
+                    未排课
+                  </div>
                 </div>
               </div>
               <div v-if="filteredCourses.length === 0" class="p-4 text-center text-gray-500">
@@ -130,7 +162,7 @@
         </transition>
       </div>
 
-      <!-- 调整大小的拖动条 -->
+      <!-- 调整大小的拖动条 - 保持不变 -->
       <transition name="fade">
         <div 
           v-if="!sidebarCollapsed"
@@ -139,7 +171,7 @@
         ></div>
       </transition>
 
-      <!-- 右侧排课区域 -->
+      <!-- 右侧排课区域 - 确保 flex-1 生效 -->
       <div class="flex-1 flex flex-col gap-3 overflow-hidden">
         <!-- 课程详情卡片 (只在选中课程时显示) -->
         <div v-if="selectedCourse" class="bg-white rounded-lg shadow p-3">
@@ -242,7 +274,7 @@
                     <th 
                       v-for="period in availablePeriods" 
                       :key="`thumb-${day.value}-${period}`" 
-                      class="border p-1 w-8"
+                      class="border p-0 w-6 text-[9px]"
                     >
                       {{ period }}
                     </th>
@@ -256,7 +288,7 @@
                     <td 
                       v-for="period in availablePeriods" 
                       :key="`thumb-${classroom}-${day.value}-${period}`" 
-                      class="border p-0 align-middle text-center h-8 w-8"
+                      class="border p-0 align-middle text-center h-6 w-6"
                       @dragover.prevent
                       @drop="onDrop($event, classroom, day.value, period)"
                     >
@@ -332,13 +364,12 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { Search, Save, X, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { Search, Save, X, ChevronLeft, ChevronDown } from 'lucide-vue-next';
 import axios from 'axios';
 
 // 侧边栏状态变量
 const sidebarCollapsed = ref(false);
-const sidebarWidth = ref(4); // 默认宽度为4/12
-const sidebarMinWidth = ref(300); // 最小宽度
+const sidebarWidth = ref(4); // Default width 4/12 - Represents fraction
 
 // 状态变量
 const selectedWeek = ref(1);
@@ -386,8 +417,32 @@ const classrooms = [
 const isLoading = ref(false);
 const loadError = ref(null);
 
-// 课程数据 - 重新添加声明
+// 课程数据
 const courses = ref([]);
+
+// 新增：管理展开课程的状态
+const expandedCourses = ref(new Set());
+
+// 检查课程是否展开
+const isCourseExpanded = (courseId) => {
+  return expandedCourses.value.has(courseId);
+};
+
+// 切换课程展开/折叠状态
+const toggleExpand = (courseId) => {
+  if (expandedCourses.value.has(courseId)) {
+    expandedCourses.value.delete(courseId);
+  } else {
+    expandedCourses.value.add(courseId);
+  }
+};
+
+// 新函数：点击课程项时，切换展开状态并选中课程
+const toggleAndSelectCourse = (course) => {
+  selectCourse(course); // 保留选中逻辑
+  // 可以选择是否在这里也切换展开状态，或者只通过小箭头切换
+  // toggleExpand(course.scid); // 如果希望点击整个卡片也切换展开
+};
 
 // 解析课程槽位
 const parseSlot = (slotStr) => {
@@ -557,27 +612,31 @@ const fetchCoursesFromAPI = async () => {
   }
 };
 
-// 筛选课程
+// 筛选课程 - 修复和增强
 const filteredCourses = computed(() => {
-  let result = [...courses.value];
-  
+  let result = [...courses.value]; // Start with all available courses
+
   // 按搜索关键词筛选
   if (courseSearch.value) {
     const searchLower = courseSearch.value.toLowerCase();
-    result = result.filter(course => 
-      course.sctask.toLowerCase().includes(searchLower) ||
-      course.composition.toLowerCase().includes(searchLower) ||
-      course.scteacherdepartment.toLowerCase().includes(searchLower)
-    );
+    result = result.filter(course => {
+      // Check against multiple fields, ensuring they exist and can be searched
+      const taskMatch = (course.sctask?.toLowerCase() || '').includes(searchLower);
+      const compositionMatch = (course.composition?.toLowerCase() || '').includes(searchLower);
+      const departmentMatch = (course.scteacherdepartment?.toLowerCase() || '').includes(searchLower);
+      const teacherIdMatch = (course.scteacherid?.toString() || '').includes(searchLower);
+      
+      return taskMatch || compositionMatch || departmentMatch || teacherIdMatch;
+    });
   }
-  
-  // 按排课状态筛选
+
+  // 按排课状态筛选 (Applied after search)
   if (filterType.value === 'scheduled') {
     result = result.filter(course => isScheduled(course));
   } else if (filterType.value === 'unscheduled') {
     result = result.filter(course => !isScheduled(course));
   }
-  
+
   return result;
 });
 
@@ -594,12 +653,12 @@ const getWeekdayName = (day) => {
 
 // 选择课程
 const selectCourse = (course) => {
-  selectedCourse.value = { ...course };
+  selectedCourse.value = JSON.parse(JSON.stringify(course)); // 使用深拷贝确保独立
   
-  // 确保数值类型正确
-  selectedCourse.value.scbegin_week = parseInt(selectedCourse.value.scbegin_week);
-  selectedCourse.value.scend_week = parseInt(selectedCourse.value.scend_week);
-  selectedCourse.value.time = parseInt(selectedCourse.value.time);
+  // 确保数值类型正确 (如果processCourseData还没处理)
+  // selectedCourse.value.scbegin_week = parseInt(selectedCourse.value.scbegin_week);
+  // selectedCourse.value.scend_week = parseInt(selectedCourse.value.scend_week);
+  // selectedCourse.value.time = parseInt(selectedCourse.value.time);
 };
 
 // 应用排课
@@ -819,38 +878,86 @@ const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value;
 };
 
-// 侧边栏大小调整
-let isResizing = false;
+// 修改：计算侧边栏样式
+const sidebarStyle = computed(() => {
+  if (sidebarCollapsed.value) {
+    return {
+      width: '2.5rem', // w-10
+      minWidth: '2.5rem',
+      flexBasis: '2.5rem',
+      flexGrow: 0,
+      flexShrink: 0,
+      overflow: 'hidden',
+    };
+  } else {
+    const percentage = (sidebarWidth.value / 12) * 100;
+    return {
+      flexBasis: `${percentage}%`,
+      width: `${percentage}%`, // Keep for clarity/fallback
+      minWidth: '200px', // Use a FIXED minimum width
+      flexGrow: 0,
+      flexShrink: 0,
+      overflow: 'hidden',
+    };
+  }
+});
+
+// 侧边栏大小调整逻辑
+let resizing = false;
+let startX = 0;
+let initialWidthFraction = 0; // Store initial width as fraction (2-6)
 
 const startResize = (e) => {
-  isResizing = true;
-  document.addEventListener('mousemove', resize);
-  document.addEventListener('mouseup', stopResize);
+  e.preventDefault();
+  e.stopPropagation();
+  resizing = true;
+  startX = e.clientX;
+  initialWidthFraction = sidebarWidth.value; // Store the initial fraction (2-6)
+  window.addEventListener('mousemove', handleResize);
+  window.addEventListener('mouseup', stopResize);
+  document.body.style.cursor = 'col-resize';
+  document.body.classList.add('select-none');
 };
 
-const resize = (e) => {
-  if (!isResizing) return;
+const handleResize = (e) => {
+  if (!resizing) return;
+  const container = document.querySelector('.flex.flex-1.gap-4');
+  if (!container) {
+    console.error("Resize container not found!");
+    return;
+  }
+  const containerWidth = container.clientWidth;
+  if (containerWidth <= 0) return;
+
+  const deltaX = e.clientX - startX;
+  const widthChangeFraction = (deltaX / containerWidth) * 12;
   
-  // 计算宽度百分比
-  const containerWidth = document.querySelector('.flex.flex-1.gap-4').offsetWidth;
-  let newWidth = e.clientX / containerWidth * 12;
+  // Calculate the new width fraction
+  let newWidthFraction = initialWidthFraction + widthChangeFraction;
+
+  // Apply limits (e.g., 2/12 to 6/12)
+  newWidthFraction = Math.max(2, Math.min(6, newWidthFraction));
   
-  // 限制最小和最大宽度
-  newWidth = Math.max(2, Math.min(6, newWidth));
+  // ONLY update the sidebarWidth ref (the fraction)
+  sidebarWidth.value = newWidthFraction;
   
-  sidebarWidth.value = newWidth;
+  // REMOVED the logic that updated sidebarMinWidth.value here
 };
 
 const stopResize = () => {
-  isResizing = false;
-  document.removeEventListener('mousemove', resize);
-  document.removeEventListener('mouseup', stopResize);
+  if (!resizing) return;
+  resizing = false;
+  window.removeEventListener('mousemove', handleResize);
+  window.removeEventListener('mouseup', stopResize);
+  document.body.style.cursor = '';
+  document.body.classList.remove('select-none');
 };
 
-// 清理事件监听器
 onBeforeUnmount(() => {
-  document.removeEventListener('mousemove', resize);
-  document.removeEventListener('mouseup', stopResize);
+  window.removeEventListener('mousemove', handleResize);
+  window.removeEventListener('mouseup', stopResize);
+  document.body.style.cursor = '';
+  document.body.classList.remove('select-none');
 });
 
 // 生命周期钩子
@@ -904,6 +1011,78 @@ onMounted(() => {
 .sidebar-content-leave-to {
   opacity: 0;
   transform: translateX(-20px);
+}
+
+/* 显著增强拖拽条的可见性和交互体验 */
+.w-1.bg-gray-200.hover\:bg-primary.hover\:w-1\.5.cursor-col-resize {
+  width: 4px !important;
+  background-color: #e5e7eb;
+  cursor: col-resize;
+  transition: background-color 0.2s;
+  position: relative;
+  z-index: 10;
+  margin: 0 -2px;
+}
+
+.w-1.bg-gray-200.hover\:bg-primary.hover\:w-1\.5.cursor-col-resize:hover,
+.w-1.bg-gray-200.hover\:bg-primary.hover\:w-1\.5.cursor-col-resize:active {
+  background-color: #4f46e5 !important;
+}
+
+.w-1.bg-gray-200.hover\:bg-primary.hover\:w-1\.5.cursor-col-resize::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  cursor: col-resize;
+}
+
+.w-1.bg-gray-200.hover\:bg-primary.hover\:w-1\.5.cursor-col-resize::after {
+  content: "⋮";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #6b7280;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.w-1.bg-gray-200.hover\:bg-primary.hover\:w-1\.5.cursor-col-resize:hover::after {
+  color: white;
+}
+
+/* 简化侧栏列表样式 */
+.border-b.border-gray-200 {
+  transition: background-color 0.15s;
+}
+
+.border-b.border-gray-200:last-child {
+  border-bottom: none;
+}
+
+/* 侧栏列表项过渡 */
+.border.rounded-md {
+  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+/* Ensure flex items behave correctly */
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+.flex-1 {
+  flex: 1 1 0%; /* Common definition for flex-1 */
+}
+
+/* Optional: Add transition to flex-basis for smoother resize */
+.transition-all {
+  /* Check if transition property includes flex-basis or width */
+  transition-property: all;
+  /* If not, add it: */
+  /* transition-property: width, min-width, flex-basis, background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter; */
 }
 </style>
 
