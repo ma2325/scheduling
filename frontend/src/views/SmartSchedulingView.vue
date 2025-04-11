@@ -86,10 +86,6 @@
               <p class="text-xl font-medium">{{ schedulingResult.scheduledCourses || 0 }}</p>
             </div>
             <div class="bg-gray-50 p-3 rounded-md">
-              <p class="text-sm text-gray-500">约束满足率</p>
-              <p class="text-xl font-medium">{{ schedulingResult.constraintSatisfaction || '0%' }}</p>
-            </div>
-            <div class="bg-gray-50 p-3 rounded-md">
               <p class="text-sm text-gray-500">算法运行时间</p>
               <p class="text-xl font-medium">{{ schedulingResult.executionTime || '0s' }}</p>
             </div>
@@ -118,11 +114,14 @@
   import { ref, reactive } from 'vue';
   import { useRouter } from 'vue-router';
   import { Play, Loader2 } from 'lucide-vue-next';
+  import {runScheduling} from '@/api/schedule'
+  import { useSchedulingStore } from '@/stores/schedulingStore';
   
   const router = useRouter();
   const isScheduling = ref(false);
   const showResultModal = ref(false);
-  
+  const schedulingStore = useSchedulingStore();
+
   // 约束条件列表
   const constraintsList = reactive([
     {
@@ -173,51 +172,66 @@
   const schedulingResult = ref({
     totalCourses: 0,
     scheduledCourses: 0,
-    constraintSatisfaction: '0%',
     executionTime: '0s'
   });
   
   // 开始排课
   const startScheduling = async () => {
+    
     isScheduling.value = true;
     
     try {
-      // 准备发送给后端的约束条件数据
-      const constraintsData = {};
+      //筛选需传给后端的数据(即被选中的约束)
+      const soft_constraints = constraintsList
+      .filter(constraint => constraint.enabled)
+      .map(constraint => ({
+        constraintItem: constraint.id,  // 对应后端要求的字段
+        priority: constraint.priority,
+      }));
       
-      // 只包含启用的约束条件
-      for (const constraint of constraintsList) {
-        if (constraint.enabled) {
-          constraintsData[constraint.id] = constraint.priority;
-        }
+      const startTime = Date.now();
+      //发送 PUT 请求
+      const response = await runScheduling(soft_constraints);
+      if (response.data.code === 200) {
+        alert("智能调课完成！");
+
+
+        const endTime = Date.now();
+        const duration = (endTime - startTime)/1000; // 算法执行耗时（毫秒）
+
+        // const summary = {
+        //         totalClasses,
+        //         scheduledClasses,
+        //         unscheduledClasses,
+        //         totalRooms,
+        //         usedRooms,
+        //         roomRate,
+        //         totalTeachers,
+        //         totalScheduledTeachers
+        //     };
+
+        // 获取后端返回的统计数据
+        const summary = response.data.data.summary;
+        
+        // 保存到 store 中
+        schedulingStore.setSummary(summary);
+
+        // 结果数据
+        schedulingResult.value = {
+          totalCourses: summary.totalClasses,
+          scheduledCourses: summary.scheduledClasses,
+          executionTime: `${duration}s`
+        };
+        
+        // 显示结果弹窗
+        showResultModal.value = true;
+
+        console.log("调课统计数据：", response.data.data.summary);
+      } else {
+        alert(response.data.msg || "调课失败");
       }
       
-      // 发送请求到后端API
-      // 这里是API调用示例，需要替换为实际的API端点和方法
-      // const response = await fetch('/api/scheduling/start', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(constraintsData),
-      // });
-      
-      // const result = await response.json();
-      
-      // 模拟API响应
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // 模拟结果数据
-      schedulingResult.value = {
-        totalCourses: 120,
-        scheduledCourses: 118,
-        constraintSatisfaction: '94%',
-        executionTime: '3.5s'
-      };
-      
-      // 显示结果弹窗
-      showResultModal.value = true;
-      
+
     } catch (error) {
       console.error('排课请求失败:', error);
       alert('排课过程中发生错误，请重试');
