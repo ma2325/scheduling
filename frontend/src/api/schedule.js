@@ -16,11 +16,11 @@ export function getTermView(user, userType) {
 
 // 基础API配置
 const api = axios.create({
-  baseURL: "/dashboard",
+  baseURL: "/automatic",
   timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  // headers: {
+  //   "Content-Type": "application/json",
+  // },
 })
 
 // // 获取周视图数据
@@ -48,14 +48,20 @@ const api = axios.create({
 //TO DO
 
 
-// 智能排课API
-export const startSmartScheduling = (constraints) => {
-  return api.post("/schedule/smart", constraints)
-}
-
-// 获取排课统计数据
-export const getSchedulingStatistics = () => {
-  return api.get("/schedule/statistics")
+/**
+ * 启动智能调课
+ * @param {Array} soft_constraints - 一个数组，每项对象格式为 { constraintItem, priority }，
+ *                                  对应后端要求形如 [(id, priority), ...]
+ * @returns {Promise} - 返回后端调课结果的 Promise 对象
+ */
+export const runScheduling = (soft_constraints) => {
+  // 参数校验：确保传入的是一个数组
+  if (!Array.isArray(soft_constraints)) {
+    return Promise.reject(new Error("softConstraints 参数必须为数组"));
+  }
+  
+  // 发送 PUT 请求，传递 soft_constraints 到后端
+  return axios.put("/automatic", {soft_constraints: soft_constraints});
 }
 
 
@@ -63,6 +69,5 @@ export const getSchedulingStatistics = () => {
 export default {
   getWeekView,
   getTermView,
-  startSmartScheduling,
-  getSchedulingStatistics,
-}
+  runScheduling,
+};

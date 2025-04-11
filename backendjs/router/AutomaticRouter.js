@@ -22,8 +22,9 @@ router.put("/", async (req, res) => {
 
         // 构造 Python 命令行参数
         const softConstraintsArg = constraintsString;
-        const pythonPath = "C:\\Users\\20409\\.conda\\envs\\schedule\\python.exe"; // 可按需指定具体路径
-        const scriptPath = "D:\\fuwuwaibao\\scheduling\\ai\\scheduler_cli.py";
+        const pythonPath = "C:\\Users\\86182\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"; // 可按需指定具体路径
+
+        const scriptPath = "C:\\Users\\86182\\OneDrive\\桌面\\软创\\scheduling\\ai\\scheduler_cli.py";
 
         // 使用 --soft_constraints 参数传递约束条件
         const pythonProcess = spawn(pythonPath, [

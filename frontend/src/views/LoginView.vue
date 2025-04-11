@@ -6,12 +6,13 @@
         <h2 class="text-3xl font-extrabold text-gray-900">{{ isLogin ? '登录' : '注册' }}</h2>
       </div>
 
-      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
+      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit" autocomplete="off">
         <div class="rounded-md shadow-sm space-y-4">
           <!-- 用户名输入框  -->
           <div>
             <label for="username" class="sr-only">用户名</label>
             <input id="username" v-model="form.username" name="username" type="text" required 
+                   autocomplete="username" 
                    class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
                    placeholder="用户名" />
           </div>
@@ -19,6 +20,7 @@
           <div>
             <label for="password" class="sr-only">密码</label>
             <input id="password" v-model="form.password" name="password" type="password" required 
+                   autocomplete="current-password"
                    class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
                    placeholder="密码" />
           </div>
@@ -26,6 +28,7 @@
           <div v-if="!isLogin">
             <label for="confirmPassword" class="sr-only">确认密码</label>
             <input id="confirmPassword" v-model="form.confirmPassword" name="confirmPassword" type="password" 
+                   autocomplete="new-password"
                    class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
                    placeholder="确认密码" />
           </div>
@@ -92,6 +95,16 @@ const handleSubmit = async () => {
       // 调用后端的注册 API
       response = await signup(form.username, form.password);
     }
+
+    // 后端返回 token，你保存 token：
+    localStorage.setItem('token', response.data.token);
+
+    // 之后请求其他接口：
+    axios.get('/dashboard', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    });
 
     // 判断请求是否成功
     if (response.data.code === 200) {
