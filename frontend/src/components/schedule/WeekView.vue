@@ -15,7 +15,7 @@
             <td class="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-gray-500">
               {{ timeSlot.label }}
             </td>
-            <td v-for="day in weekdays" :key="day.value" class="px-1 sm:px-2 py-2 h-16 sm:h-20 align-top relative">
+            <td v-for="day in weekdays" :key="day.value" class="px-1 sm:px-2 py-2 h-28 sm:h-32 align-top relative">
               <div v-for="course in getCoursesForTimeAndDay(timeSlot.value, day.value)" :key="course.id" 
                   class="p-1 sm:p-2 rounded-md bg-primary-light text-primary-dark text-xs sm:text-sm cursor-pointer hover:bg-primary-lighter w-full h-full overflow-y-auto"
                   @click="openCourseDetails(course)">
