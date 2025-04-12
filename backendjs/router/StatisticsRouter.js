@@ -18,7 +18,6 @@ router.get("/", async (req, res) => {
     if (!week) return res.send({ code: 400, msg: "缺少 week 参数" });
 
     try {
-        console.log("start right");
         //获取建筑占用率
         const { success: buildingSuccess, data: buildingRows } = await getCountData(
             "SELECT `bname` FROM `building`",
@@ -30,9 +29,13 @@ router.get("/", async (req, res) => {
             const buildingNames = buildingRows.map((b) => b.bname);
 
             const roomCounts = await Promise.all(
-                buildingNames.map((b) =>
-                    getCountData("SELECT COUNT(*) AS `cnt` FROM `room` WHERE `rbuilding` = ?", [b])
-                )
+                buildingNames.map(async (b) => {
+                    const countData = await getCountData(
+                        "SELECT COUNT(*) AS `cnt` FROM `room` WHERE `rbuilding` = ?", 
+                        [b]
+                    );
+                    return countData; // 保持完整结构
+                })
             );
 
             const roomOccupied = await Promise.all(
@@ -52,9 +55,9 @@ router.get("/", async (req, res) => {
             room_occupancy_rate = buildingNames.map((building, i) => ({
                 building,
                 occupied: roomOccupied[i].data[0].cnt,
-                total: roomCounts[i].data[0].cnt,
+                total: roomCounts[i].data[0].cnt * 8 * 7, // 在这里做乘法
                 rate: roomCounts[i].success && roomCounts[i].data[0].cnt !== 0 
-                      ? roomOccupied[i].data[0].cnt / roomCounts[i].data[0].cnt 
+                      ? roomOccupied[i].data[0].cnt / (roomCounts[i].data[0].cnt * 8 * 7)
                       : 0,
             }));
             
@@ -73,7 +76,7 @@ router.get("/", async (req, res) => {
             const typeCounts = await Promise.all(
                 taskTypes.map((type) =>
                     getCountData(
-                        "SELECT COUNT(*) AS cnt FROM schedule join task on task.tacode=schedule.scid WHERE scbegin_week <= ? AND scend_week >=? AND tatype = ?",
+                        "SELECT COUNT(*) AS cnt FROM schedule join task on task.taformclassid=schedule.sctask WHERE scbegin_week <= ? AND scend_week >=? AND tatype = ?",
                         [week, week, type]
                     )
                 )
@@ -89,6 +92,7 @@ router.get("/", async (req, res) => {
             data: [room_occupancy_rate, type_count],
         });
     } catch (err) {
+        console.log(err.message);
         res.send({
             code: 500,
             msg: "服务器异常",
