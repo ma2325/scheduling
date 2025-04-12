@@ -268,7 +268,7 @@ const updateWeekCharts = () => {
 
   // 创建教室利用率图表
   if (classroomUtilizationChart.value) {
-    // const adjustedRates = buildingRates.map(rate => rate);
+    const adjustedRates = buildingRates.map(rate => rate * 100);
     classroomChartInstance = new Chart(classroomUtilizationChart.value, {
       type: "bar",
       data: {
@@ -276,7 +276,7 @@ const updateWeekCharts = () => {
         datasets: [
           {
             label: "教室利用率",
-            data: buildingRates,
+            data: adjustedRates,
             backgroundColor: buildingLabels.map((_, index) => {
               const opacity = 0.8 - index * 0.1
               return `rgba(79, 70, 229, ${opacity > 0.3 ? opacity : 0.3})`
