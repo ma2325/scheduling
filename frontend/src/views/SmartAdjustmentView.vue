@@ -599,8 +599,8 @@ const applySuggestion = async (suggestion) => {
     
     if (response.status === 200 && response.data.code === 200) {
       // 更新成功，从建议列表中移除
-      suggestions.value = suggestions.value.filter(s => s !== suggestion);
-      showNoSuggestions.value = suggestions.value.length === 0;
+  suggestions.value = suggestions.value.filter(s => s !== suggestion);
+  showNoSuggestions.value = suggestions.value.length === 0;
       
       // 更新本地课程数据
       const courseIndex = courses.value.findIndex(c => c.scid === suggestion.courseId);
