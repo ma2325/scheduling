@@ -106,7 +106,7 @@
             <!-- 课程列表容器 - 保持 overflow-y-auto -->
             <div class="flex-1 overflow-y-auto p-1 space-y-1">
               <div 
-                v-for="course in filteredCourses" 
+                v-for="course in paginatedCourses" 
                 :key="course.scid" 
                 class="border rounded-md cursor-pointer transition-all duration-150 overflow-hidden"
                 :class="[
@@ -154,8 +154,74 @@
                   </div>
                 </div>
               </div>
-              <div v-if="filteredCourses.length === 0" class="p-4 text-center text-gray-500">
+              <div v-if="courses.length === 0" class="p-4 text-center text-gray-500">
                 没有找到匹配的课程
+              </div>
+              
+              <!-- 分页控制 -->
+              <div v-if="totalPages > 1" class="pt-2 flex justify-between items-center text-xs border-t mt-2">
+                <span>
+                  显示 {{ (courseListPage - 1) * courseListPageSize + 1 }}-{{ Math.min(courseListPage * courseListPageSize, courses.length) }} / {{ courses.length }}
+                </span>
+                <div class="flex gap-1 items-center">
+                  <button 
+                    @click="courseListPage = 1" 
+                    class="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
+                    :disabled="courseListPage === 1"
+                    title="首页"
+                  >
+                    &laquo;
+                  </button>
+                  <button 
+                    @click="prevPage" 
+                    class="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
+                    :disabled="courseListPage === 1"
+                  >
+                    &lsaquo;
+                  </button>
+                  
+                  <!-- 页码快速索引 -->
+                  <div class="flex items-center gap-1 mx-1">
+                    <div v-for="(page, index) in pageNumbers" :key="`page-${index}-${page}`" class="flex">
+                      <button 
+                        v-if="page !== '...'"
+                        @click="courseListPage = page" 
+                        class="w-6 h-6 text-center rounded text-xs"
+                        :class="page === courseListPage ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'"
+                      >
+                        {{ page }}
+                      </button>
+                      <span v-else class="text-gray-500">...</span>
+                    </div>
+                  </div>
+                  
+                  <!-- 页码输入框 -->
+                  <div class="relative mx-1 hidden sm:block">
+                    <input 
+                      v-model="tempCoursePageInput"
+                      @keyup.enter="jumpToCoursePage"
+                      type="text" 
+                      class="w-10 h-6 text-center text-xs border rounded"
+                      placeholder="#"
+                    />
+                  </div>
+                  
+                  <button 
+                    @click="nextPage" 
+                    class="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
+                    :disabled="courseListPage === totalPages"
+                  >
+                    &rsaquo;
+                  </button>
+                  <button 
+                    @click="courseListPage = totalPages" 
+                    class="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
+                    :disabled="courseListPage === totalPages"
+                    title="末页"
+                  >
+                    &raquo;
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -175,6 +241,16 @@
       <div class="flex-1 flex flex-col gap-3 overflow-hidden">
         <!-- 课程详情卡片 (只在选中课程时显示) -->
         <div v-if="selectedCourse" class="bg-white rounded-lg shadow p-3">
+          <!-- 课程基本信息 -->
+          <div class="mb-3 bg-gray-50 p-2 rounded-md">
+            <div class="text-sm font-medium text-primary truncate" :title="selectedCourse.sctask">{{ selectedCourse.sctask }}</div>
+            <div class="text-xs text-gray-600 truncate" :title="selectedCourse.composition">{{ selectedCourse.composition }}</div>
+            <div class="text-xs text-gray-500 flex gap-2 mt-1">
+              <span>教师ID: {{ selectedCourse.scteacherid }}</span>
+              <span>学院: {{ selectedCourse.scteacherdepartment }}</span>
+            </div>
+          </div>
+          
           <!-- 排课表单 -->
           <div class="grid grid-cols-6 gap-3">
             <div>
@@ -262,7 +338,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="classroom in classrooms" :key="`thumb-${classroom}`">
+                <tr v-for="classroom in paginatedClassrooms" :key="`thumb-${classroom}`">
                   <td class="border p-2 font-medium bg-gray-50 sticky left-0 z-10">{{ classroom }}</td>
                   <template v-for="day in weekdays" >
                     <td 
@@ -292,6 +368,72 @@
                 </tr>
               </tbody>
             </table>
+            
+            <!-- 表格分页控制 -->
+            <div v-if="totalTablePages > 1" class="p-2 flex justify-between items-center border-t">
+              <span class="text-sm">
+                显示教室 {{ (tablePage - 1) * tablePageSize + 1 }}-{{ Math.min(tablePage * tablePageSize, classrooms.length) }} / {{ classrooms.length }}
+              </span>
+              <div class="flex gap-2">
+                <button 
+                  @click="tablePage = 1" 
+                  class="px-2 py-1 bg-gray-100 text-sm rounded hover:bg-gray-200 disabled:opacity-50"
+                  :disabled="tablePage === 1"
+                  title="首页"
+                >
+                  &laquo;
+                </button>
+                <button 
+                  @click="prevTablePage" 
+                  class="px-2 py-1 bg-gray-100 text-sm rounded hover:bg-gray-200 disabled:opacity-50"
+                  :disabled="tablePage === 1"
+                >
+                  &lsaquo;
+                </button>
+                
+                <!-- 页码快速索引 -->
+                <div class="flex items-center gap-1 mx-1">
+                  <div v-for="(page, index) in tablePageNumbers" :key="`page-${index}-${page}`" class="flex">
+                    <button 
+                      v-if="page !== '...'"
+                      @click="tablePage = page" 
+                      class="w-6 h-6 text-center rounded text-xs"
+                      :class="page === tablePage ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'"
+                    >
+                      {{ page }}
+                    </button>
+                    <span v-else class="text-gray-500">...</span>
+                  </div>
+                </div>
+                
+                <!-- 页码输入框 -->
+                <div class="relative mx-1 hidden sm:block">
+                  <input 
+                    v-model="tempTablePageInput"
+                    @keyup.enter="jumpToTablePage"
+                    type="text" 
+                    class="w-10 h-6 text-center text-xs border rounded"
+                    placeholder="#"
+                  />
+                </div>
+                
+                <button 
+                  @click="nextTablePage" 
+                  class="px-3 py-1 bg-gray-100 text-sm rounded hover:bg-gray-200 disabled:opacity-50"
+                  :disabled="tablePage === totalTablePages"
+                >
+                  &rsaquo;
+                </button>
+                <button 
+                  @click="tablePage = totalTablePages" 
+                  class="px-2 py-1 bg-gray-100 text-sm rounded hover:bg-gray-200 disabled:opacity-50"
+                  :disabled="tablePage === totalTablePages"
+                  title="末页"
+                >
+                  &raquo;
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -342,7 +484,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { Search, Save, X, ChevronLeft, ChevronDown } from 'lucide-vue-next';
 import axios from 'axios';
 
@@ -398,7 +540,97 @@ const isLoading = ref(false);
 const loadError = ref(null);
 
 // 课程数据
-const courses = ref([]);
+const allCourses = ref([]); // 所有课程数据
+const courses = ref([]); // 当前过滤后的课程数据
+const courseIndexes = ref(new Map()); // 课程索引：教室-日期-节次 -> 课程数组
+
+// 添加课程列表可视化控制变量
+const courseListPageSize = 20; // 每页显示的课程数量
+const courseListPage = ref(1); // 当前页码
+
+// 分页显示课程
+const paginatedCourses = computed(() => {
+  const startIndex = (courseListPage.value - 1) * courseListPageSize;
+  return courses.value.slice(startIndex, startIndex + courseListPageSize);
+});
+
+// 课程总页数
+const totalPages = computed(() => {
+  return Math.ceil(courses.value.length / courseListPageSize);
+});
+
+// 切换到下一页
+const nextPage = () => {
+  if (courseListPage.value < totalPages.value) {
+    courseListPage.value++;
+  }
+};
+
+// 切换到上一页
+const prevPage = () => {
+  if (courseListPage.value > 1) {
+    courseListPage.value--;
+  }
+};
+
+// 创建课程索引，用于快速查找
+const createCourseIndexes = () => {
+  const indexMap = new Map();
+  
+  courses.value.forEach(course => {
+    if (!course.scroom || !course.scday_of_week || !course.time) return;
+    
+    const classroom = course.scroom;
+    const day = parseInt(course.scday_of_week);
+    const period = course.time;
+    
+    // 创建教室-日期-节次 索引
+    const key = `${classroom}-${day}-${period}`;
+    if (!indexMap.has(key)) {
+      indexMap.set(key, []);
+    }
+    indexMap.get(key).push(course);
+    
+    // 创建课程ID索引
+    indexMap.set(`course-${course.scid}`, course);
+  });
+  
+  courseIndexes.value = indexMap;
+};
+
+// 应用筛选条件
+const applyFilters = () => {
+  let result = [...allCourses.value];
+  
+  // 按搜索关键词筛选
+  if (courseSearch.value) {
+    const searchLower = courseSearch.value.toLowerCase();
+    result = result.filter(course => {
+      // Check against multiple fields, ensuring they exist and can be searched
+      const taskMatch = (course.sctask?.toLowerCase() || '').includes(searchLower);
+      const compositionMatch = (course.composition?.toLowerCase() || '').includes(searchLower);
+      const departmentMatch = (course.scteacherdepartment?.toLowerCase() || '').includes(searchLower);
+      const teacherIdMatch = (course.scteacherid?.toString() || '').includes(searchLower);
+      
+      return taskMatch || compositionMatch || departmentMatch || teacherIdMatch;
+    });
+  }
+
+  // 按排课状态筛选
+  if (filterType.value === 'scheduled') {
+    result = result.filter(course => isScheduled(course));
+  } else if (filterType.value === 'unscheduled') {
+    result = result.filter(course => !isScheduled(course));
+  }
+
+  courses.value = result;
+  createCourseIndexes(); // 重建索引
+};
+
+// 监听筛选条件变化
+watch([courseSearch, filterType], () => {
+  applyFilters();
+});
 
 // 新增：管理展开课程的状态
 const expandedCourses = ref(new Set());
@@ -576,12 +808,15 @@ const fetchCoursesFromAPI = async () => {
     
     if (response.status === 200 && response.data.code === 200) {
       // 处理API返回的数据
-      courses.value = processCourseData(response.data.rows);
-      console.log('从API加载了', courses.value.length, '条课程数据');
+      allCourses.value = processCourseData(response.data.rows);
+      console.log('从API加载了', allCourses.value.length, '条课程数据');
       
       // 从加载的数据中提取教室列表
-      const uniqueClassrooms = [...new Set(courses.value.map(course => course.scroom).filter(Boolean))];
+      const uniqueClassrooms = [...new Set(allCourses.value.map(course => course.scroom).filter(Boolean))];
       classrooms.value = uniqueClassrooms.sort();
+      
+      // 应用筛选条件
+      applyFilters();
 
     } else {
       throw new Error(`API返回错误: ${response.data.code || response.status}`);
@@ -591,43 +826,21 @@ const fetchCoursesFromAPI = async () => {
     console.log('使用测试数据替代');
     
     // 使用测试数据
-    courses.value = processCourseData(mockCourses);
+    allCourses.value = processCourseData(mockCourses);
     // 从模拟数据中提取教室列表
-    const uniqueMockClassrooms = [...new Set(courses.value.map(course => course.scroom).filter(Boolean))];
+    const uniqueMockClassrooms = [...new Set(allCourses.value.map(course => course.scroom).filter(Boolean))];
     classrooms.value = uniqueMockClassrooms.sort();
+    
+    // 应用筛选条件
+    applyFilters();
 
   } finally {
     isLoading.value = false;
   }
 };
 
-// 筛选课程 - 修复和增强
-const filteredCourses = computed(() => {
-  let result = [...courses.value]; // Start with all available courses
-
-  // 按搜索关键词筛选
-  if (courseSearch.value) {
-    const searchLower = courseSearch.value.toLowerCase();
-    result = result.filter(course => {
-      // Check against multiple fields, ensuring they exist and can be searched
-      const taskMatch = (course.sctask?.toLowerCase() || '').includes(searchLower);
-      const compositionMatch = (course.composition?.toLowerCase() || '').includes(searchLower);
-      const departmentMatch = (course.scteacherdepartment?.toLowerCase() || '').includes(searchLower);
-      const teacherIdMatch = (course.scteacherid?.toString() || '').includes(searchLower);
-      
-      return taskMatch || compositionMatch || departmentMatch || teacherIdMatch;
-    });
-  }
-
-  // 按排课状态筛选 (Applied after search)
-  if (filterType.value === 'scheduled') {
-    result = result.filter(course => isScheduled(course));
-  } else if (filterType.value === 'unscheduled') {
-    result = result.filter(course => !isScheduled(course));
-  }
-
-  return result;
-});
+// 使用引用代替计算属性，提高性能
+const filteredCourses = computed(() => courses.value);
 
 // 检查课程是否已排课
 const isScheduled = (course) => {
@@ -642,13 +855,24 @@ const getWeekdayName = (day) => {
 
 // 选择课程
 const selectCourse = (course) => {
-  selectedCourse.value = JSON.parse(JSON.stringify(course)); // 恢复使用 JSON.parse/stringify 进行深拷贝
-  // selectedCourse.value = structuredClone(course); // 暂时注释掉 structuredClone
+  // 尝试使用浅拷贝（直接赋值）来解决高亮问题
+  selectedCourse.value = course; 
   
-  // 确保数值类型正确 (如果processCourseData还没处理)
-  // selectedCourse.value.scbegin_week = parseInt(selectedCourse.value.scbegin_week);
-  // selectedCourse.value.scend_week = parseInt(selectedCourse.value.scend_week);
-  // selectedCourse.value.time = parseInt(selectedCourse.value.time);
+  // --- Previous deep copy logic ---
+  // if (window.structuredClone) {
+  //   selectedCourse.value = structuredClone(course);
+  // } else {
+  //   selectedCourse.value = JSON.parse(JSON.stringify(course));
+  // }
+  
+  // // 确保数值类型正确 (浅拷贝时可能不需要，因为是同一对象)
+  // if (selectedCourse.value) {
+  //   selectedCourse.value.scbegin_week = parseInt(selectedCourse.value.scbegin_week);
+  //   selectedCourse.value.scend_week = parseInt(selectedCourse.value.scend_week);
+  //   if (selectedCourse.value.time) {
+  //     selectedCourse.value.time = parseInt(selectedCourse.value.time);
+  //   }
+  // }
 };
 
 // 应用排课
@@ -682,11 +906,20 @@ const applySchedule = () => {
     }
   }
   
-  // 更新课程数据
-  const index = courses.value.findIndex(c => c.scid === selectedCourse.value.scid);
-  if (index !== -1) {
-    courses.value[index] = { ...selectedCourse.value };
+  // 更新课程数据 - 在allCourses和courses中同时更新
+  const indexInAll = allCourses.value.findIndex(c => c.scid === selectedCourse.value.scid);
+  const indexInFiltered = courses.value.findIndex(c => c.scid === selectedCourse.value.scid);
+  
+  if (indexInAll !== -1) {
+    allCourses.value[indexInAll] = { ...selectedCourse.value };
   }
+  
+  if (indexInFiltered !== -1) {
+    courses.value[indexInFiltered] = { ...selectedCourse.value };
+  }
+  
+  // 重建索引
+  createCourseIndexes();
   
   alert('排课成功');
 };
@@ -695,19 +928,31 @@ const applySchedule = () => {
 const unschedule = (course) => {
   if (!confirm(`确定要取消 ${course.sctask} 的排课吗?`)) return;
   
-  const index = courses.value.findIndex(c => c.scid === course.scid);
-  if (index !== -1) {
-    courses.value[index] = {
-      ...courses.value[index],
-      scday_of_week: "",
-      scroom: "",
-      time: 0
-    };
-    
-    // 更新选中的课程
-    if (selectedCourse.value && selectedCourse.value.scid === course.scid) {
-      selectedCourse.value = { ...courses.value[index] };
-    }
+  // 在allCourses和courses中同时更新
+  const indexInAll = allCourses.value.findIndex(c => c.scid === course.scid);
+  const indexInFiltered = courses.value.findIndex(c => c.scid === course.scid);
+  
+  const updatedCourse = {
+    ...course,
+    scday_of_week: "",
+    scroom: "",
+    time: 0
+  };
+  
+  if (indexInAll !== -1) {
+    allCourses.value[indexInAll] = updatedCourse;
+  }
+  
+  if (indexInFiltered !== -1) {
+    courses.value[indexInFiltered] = updatedCourse;
+  }
+  
+  // 重建索引
+  createCourseIndexes();
+  
+  // 更新选中的课程
+  if (selectedCourse.value && selectedCourse.value.scid === course.scid) {
+    selectedCourse.value = { ...updatedCourse };
   }
 };
 
@@ -716,15 +961,21 @@ const hasCourse = (classroom, day, period) => {
   return getCoursesByCell(classroom, day, period).length > 0;
 };
 
-// 获取单元格中的课程
+// 获取单元格中的课程 - 优化使用索引
 const getCoursesByCell = (classroom, day, period) => {
-  return courses.value.filter(course => 
-    course.scroom === classroom && 
-    parseInt(course.scday_of_week) === day &&
-    course.time === period &&
-    course.scbegin_week <= selectedWeek.value &&
-    course.scend_week >= selectedWeek.value
-  );
+  const key = `${classroom}-${day}-${period}`;
+  
+  // 首先从索引中查找
+  if (courseIndexes.value.has(key)) {
+    // 在所有缓存的课程中找出符合当前周次的课程
+    return courseIndexes.value.get(key).filter(course => 
+      course.scbegin_week <= selectedWeek.value &&
+      course.scend_week >= selectedWeek.value
+    );
+  }
+  
+  // 如果索引中没有，返回空数组
+  return [];
 };
 
 // 获取单元格样式
@@ -741,16 +992,29 @@ const getCellStyle = (classroom, day, period) => {
   return { backgroundColor: '#4f46e5' };
 };
 
-// 检查是否是高亮的单元格
+// 检查是否是高亮的单元格 - 优化使用索引
 const isHighlighted = (classroom, day, period) => {
-  if (!selectedCourse.value) return false;
-  
-  return courses.value.some(course => 
-    course.scid === selectedCourse.value.scid &&
-    course.scroom === classroom && 
-    parseInt(course.scday_of_week) === day &&
-    course.time === period
+  if (!selectedCourse.value || !selectedCourse.value.scid) return false;
+
+  // 仅当选中的课程本身有排课信息时，才进行高亮判断
+  if (!selectedCourse.value.scroom || !selectedCourse.value.scday_of_week || !selectedCourse.value.time) {
+    return false; // 如果选中的课程未排课，则不高亮任何单元格
+  }
+
+  // 直接比较单元格坐标和选中课程的排课信息
+  return (
+    selectedCourse.value.scroom === classroom &&
+    parseInt(selectedCourse.value.scday_of_week) === day &&
+    selectedCourse.value.time === period
   );
+  
+  // --- Previous logic using index (removed for clarity in highlighting the specific selected course) ---
+  // const key = `${classroom}-${day}-${period}`;
+  // if (!courseIndexes.value.has(key)) return false;
+  
+  // return courseIndexes.value.get(key).some(course => 
+  //   course.scid === selectedCourse.value.scid
+  // );
 };
 
 // 获取课程周次显示
@@ -764,12 +1028,9 @@ const getCourseWeeks = (classroom, day, period) => {
 
 // 查看单元格详情
 const viewCellDetails = (classroom, day, period) => {
-  // 获取当前单元格中的所有课程（不限于当前周）
-  const cellCourses = courses.value.filter(course => 
-    course.scroom === classroom && 
-    parseInt(course.scday_of_week) === day &&
-    course.time === period
-  );
+  // 使用索引获取课程数据 - 不再筛选周次，显示该单元格所有课程
+  const key = `${classroom}-${day}-${period}`;
+  const cellCourses = courseIndexes.value.has(key) ? courseIndexes.value.get(key) : [];
   
   cellDetails.value = {
     visible: true,
@@ -816,26 +1077,36 @@ const onDrop = (event, classroom, day, period) => {
     }
   }
   
-  // 更新课程数据
-  const index = courses.value.findIndex(c => c.scid === courseId);
-  if (index !== -1) {
-    courses.value[index] = updatedCourse;
-    
-    // 更新选中的课程
-    if (selectedCourse.value && selectedCourse.value.scid === courseId) {
-      selectedCourse.value = { ...updatedCourse };
-    }
+  // 更新课程数据 - 在allCourses和courses中同时更新
+  const indexInAll = allCourses.value.findIndex(c => c.scid === courseId);
+  const indexInFiltered = courses.value.findIndex(c => c.scid === courseId);
+  
+  if (indexInAll !== -1) {
+    allCourses.value[indexInAll] = updatedCourse;
+  }
+  
+  if (indexInFiltered !== -1) {
+    courses.value[indexInFiltered] = updatedCourse;
+  }
+  
+  // 重建索引
+  createCourseIndexes();
+  
+  // 更新选中的课程
+  if (selectedCourse.value && selectedCourse.value.scid === courseId) {
+    selectedCourse.value = { ...updatedCourse };
   }
 };
 
-// 检查冲突
+// 检查冲突 - 优化使用索引
 const checkConflicts = (classroom, day, period, excludeCourseId) => {
-  // 查找在同一教室、同一时间有课的其他课程
-  return courses.value.filter(course => 
+  // 使用索引快速查找可能冲突的课程
+  const key = `${classroom}-${day}-${period}`;
+  if (!courseIndexes.value.has(key)) return [];
+  
+  // 从索引中获取课程，并检查周次重叠
+  return courseIndexes.value.get(key).filter(course => 
     course.scid !== excludeCourseId &&
-    course.scroom === classroom && 
-    parseInt(course.scday_of_week) === day &&
-    course.time === period &&
     // 检查周次是否有重叠
     ((course.scbegin_week <= selectedCourse.value.scbegin_week && course.scend_week >= selectedCourse.value.scbegin_week) ||
      (course.scbegin_week <= selectedCourse.value.scend_week && course.scend_week >= selectedCourse.value.scend_week) ||
@@ -858,9 +1129,64 @@ const isValidDropTarget = (classroom, day, period) => {
 };
 
 // 保存排课
-const saveSchedule = () => {
-  // 这里可以添加保存到后端的逻辑
-  alert('排课已保存');
+const saveSchedule = async () => {
+  try {
+    // 找出所有修改过的课程数据
+    const scheduledCourses = courses.value.filter(isScheduled);
+    
+    if (scheduledCourses.length === 0) {
+      alert('没有课程被安排，无需保存');
+      return;
+    }
+    
+    // 显示保存中提示
+    isLoading.value = true;
+    
+    // 先提取需要的字段并转换格式，然后批量提交
+    const updatePromises = scheduledCourses.map(course => {
+      // 构建更新数据
+      const updateData = {
+        scid: course.scid,
+        scroom: course.scroom,
+        scday_of_week: course.scday_of_week,
+        scbegin_week: course.scbegin_week,
+        scend_week: course.scend_week
+      };
+      
+      // 处理节次数据
+      if (course.time && course.slot_end) {
+        if (course.time === course.slot_end) {
+          updateData.scslot = `${course.time}`;
+        } else {
+          updateData.scslot = `${course.time}-${course.slot_end}`;
+        }
+      } else if (course.time) {
+        updateData.scslot = `${course.time}`;
+      }
+      
+      // 调用API
+      return axios.post('http://localhost:8080/manual/update', updateData);
+    });
+    
+    // 等待所有请求完成
+    const results = await Promise.allSettled(updatePromises);
+    
+    // 统计成功和失败数量
+    const successful = results.filter(r => r.status === 'fulfilled' && r.value?.data?.code === 200).length;
+    const failed = results.filter(r => r.status === 'rejected' || r.value?.data?.code !== 200).length;
+    
+    // 根据结果显示不同的提示
+    if (failed === 0) {
+      alert(`排课保存成功，共更新了 ${successful} 门课程。`);
+    } else {
+      alert(`排课部分保存成功，成功 ${successful} 门课程，失败 ${failed} 门课程。`);
+    }
+  } catch (error) {
+    console.error('保存排课失败:', error);
+    alert(`保存排课失败: ${error.message || '未知错误'}`);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 // 切换侧边栏
@@ -956,6 +1282,144 @@ onMounted(() => {
   fetchCoursesFromAPI();
   
   console.log('手动排课组件已挂载');
+});
+
+// 监听周次选择器变化
+watch(selectedWeek, () => {
+  // 不需要重新加载数据，只需要更新视图
+  // 这样在切换周次时不会导致浏览器卡顿
+});
+
+// 表格分页变量
+const tablePageSize = 10; // 每页显示的教室数量
+const tablePage = ref(1); // 当前页码
+
+// 分页显示教室
+const paginatedClassrooms = computed(() => {
+  const startIndex = (tablePage.value - 1) * tablePageSize;
+  return classrooms.value.slice(startIndex, startIndex + tablePageSize);
+});
+
+// 教室总页数
+const totalTablePages = computed(() => {
+  return Math.ceil(classrooms.value.length / tablePageSize);
+});
+
+// 切换表格页面
+const nextTablePage = () => {
+  if (tablePage.value < totalTablePages.value) {
+    tablePage.value++;
+  }
+};
+
+const prevTablePage = () => {
+  if (tablePage.value > 1) {
+    tablePage.value--;
+  }
+};
+
+// 添加页码导航相关变量
+const tempCoursePageInput = ref('');
+const tempTablePageInput = ref('');
+
+// 跳转到指定课程页
+const jumpToCoursePage = () => {
+  const pageNum = parseInt(tempCoursePageInput.value);
+  if (pageNum && pageNum > 0 && pageNum <= totalPages.value) {
+    courseListPage.value = pageNum;
+  }
+  tempCoursePageInput.value = '';
+};
+
+// 跳转到指定表格页
+const jumpToTablePage = () => {
+  const pageNum = parseInt(tempTablePageInput.value);
+  if (pageNum && pageNum > 0 && pageNum <= totalTablePages.value) {
+    tablePage.value = pageNum;
+  }
+  tempTablePageInput.value = '';
+};
+
+// 生成课程列表分页页码
+const pageNumbers = computed(() => {
+  const total = totalPages.value;
+  const current = courseListPage.value;
+  
+  // 总页数小于10，显示所有页码
+  if (total <= 10) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  
+  // 总页数大于10，显示首页、末页和当前页附近的页码
+  const pages = [];
+  
+  // 当前页附近的页码
+  const nearbyPages = [];
+  for (let i = Math.max(2, current - 2); i <= Math.min(total - 1, current + 2); i++) {
+    nearbyPages.push(i);
+  }
+  
+  // 添加首页
+  pages.push(1);
+  
+  // 如果首页和当前页区域之间有间隔，添加省略号
+  if (nearbyPages[0] > 2) {
+    pages.push('...');
+  }
+  
+  // 添加当前页附近的页码
+  pages.push(...nearbyPages);
+  
+  // 如果当前页区域和末页之间有间隔，添加省略号
+  if (nearbyPages[nearbyPages.length - 1] < total - 1) {
+    pages.push('...');
+  }
+  
+  // 添加末页
+  pages.push(total);
+  
+  return pages;
+});
+
+// 生成表格分页页码
+const tablePageNumbers = computed(() => {
+  const total = totalTablePages.value;
+  const current = tablePage.value;
+  
+  // 总页数小于10，显示所有页码
+  if (total <= 10) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  
+  // 总页数大于10，显示首页、末页和当前页附近的页码
+  const pages = [];
+  
+  // 当前页附近的页码
+  const nearbyPages = [];
+  for (let i = Math.max(2, current - 2); i <= Math.min(total - 1, current + 2); i++) {
+    nearbyPages.push(i);
+  }
+  
+  // 添加首页
+  pages.push(1);
+  
+  // 如果首页和当前页区域之间有间隔，添加省略号
+  if (nearbyPages[0] > 2) {
+    pages.push('...');
+  }
+  
+  // 添加当前页附近的页码
+  pages.push(...nearbyPages);
+  
+  // 如果当前页区域和末页之间有间隔，添加省略号
+  if (nearbyPages[nearbyPages.length - 1] < total - 1) {
+    pages.push('...');
+  }
+  
+  // 添加末页
+  pages.push(total);
+  
+  return pages;
 });
 </script>
 
