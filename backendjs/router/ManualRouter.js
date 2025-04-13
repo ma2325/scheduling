@@ -165,21 +165,55 @@ router.post("/change",async(req,res)=>{
 
 })
 
-router.get("/all",async(req,res)=>{
-    const query = "SELECT `scid`, `sctask`, `scday_of_week`, `scroom`, `scbegin_week`, `scend_week`,`scslot`, `scteacherid`, `scteachername`, task.taformclass as `composition` FROM `schedule` join `task` on schedule.sctask=task.taformclassid;";
-    const params = [];
-    const {err,rows} = await db.async.all(query,params);
-    if(err){
+router.get("/all", async (req, res) => {
+    // 从查询参数中读取页码和每页条数，默认 page=1, pageSize=50
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const offset = (page - 1) * pageSize;
+
+    const dataQuery = `
+        SELECT 
+            scid, sctask, scday_of_week, scroom, scbegin_week, scend_week, scslot, 
+            scteacherid, scteachername, task.taformclass AS composition 
+        FROM schedule 
+        JOIN task ON schedule.sctask = task.taformclassid 
+        LIMIT ? OFFSET ?;
+    `;
+    console.log("page"+page);
+    console.log("pageSize"+pageSize);
+    const countQuery = `
+        SELECT COUNT(*) AS total FROM schedule 
+        JOIN task ON schedule.sctask = task.taformclassid;
+    `;
+
+    try {
+        const { rows: dataRows, err: dataErr } = await db.async.all(dataQuery, [pageSize, offset]);
+        if (dataErr) throw dataErr;
+
+        const { rows: countRows, err: countErr } = await db.async.all(countQuery, []);
+        if (countErr) throw countErr;
+
+        const total = countRows[0].total;
+        const totalPages = Math.ceil(total / pageSize);
+
         res.send({
-            "code":500,
-            "msg":"数据库读取错误"
+            code: 200,
+            "rows":dataRows,
+            pagination: {
+                currentPage: page,
+                pageSize,
+                total,
+                totalPages
+            }
         });
-    }else{
+    } catch (err) {
         res.send({
-            "code":200,
-            rows
+            code: 500,
+            msg: "数据库读取错误",
+            error: err.message
         });
     }
-})
+});
+
 
 module.exports = router;
