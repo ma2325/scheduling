@@ -206,7 +206,10 @@ query:week=[week]//查询的周
 ```
 #### (4)/manual/all:
 
-作用：获取所有课程，请求形式：get，附加参数：无
+作用：获取所有课程，请求形式：get，附加参数：query
+参数格式：*page=[page]&pageSize=[pageSize]*
+page:当前页数，pageSize：每页显示的课程数量
+**备注：默认page=1，pageSize=10**
 ```json
 //respond when success
 {
@@ -237,8 +240,14 @@ query:week=[week]//查询的周
             "scteachername":[scteachername],
             "composition":[composition]
         }
-        //其他课程信息
-    ]
+        //...其他课程信息
+    ],
+    "pagination": {
+                "currentPage": [currentpage],
+                "pageSize": [pagesize],
+                "total": [total],//总课程数
+                "totalPages": [totalpages]//总页数
+    }
 }
 ```
 ## 三、Dashboard 功能接口
