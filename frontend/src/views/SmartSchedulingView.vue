@@ -1,12 +1,35 @@
 <template>
     <div class="space-y-6">
+      <!-- 文件上传与处理（始终最上方） -->
+      <div class="bg-white rounded-lg shadow p-6 mb-4 flex flex-col md:flex-row md:items-center md:space-x-6 space-y-2 md:space-y-0">
+        <div class="flex-1">
+          <label class="block text-base font-medium mb-2">上传教师需求CSV文件：</label>
+          <input type="file" accept=".csv" @change="handleFileUpload" class="block w-full" />
+        </div>
+        <div v-if="csvLoading" class="flex items-center text-primary">
+          <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          正在处理...
+        </div>
+        <div v-if="csvResult" class="flex items-center space-x-2">
+          <button @click="downloadResult" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark">下载JSON结果</button>
+        </div>
+      </div>
       <div class="flex justify-between items-center">
         <h2 class="text-xl font-bold">智能排课</h2>
         <div class="flex space-x-2">
+          <label class="flex items-center space-x-1 mr-2 select-none">
+            <input type="checkbox" v-model="useTeacherConstraint" class="rounded border-gray-300 text-primary focus:ring-primary" />
+            <span class="text-sm">使用教师需求约束</span>
+          </label>
           <button 
             @click="startScheduling" 
-            class="px-6 py-3 bg-primary text-white rounded-md hover:bg-primary-dark flex items-center"
-            :disabled="isScheduling"
+            :class="[
+              'px-6 py-3 rounded-md flex items-center',
+              isScheduling || (useTeacherConstraint && (!csvResult || csvLoading))
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-primary text-white hover:bg-primary-dark'
+            ]"
+            :disabled="isScheduling || (useTeacherConstraint && (!csvResult || csvLoading))"
           >
             <Loader2 v-if="isScheduling" class="w-5 h-5 mr-2 animate-spin" />
             <Play v-else class="w-5 h-5 mr-2" />
@@ -134,7 +157,7 @@
     {
       id: 2,
       name: '班级排课集中',
-      detail: '尽可能把一个班级的一天课程集中安排在较短时间段内，避免“早来一节、晚走一节”这种低效时段浪费',
+      detail: '尽可能把一个班级的一天课程集中安排在较短时间段内，避免"早来一节、晚走一节"这种低效时段浪费',
       enabled: true,
       priority: 5
     },
@@ -174,6 +197,142 @@
     scheduledCourses: 0,
     executionTime: '0s'
   });
+  
+  // ================= 文件上传与处理 =================
+  const csvLoading = ref(false);
+  const csvResult = ref(null);
+  
+  // 是否使用教师需求约束
+  const useTeacherConstraint = ref(false);
+  
+  class TeacherConstraintProcessor {
+    constructor() {
+      this.apiKey = "sk-f8b82e9fab8a44ff928a1bccc5fb6688";
+    }
+    parseCSV(csvText) {
+      const lines = csvText.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.trim());
+      const data = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = this.parseCSVLine(lines[i]);
+        if (values.length >= 3) {
+          const teacherData = {
+            teacherID: values[0].trim(),
+            teachName: values[1].trim(),
+            requirement: [values[2].trim()]
+          };
+          const existingTeacher = data.find(t => t.teacherID === teacherData.teacherID);
+          if (existingTeacher) {
+            existingTeacher.requirement.push(teacherData.requirement[0]);
+          } else {
+            data.push(teacherData);
+          }
+        }
+      }
+      return { data };
+    }
+    parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current);
+      return result;
+    }
+    async callDeepSeekAPI(messages, model = "deepseek-chat") {
+      const API_ENDPOINT = "https://api.deepseek.com/v1/chat/completions";
+      try {
+        const response = await fetch(API_ENDPOINT, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${this.apiKey}`
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: messages,
+            temperature: 0.3,
+            max_tokens: 4000
+          })
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error?.message || "API 请求失败");
+        }
+        const data = await response.json();
+        return data.choices[0].message.content;
+      } catch (error) {
+        console.error("调用 DeepSeek API 出错:", error);
+        throw error;
+      }
+    }
+    generateEvaluationPrompt(teacherData) {
+      return `你是一个教师排课约束评估专家。请根据以下约束分类和教师需求，对每个需求进行评估。\n\n约束分类说明：...（省略，见原文）...\n\n教师需求数据：\n${JSON.stringify(teacherData, null, 2)}\n\n请严格按照以下JSON格式返回评估结果，不要添加任何其他文字：\n\n{\n    "evaluatedData": [\n        {\n            "teacherID": "教师编号",\n            "teachName": "教师姓名",\n            "evaluate": [\n                {\n                    "id": "R001",\n                    "content": "需求内容",\n                    "status": "合理/删除",\n                    "reason": "评估理由",\n                    "constraintType": "约束类型代码",\n                    "priority": "高/中/低/无"\n                }\n            ]\n        }\n    ]\n}`;
+    }
+    async processTeacherConstraints(csvText) {
+      try {
+        const parsedData = this.parseCSV(csvText);
+        const prompt = this.generateEvaluationPrompt(parsedData);
+        const messages = [
+          { role: "system", content: "你是一个专业的教师排课约束评估专家，严格按照要求分析教师需求并返回标准JSON格式结果。" },
+          { role: "user", content: prompt }
+        ];
+        const apiResponse = await this.callDeepSeekAPI(messages);
+        let evaluatedData;
+        try {
+          const jsonMatch = apiResponse.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            evaluatedData = JSON.parse(jsonMatch[0]);
+          } else {
+            throw new Error("未找到有效的JSON格式");
+          }
+        } catch (parseError) {
+          throw new Error("API返回的数据格式不正确");
+        }
+        return evaluatedData;
+      } catch (error) {
+        throw error;
+      }
+    }
+  }
+  
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    csvLoading.value = true;
+    csvResult.value = null;
+    try {
+      const csvText = await file.text();
+      const processor = new TeacherConstraintProcessor();
+      const result = await processor.processTeacherConstraints(csvText);
+      csvResult.value = result;
+    } catch (e) {
+      alert('处理CSV文件失败：' + e.message);
+    } finally {
+      csvLoading.value = false;
+    }
+  };
+  
+  const downloadResult = () => {
+    if (!csvResult.value) return;
+    const blob = new Blob([JSON.stringify(csvResult.value, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'teacher_constraint_evaluated.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   
   // 开始排课
   const startScheduling = async () => {
