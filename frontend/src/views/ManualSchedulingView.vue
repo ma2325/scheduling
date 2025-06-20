@@ -1165,7 +1165,7 @@ const saveSchedule = async () => {
       }
       
       // 调用API
-      return axios.post('http://localhost:8080/manual/update', updateData);
+      return axios.post('http://localhost:8080/manual/change', updateData);
     });
     
     // 等待所有请求完成
