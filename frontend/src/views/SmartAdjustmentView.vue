@@ -31,6 +31,10 @@
     <!-- 调课条件设置 -->
     <div class="bg-white rounded-lg shadow p-6">
       <h3 class="text-lg font-medium mb-4">调课条件</h3>
+      <div class="flex space-x-2 mb-4">
+        <button @click="showCourseSelectDialog = true" class="px-3 py-1 bg-primary text-white rounded-md hover:bg-primary-dark">课程微调</button>
+        <button @click="showTeacherSelectDialog = true" class="px-3 py-1 bg-primary text-white rounded-md hover:bg-primary-dark">教师课程微调</button>
+      </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -255,11 +259,149 @@
         </div>
       </div>
     </div>
+
+    <!-- 课程选择对话框 -->
+    <div v-if="showCourseSelectDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-4xl">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-2xl font-bold">课程微调 - 选择课程</h3>
+          <button @click="showCourseSelectDialog = false" class="text-gray-500 hover:text-gray-700">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <!-- 搜索框 -->
+        <div class="mb-4 flex items-center">
+          <input v-model="searchCourseText" type="text" placeholder="搜索课程名/教师/教室/班级..." class="w-full px-4 py-2 border rounded-lg shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" />
+        </div>
+        <div class="max-h-[60vh] overflow-y-auto rounded-xl border shadow">
+          <table class="w-full text-base text-left">
+            <thead class="bg-gray-100 text-gray-700 font-semibold">
+              <tr>
+                <th class="px-3 py-3">选择</th>
+                <th class="px-3 py-3">课程任务</th>
+                <th class="px-3 py-3">教师</th>
+                <th class="px-3 py-3">教室</th>
+                <th class="px-3 py-3">时间</th>
+                <th class="px-3 py-3">班级</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="course in filteredPagedCourses" :key="course.scid" class="border-b cursor-pointer hover:bg-primary/10 transition">
+                <td class="px-3 py-2 text-center">
+                  <input type="checkbox" :value="course" v-model="selectedCourses" />
+                </td>
+                <td class="px-3 py-2">{{ course.sctask }}</td>
+                <td class="px-3 py-2">{{ course.scteachername || course.scteacherid }}</td>
+                <td class="px-3 py-2">{{ course.scroom }}</td>
+                <td class="px-3 py-2">周{{ getWeekdayName(parseInt(course.scday_of_week)) }} {{ course.scslot }}</td>
+                <td class="px-3 py-2">{{ course.composition }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- 分页控件 -->
+        <div class="flex justify-center items-center mt-4 space-x-4">
+          <button @click="coursePage > 1 && (coursePage--)" :disabled="coursePage === 1" class="px-4 py-2 border rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-50">上一页</button>
+          <span class="text-base">第 {{ coursePage }} / {{ totalCoursePages }} 页</span>
+          <button @click="coursePage < totalCoursePages && (coursePage++)" :disabled="coursePage === totalCoursePages" class="px-4 py-2 border rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-50">下一页</button>
+        </div>
+        <div class="mt-6 flex justify-end space-x-4">
+          <button @click="showCourseSelectDialog = false" class="px-6 py-2 border rounded-lg hover:bg-gray-50">取消</button>
+          <button @click="confirmCourseSelection" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark">确定</button>
+        </div>
+      </div>
+    </div>
+    <!-- 教师课程微调对话框 -->
+    <div v-if="showTeacherSelectDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-4xl">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-2xl font-bold">教师课程微调 - 选择教师</h3>
+          <button @click="showTeacherSelectDialog = false" class="text-gray-500 hover:text-gray-700">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <!-- 教师搜索框 -->
+        <div class="mb-4 flex items-center">
+          <input v-model="searchTeacherText" type="text" placeholder="搜索教师姓名/工号..." class="w-full px-4 py-2 border rounded-lg shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" />
+        </div>
+        <!-- 教师表格 -->
+        <div class="max-h-[30vh] overflow-y-auto rounded-xl border shadow mb-6">
+          <table class="w-full text-base text-left">
+            <thead class="bg-gray-100 text-gray-700 font-semibold">
+              <tr>
+                <th class="px-3 py-3">工号</th>
+                <th class="px-3 py-3">姓名</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="teacher in filteredTeacherList" :key="teacher.id"
+                  :class="[selectedTeacherId === teacher.id ? 'bg-primary/10' : '', 'cursor-pointer hover:bg-primary/10 transition']"
+                  @click="selectedTeacherId = teacher.id; fetchTeacherCourses();">
+                <td class="px-3 py-2">{{ teacher.id }}</td>
+                <td class="px-3 py-2">{{ teacher.name }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- 搜索框 -->
+        <div class="mb-4 flex items-center">
+          <input v-model="searchTeacherCourseText" type="text" placeholder="搜索课程名/教室/班级..." class="w-full px-4 py-2 border rounded-lg shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" />
+        </div>
+        <div v-if="teacherCourses.length > 0" class="h-40 overflow-y-auto rounded-xl border shadow">
+          <table class="w-full text-base text-left">
+            <thead class="bg-gray-100 text-gray-700 font-semibold">
+              <tr>
+                <th class="px-3 py-3">选择</th>
+                <th class="px-3 py-3">课程任务</th>
+                <th class="px-3 py-3">教室</th>
+                <th class="px-3 py-3">时间</th>
+                <th class="px-3 py-3">班级</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="course in filteredTeacherPagedCourses" :key="course.scid" class="border-b hover:bg-primary/10 transition">
+                <td class="px-3 py-2 text-center">
+                  <input type="checkbox" :value="course" v-model="selectedCourses" />
+                </td>
+                <td class="px-3 py-2">{{ course.sctask }}</td>
+                <td class="px-3 py-2">{{ course.scroom }}</td>
+                <td class="px-3 py-2">周{{ getWeekdayName(parseInt(course.scday_of_week)) }} {{ course.scslot }}</td>
+                <td class="px-3 py-2">{{ course.composition }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- 分页控件 -->
+        <div v-if="teacherCourses.length > 0" class="flex justify-center items-center mt-4 space-x-4">
+          <button @click="teacherCoursePage > 1 && (teacherCoursePage--)" :disabled="teacherCoursePage === 1" class="px-4 py-2 border rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-50">上一页</button>
+          <span class="text-base">第 {{ teacherCoursePage }} / {{ totalTeacherCoursePages }} 页</span>
+          <button @click="teacherCoursePage < totalTeacherCoursePages && (teacherCoursePage++)" :disabled="teacherCoursePage === totalTeacherCoursePages" class="px-4 py-2 border rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-50">下一页</button>
+        </div>
+        <div v-else class="text-gray-500">请选择教师后显示课程</div>
+        <div class="mt-6 flex justify-end space-x-4">
+          <button @click="showTeacherSelectDialog = false" class="px-6 py-2 border rounded-lg hover:bg-gray-50">取消</button>
+          <button @click="confirmCourseSelection" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark" :disabled="!selectedTeacherId">确定</button>
+        </div>
+      </div>
+    </div>
+    <!-- 已选课程展示 -->
+    <div v-if="selectedCourses.length > 0" class="bg-white rounded-lg shadow p-4 mt-4">
+      <h4 class="text-md font-medium mb-2">已选课程</h4>
+      <ul class="list-disc pl-5 text-sm">
+        <li v-for="course in selectedCourses" :key="course.scid">
+          {{ course.sctask }} - {{ course.scteachername || course.scteacherid }} - {{ course.scroom }}
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import axios from 'axios';
 
 // 状态变量
@@ -274,6 +416,61 @@ const errorMessage = ref('');
 const rawAnalysisResult = ref('');
 const showAnalysisDialog = ref(false);
 const hasSavedData = ref(false);
+const showCourseSelectDialog = ref(false);
+const showTeacherSelectDialog = ref(false);
+const allCourses = ref([]);
+const selectedCourses = ref([]);
+const coursePage = ref(1);
+const pageSize = 10;
+const teacherCoursePageSize = 3;
+const searchCourseText = ref('');
+const searchTeacherCourseText = ref('');
+const searchTeacherText = ref('');
+
+// 课程微调分页和搜索
+const pagedCourses = computed(() => {
+  const start = (coursePage.value - 1) * pageSize;
+  return allCourses.value.slice(start, start + pageSize);
+});
+const totalCoursePages = computed(() => Math.ceil(allCourses.value.length / pageSize) || 1);
+const filteredPagedCourses = computed(() => {
+  if (!searchCourseText.value) return pagedCourses.value;
+  const kw = searchCourseText.value.trim().toLowerCase();
+  return pagedCourses.value.filter(c =>
+    (c.sctask && c.sctask.toLowerCase().includes(kw)) ||
+    (c.scteachername && c.scteachername.toLowerCase().includes(kw)) ||
+    (c.scroom && c.scroom.toLowerCase().includes(kw)) ||
+    (c.composition && c.composition.toLowerCase().includes(kw))
+  );
+});
+
+// 教师课程微调相关
+const teacherList = ref([]);
+const selectedTeacherId = ref("");
+const teacherCourses = ref([]);
+const teacherCoursePage = ref(1);
+const teacherPagedCourses = computed(() => {
+  const start = (teacherCoursePage.value - 1) * teacherCoursePageSize;
+  return teacherCourses.value.slice(start, start + teacherCoursePageSize);
+});
+const totalTeacherCoursePages = computed(() => Math.ceil(teacherCourses.value.length / teacherCoursePageSize) || 1);
+const filteredTeacherPagedCourses = computed(() => {
+  if (!searchTeacherCourseText.value) return teacherPagedCourses.value;
+  const kw = searchTeacherCourseText.value.trim().toLowerCase();
+  return teacherPagedCourses.value.filter(c =>
+    (c.sctask && c.sctask.toLowerCase().includes(kw)) ||
+    (c.scroom && c.scroom.toLowerCase().includes(kw)) ||
+    (c.composition && c.composition.toLowerCase().includes(kw))
+  );
+});
+const filteredTeacherList = computed(() => {
+  if (!searchTeacherText.value) return teacherList.value;
+  const kw = searchTeacherText.value.trim().toLowerCase();
+  return teacherList.value.filter(t =>
+    (t.id && t.id.toLowerCase().includes(kw)) ||
+    (t.name && t.name.toLowerCase().includes(kw))
+  );
+});
 
 // 调课设置
 const adjustmentSettings = reactive({
@@ -408,17 +605,20 @@ const fetchCoursesAndGenerateSuggestions = async () => {
   
   try {
     // 获取课程数据
-    const coursesData = await fetchCourses();
-    
+    let coursesData = [];
+    if (selectedCourses.value.length > 0) {
+      coursesData = selectedCourses.value;
+    } else {
+      coursesData = await fetchCourses();
+    }
     if (!coursesData || coursesData.length === 0) {
       throw new Error('没有获取到课程数据');
     }
-    
     // 准备提示语
     const prompt = generateAIPrompt(coursesData);
     
     // 调用 DeepSeek API
-    const apiKey = "sk-6b3de816799d4f0386bc2fbe014797b0";
+    const apiKey = "sk-f8b82e9fab8a44ff928a1bccc5fb6688";
     const messages = [
       { role: "user", content: prompt }
     ];
@@ -702,6 +902,65 @@ const loadDataFromStorage = () => {
 onMounted(() => {
   loadDataFromStorage();
 });
+
+// 课程微调弹窗确认
+const confirmCourseSelection = () => {
+  showCourseSelectDialog.value = false;
+  showTeacherSelectDialog.value = false;
+  // 这里selectedCourses已自动绑定
+};
+
+// 获取所有课程数据（用于微调选择）
+const fetchAllCourses = async () => {
+  try {
+    const response = await axios.get('http://localhost:8080/manual/all');
+    if (response.status === 200 && response.data.code === 200) {
+      allCourses.value = response.data.rows || [];
+      // 提取教师列表
+      const teacherMap = {};
+      response.data.rows.forEach(c => {
+        if (c.scteacherid && !teacherMap[c.scteacherid]) {
+          teacherMap[c.scteacherid] = { id: c.scteacherid, name: c.scteachername || c.scteacherid };
+        }
+      });
+      teacherList.value = Object.values(teacherMap);
+    } else {
+      allCourses.value = [];
+      teacherList.value = [];
+    }
+  } catch (e) {
+    allCourses.value = [];
+    teacherList.value = [];
+  }
+};
+
+// 打开课程微调弹窗时加载数据
+watch(showCourseSelectDialog, (val) => {
+  if (val) {
+    fetchAllCourses();
+    coursePage.value = 1;
+  }
+});
+
+// 打开教师微调弹窗时加载数据
+watch(showTeacherSelectDialog, (val) => {
+  if (val) {
+    fetchAllCourses();
+    selectedTeacherId.value = "";
+    teacherCourses.value = [];
+    teacherCoursePage.value = 1;
+  }
+});
+
+// 选择教师后筛选课程
+const fetchTeacherCourses = () => {
+  if (!selectedTeacherId.value) {
+    teacherCourses.value = [];
+    return;
+  }
+  teacherCourses.value = allCourses.value.filter(c => c.scteacherid == selectedTeacherId.value);
+  teacherCoursePage.value = 1;
+};
 </script>
 
 <style scoped>

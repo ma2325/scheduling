@@ -48,6 +48,7 @@ axios.defaults.baseURL = "http://localhost:8080";
 }
 ```
 #### (2)/admin/signup:
+
 作用：注册，请求形式：post，附加参数：body
 ```json
 //request
@@ -73,6 +74,7 @@ axios.defaults.baseURL = "http://localhost:8080";
 ```
 ### 2.统计数据
 #### (1)/statistics:
+
 作用：获取统计信息，请求形式：get，附加参数：无
 ```json
 //request

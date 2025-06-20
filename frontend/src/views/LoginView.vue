@@ -100,11 +100,11 @@ const handleSubmit = async () => {
     localStorage.setItem('token', response.data.token);
 
     // 之后请求其他接口：
-    axios.get('/dashboard', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    });
+    // axios.get('/dashboard', {
+    //   headers: {
+    //     Authorization: `Bearer ${localStorage.getItem('token')}`
+    //   }
+    // });
 
     // 判断请求是否成功
     if (response.data.code === 200) {

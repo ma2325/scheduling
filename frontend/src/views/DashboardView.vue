@@ -105,7 +105,7 @@ watch(userType, (newType) => {
   if (newType === 'teacher') {
     user.value = '304';
   } else {
-    user.value = '24教学7班';
+    user.value = '22汽修1班';
   }
 });
 
